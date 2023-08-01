@@ -25,7 +25,7 @@ public class Program {
     private ProgramStatus status;
 
     @Column(name = "ID", length = 35)
-    private String uuid;
+    private String id;
 
     @Column(name = "DESCR", length = 60)
     private String description;

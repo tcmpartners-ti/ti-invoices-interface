@@ -21,9 +21,9 @@ public class ProgramController {
     private final ProgramMapper programMapper;
     private final ProgramService programService;
 
-    @GetMapping("{programUuid}")
-    public ResponseEntity<ProgramDTO> getProgramByUuid(@PathVariable String programUuid) {
-        Program program = programService.getProgramByUuid(programUuid);
+    @GetMapping("{programId}")
+    public ResponseEntity<ProgramDTO> getProgramById(@PathVariable String programId) {
+        Program program = programService.getProgramById(programId);
         ProgramDTO programDTO = programMapper.mapEntityToDTO(program);
 
         return ResponseEntity.ok(programDTO);

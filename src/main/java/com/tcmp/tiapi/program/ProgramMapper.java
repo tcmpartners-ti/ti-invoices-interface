@@ -7,11 +7,9 @@ import com.tcmp.tiapi.program.model.Program;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
-
 @Mapper
 public interface ProgramMapper {
-    @Mapping(source = "uuid", target = "id")
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "description", target = "name")
     @Mapping(source = "customerMnemonic", target = "customer.mnemonic")
     @Mapping(source = "startDate", target = "startDate")
@@ -21,8 +19,6 @@ public interface ProgramMapper {
     @Mapping(source = "availableLimitAmount", target = "creditLimit.amount")
     @Mapping(source = "status", target = "status")
     ProgramDTO mapEntityToDTO(Program program);
-
-    List<ProgramDTO> mapEntitiesToDTOs(List<Program> programs);
 
     @Mapping(source = "description", target = "description")
     @Mapping(source = "customer.mnemonic", target = "customer.mnemonic")

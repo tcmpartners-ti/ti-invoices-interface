@@ -17,10 +17,10 @@ public class ProgramService {
     private final ProgramRepository programRepository;
     private final ProducerTemplate producerTemplate;
 
-    public Program getProgramByUuid(String programUuid) {
-        return programRepository.findByUuid(programUuid)
+    public Program getProgramById(String programId) {
+        return programRepository.findById(programId)
                 .orElseThrow(() -> new NotFoundHttpException(
-                        String.format("Could not find a program with id %s.", programUuid)));
+                        String.format("Could not find a program with id %s.", programId)));
     }
 
     public String sendAndReceiveProgramUUID(SCFProgrammeMessage programmeMessage) {

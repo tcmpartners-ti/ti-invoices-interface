@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface ProgramRepository extends JpaRepository<Program, Long> {
-    Optional<Program> findByUuid(String programUuid);
+    Optional<Program> findById(String programUuid);
 
     Page<Program> findAllByCustomerMnemonic(String customerMnemonic, Pageable pageable);
 }

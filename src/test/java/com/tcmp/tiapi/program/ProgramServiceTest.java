@@ -40,13 +40,13 @@ class ProgramServiceTest {
         String programUuid = "mockUuid";
 
         // When
-        when(programRepository.findByUuid(anyString()))
+        when(programRepository.findById(anyString()))
                 .thenReturn(Optional.of(Program.builder().pk(1L).build()));
 
-        testedProgramService.getProgramByUuid(programUuid);
+        testedProgramService.getProgramById(programUuid);
 
         //Then
-        verify(programRepository).findByUuid(programUuid);
+        verify(programRepository).findById(programUuid);
     }
 
     @Test
@@ -55,14 +55,14 @@ class ProgramServiceTest {
         String expectedProgramUuid = "mockUuid";
 
         // When
-        when(programRepository.findByUuid(anyString()))
+        when(programRepository.findById(anyString()))
                 .thenReturn(Optional.of(Program.builder().pk(1L).build()));
-        testedProgramService.getProgramByUuid(expectedProgramUuid);
+        testedProgramService.getProgramById(expectedProgramUuid);
 
         // Then
         ArgumentCaptor<String> uuidCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(programRepository).findByUuid(uuidCaptor.capture());
+        verify(programRepository).findById(uuidCaptor.capture());
         String capturedUuid = uuidCaptor.getValue();
 
         assertEquals(capturedUuid, expectedProgramUuid);
@@ -73,12 +73,12 @@ class ProgramServiceTest {
         String uuid = "mockUuid";
 
         // When
-        when(programRepository.findByUuid(uuid))
+        when(programRepository.findById(uuid))
                 .thenReturn(Optional.empty());
 
         // Then
         assertThrows(NotFoundHttpException.class,
-                () -> testedProgramService.getProgramByUuid(uuid));
+                () -> testedProgramService.getProgramById(uuid));
     }
 
     @Test
