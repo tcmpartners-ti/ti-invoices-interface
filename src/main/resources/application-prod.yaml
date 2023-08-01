@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://<DB_HOST>;database=<DB_NAME>
+    username: <DB_USER>
+    password: <DB_PASS>
+
+  activemq:
+    user: <MQ_USER>
+    password: <MQ_PASS>
+    broker-url: tcp://localhost:61616

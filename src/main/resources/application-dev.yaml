@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    # Local DB
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:<DB_PORT>/<DB_NAME>
+    username: <DB_USER>
+    password: <DB_PASSWORD>
+
+  activemq:
+    user: <MQ_USER>
+    password: <MQ_PASS>
+    broker-url: tcp://localhost:61616

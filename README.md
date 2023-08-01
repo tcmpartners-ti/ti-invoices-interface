@@ -1,16 +1,15 @@
 # TI Invoices Integration
 This project handles the integration of the entities related to the
 invoices management:
-* Invoices.
-* Programs.
-* Customers.
-* ... [TBD]
+*  Invoices.
+*  Programs.
+*  Customers.
+*  ... [TBD]
 
 ## Run Locally
 
 > **Important:**
-> Please create your own `application.yaml` file in `src/main/resources`. You
-> can use the `application-example.yaml` file as a template.
+> Please modify the `application-<env>.yaml` file in `src/main/resources`.
 
 Clone the project
 ```bash
