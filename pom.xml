@@ -3,27 +3,42 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.13</version>
+        <version>2.7.10</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>com.tcmp</groupId>
     <artifactId>invoices</artifactId>
     <version>0.0.1</version>
-    <name>invoices</name>
-    <description>invoices</description>
+    <name>InvoicesInterface</name>
+    <description>Interface to interact with Trade Innovation services.</description>
+
     <properties>
-        <java.version>11</java.version>
+        <!-- Project properties -->
+        <java.version>17</java.version>
         <lombok.version>1.18.28</lombok.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <camel.version>3.20.6</camel.version>
         <openapi.version>1.7.0</openapi.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <functionAppName>fnati-invoices</functionAppName>
+        <!-- Azure properties -->
         <azure.functions.java.library.version>3.0.0</azure.functions.java.library.version>
         <azure.functions.maven.plugin.version>1.26.0</azure.functions.maven.plugin.version>
+        <spring.cloud.function.dependencies>4.0.5</spring.cloud.function.dependencies>
+
+        <functionAppName>fnatipch-invoices</functionAppName>
+        <functionResourceGroup>${functionAppName}</functionResourceGroup>
+        <functionAppServicePlanName>ASP-${functionAppName}</functionAppServicePlanName>
+        <functionAppRegion>East US</functionAppRegion>
+        <functionPricingTier>Y1</functionPricingTier>
+
+        <start-class>com.tcmp.tiapi.TIInvoicesAPIApplication</start-class>
     </properties>
 
     <dependencies>
@@ -31,12 +46,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Azure -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-function-adapter-azure</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.microsoft.azure.functions</groupId>
             <artifactId>azure-functions-java-library</artifactId>
@@ -90,7 +109,7 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <!-- Temporal -->
+            <!-- Temporal DELETE -->
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
@@ -145,32 +164,74 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-function-dependencies</artifactId>
+                <version>${spring.cloud.function.dependencies}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure.functions</groupId>
+                <artifactId>azure-functions-java-library</artifactId>
+                <version>${azure.functions.java.library.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.microsoft.azure</groupId>
+                    <artifactId>azure-functions-maven-plugin</artifactId>
+                    <version>${azure.functions.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.4.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>io.gatling</groupId>
+                    <artifactId>gatling-maven-plugin</artifactId>
+                    <version>4.1.5</version>
+                    <configuration>
+                        <includes>
+                            <include>com.example.loadtest.*</include>
+                        </includes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
             <!-- Azure -->
             <plugin>
                 <groupId>com.microsoft.azure</groupId>
                 <artifactId>azure-functions-maven-plugin</artifactId>
                 <version>${azure.functions.maven.plugin.version}</version>
                 <configuration>
+                    <resourceGroup>${functionResourceGroup}</resourceGroup>
                     <appName>${functionAppName}</appName>
-                    <resourceGroup>java-functions-group</resourceGroup>
-                    <appServicePlanName>java-functions-app-service-plan</appServicePlanName>
-                    <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-regions for all valid values -->
-                    <region>westus</region>
+                    <region>${functionAppRegion}</region>
+                    <appServicePlanName>${functionAppServicePlanName}</appServicePlanName>
+                    <pricingTier>${functionPricingTier}</pricingTier>
+
+                    <hostJson>${project.basedir}/src/main/azure/host.json</hostJson>
+                    <localSettingsJson>${project.basedir}/src/main/azure/local.settings.json</localSettingsJson>
+
                     <runtime>
                         <os>windows</os>
                         <javaVersion>${java.version}</javaVersion>
@@ -191,7 +252,20 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--Remove obj folder generated by .NET SDK in maven clean-->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>obj</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
 
+            <!-- Mvn plugins (lombok & mapstruct) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -212,6 +286,19 @@
                             <version>${org.mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
