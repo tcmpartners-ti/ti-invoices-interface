@@ -1,9 +1,9 @@
 package com.tcmp.tiapi.program.converter;
 
 import com.tcmp.tiapi.program.model.ProgramStatus;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import java.util.Objects;
 
 @Converter
