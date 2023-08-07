@@ -1,12 +1,12 @@
 package com.tcmp.tiapi.program.dto.request;
 
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data

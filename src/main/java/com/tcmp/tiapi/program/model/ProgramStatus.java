@@ -4,13 +4,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Getter
 public enum ProgramStatus {
     BLOCKED("B", "BLOCKED"),
     REFERRED("R", "REFERRED"),
     INACTIVE("I","INACTIVE" ),
     ACTIVE("A", "ACTIVE");
 
-    @Getter
     private final String value;
 
     @Getter private final String display;

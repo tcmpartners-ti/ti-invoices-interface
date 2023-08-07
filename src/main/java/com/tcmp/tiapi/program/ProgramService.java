@@ -9,6 +9,7 @@ import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.ProducerTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Service;
 public class ProgramService {
     private final ProgramRepository programRepository;
     private final ProducerTemplate producerTemplate;
+
+    @Value("${route.program.create.single.from}")
+    private String uriFrom;
 
     public Program getProgramById(String programId) {
         return programRepository.findById(programId)
@@ -27,6 +31,6 @@ public class ProgramService {
         ServiceRequest<SCFProgrammeMessage> createProgramRequest =
             TIServiceRequestWrapper.wrapRequest(TIService.TRADE_INNOVATION, TIOperation.SCF_PROGRAMME, programmeMessage);
 
-        return producerTemplate.requestBody(ProgramRouter.DIRECT_CREATE_PROGRAM, createProgramRequest, String.class);
+        return producerTemplate.requestBody(uriFrom, createProgramRequest, String.class);
     }
 }

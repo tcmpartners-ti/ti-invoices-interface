@@ -84,7 +84,7 @@ class ProgramServiceTest {
     @Test
     void itShouldWrapProgrammeMessageAsServiceRequest() {
         // Given
-        String expectedInvokedRoute = ProgramRouter.DIRECT_CREATE_PROGRAM;
+        String expectedInvokedRoute = "direct:createProgramInTI";
         String expectedProgrammeId = "PROG123";
         String expectedService = TIService.TRADE_INNOVATION.getValue();
         String expectedOperation = TIOperation.SCF_PROGRAMME.getValue();
