@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.messaging;
 
+import com.tcmp.tiapi.messaging.config.TIMessagingConfig;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
@@ -21,7 +22,7 @@ public class NamespaceFixerProcessor implements Processor {
     }
 
     private String removePrefixFromDefaultNamespace(String originalXml) {
-        String incorrectPrefix = ":" + TINamespacePrefixMapper.CONTROL_PREFIX;
+        String incorrectPrefix = ":" + TIMessagingConfig.CONTROL_PREFIX;
         return originalXml.replaceFirst(incorrectPrefix, "");
     }
 }

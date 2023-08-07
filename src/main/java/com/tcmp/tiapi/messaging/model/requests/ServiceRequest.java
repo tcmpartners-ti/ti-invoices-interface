@@ -4,12 +4,12 @@ import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.program.messaging.SCFProgrammeMessage;
+import jakarta.xml.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.xml.bind.annotation.*;
 
 @Data
 @Builder
