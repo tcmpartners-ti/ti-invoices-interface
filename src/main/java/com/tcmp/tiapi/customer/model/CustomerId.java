@@ -1,10 +1,10 @@
 package com.tcmp.tiapi.customer.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.Hibernate;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -15,6 +15,7 @@ import java.util.Objects;
 @Setter
 @Embeddable
 public class CustomerId implements Serializable {
+    @Serial
     private static final long serialVersionUID = 7030907852707213599L;
 
     @Column(name = "GFCUS1_SBB", nullable = false, length = 8)

@@ -10,16 +10,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-@RestController
+@Controller
 @RequestMapping("customers")
 @RequiredArgsConstructor
 @Slf4j
@@ -33,13 +32,13 @@ public class CustomerController {
         Page<Program> programsPage = customerService.getCustomerPrograms(customerMnemonic, pageParams);
 
         return ResponseEntity.ok(PaginatedResult.<List<ProgramDTO>>builder()
-                .data(programsPage.get().map(programMapper::mapEntityToDTO).collect(Collectors.toList()))
-                .meta(Map.of(
-                    "pagination", Map.of(
-                        "isLastPage", programsPage.isLast(),
-                        "totalPages", programsPage.getTotalPages()
-                    )
-                ))
-                .build());
+            .data(programsPage.get().map(programMapper::mapEntityToDTO).toList())
+            .meta(Map.of(
+                "pagination", Map.of(
+                    "isLastPage", programsPage.isLast(),
+                    "totalPages", programsPage.getTotalPages()
+                )
+            ))
+            .build());
     }
 }
