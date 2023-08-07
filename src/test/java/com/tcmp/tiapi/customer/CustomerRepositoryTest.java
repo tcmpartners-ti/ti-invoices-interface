@@ -28,11 +28,20 @@ class CustomerRepositoryTest {
         .sourceBankingBusinessCode("SBB123")
         .mnemonic(mnemonic).build())
       .fullName("Customer 123")
-      // Other fields set as null for this test
+      // Other fields ...
       .build());
 
-    boolean expected = testedCustomerRepository.existsByIdMnemonic(mnemonic);
+    boolean actualExists = testedCustomerRepository.existsByIdMnemonic(mnemonic);
 
-    assertThat(expected).isTrue();
+    assertThat(actualExists).isTrue();
+  }
+
+  @Test
+  void itShouldCheckIfCustomerDoesntExistByMnemonic() {
+    String nonExistingMnemonic = "123";
+
+    boolean actualExists = testedCustomerRepository.existsByIdMnemonic(nonExistingMnemonic);
+
+    assertThat(actualExists).isFalse();
   }
 }
