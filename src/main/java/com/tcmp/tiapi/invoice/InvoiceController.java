@@ -6,13 +6,12 @@ import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("invoices")
@@ -22,6 +21,8 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
 
     private final InvoiceMapper invoiceMapper;
+
+    // IMPORTANT: Get operations are already defined.
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(description = "Create a single invoice.")

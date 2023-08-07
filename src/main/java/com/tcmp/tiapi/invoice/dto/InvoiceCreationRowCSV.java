@@ -42,13 +42,13 @@ public class InvoiceCreationRowCSV implements Serializable {
     @DataField(pos = 9, name = "IssueDate", pattern = "yyyy-MM-dd")
     private LocalDate issueDate;
 
-    @DataField(pos = 10, name = "FaceValueAmount", pattern = "#.##",  precision = 2)
+    @DataField(pos = 10, name = "FaceValueAmount", pattern = "#.##", precision = 2)
     private BigDecimal faceValueAmount;
 
     @DataField(pos = 11, name = "FaceValueCurrency")
     private String faceValueCurrency;
 
-    @DataField(pos = 12, name = "OutstandingAmount", pattern = "#.##",  precision = 2)
+    @DataField(pos = 12, name = "OutstandingAmount", pattern = "#.##", precision = 2)
     private BigDecimal outstandingAmount;
 
     @DataField(pos = 13, name = "OutstandingCurrency")

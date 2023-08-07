@@ -1,9 +1,12 @@
 package com.tcmp.tiapi.invoice.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.Nationalized;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -93,7 +96,6 @@ public class InvoiceCreationEvent {
     @Column(name = "SEC_DTLS", length = 370)
     private String securityDetails;
 
-    // TODO: add boolean converter
     @Nationalized
     @Column(name = "DISCLOSED", length = 1)
     private String isDisclosed;

@@ -18,8 +18,6 @@ public class InvoiceRouter extends RouteBuilder {
     public static final String DIRECT_CREATE_INVOICE = "direct:createInvoiceInTI";
     public static final String DIRECT_CREATE_INVOICES_BULK = "direct:createInvoicesBulkInTI";
 
-    private static final String PUBLISH_TO_INVOICES_QUEUE = "activemq:queue:invoices?connectionFactory=#jmsConnectionFactory";
-
     private static final int THREAD_POOL_SIZE_FOR_BULK_OPERATIONS = 5;
 
     private final InvoiceMapper invoiceMapper;
@@ -31,7 +29,7 @@ public class InvoiceRouter extends RouteBuilder {
             .process(ex -> ex.getIn().setHeader("fileUuid", UUID.randomUUID().toString()))
             .marshal(jaxbDataFormat)
             .process(new NamespaceFixerProcessor())
-            .to(PUBLISH_TO_INVOICES_QUEUE)
+            .to("mock:queueTi")
             .end()
             .setBody(ex -> ex.getIn().getHeader("fileUuid"))
             .end();
