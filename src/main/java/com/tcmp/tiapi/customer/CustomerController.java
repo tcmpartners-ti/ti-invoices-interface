@@ -24,21 +24,21 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "Customers [WIP]", description = "Defines the customers operations.")
 public class CustomerController {
-    private final CustomerService customerService;
-    private final ProgramMapper programMapper;
+  private final CustomerService customerService;
+  private final ProgramMapper programMapper;
 
-    @GetMapping("{customerMnemonic}/programs")
-    public ResponseEntity<PaginatedResult<List<ProgramDTO>>> getCustomerProgramsByMnemonic(PageParams pageParams, @PathVariable String customerMnemonic) {
-        Page<Program> programsPage = customerService.getCustomerPrograms(customerMnemonic, pageParams);
+  @GetMapping("{customerMnemonic}/programs")
+  public ResponseEntity<PaginatedResult<List<ProgramDTO>>> getCustomerProgramsByMnemonic(PageParams pageParams, @PathVariable String customerMnemonic) {
+    Page<Program> programsPage = customerService.getCustomerPrograms(customerMnemonic, pageParams);
 
-        return ResponseEntity.ok(PaginatedResult.<List<ProgramDTO>>builder()
-            .data(programsPage.get().map(programMapper::mapEntityToDTO).toList())
-            .meta(Map.of(
-                "pagination", Map.of(
-                    "isLastPage", programsPage.isLast(),
-                    "totalPages", programsPage.getTotalPages()
-                )
-            ))
-            .build());
-    }
+    return ResponseEntity.ok(PaginatedResult.<List<ProgramDTO>>builder()
+      .data(programsPage.get().map(programMapper::mapEntityToDTO).toList())
+      .meta(Map.of(
+        "pagination", Map.of(
+          "isLastPage", programsPage.isLast(),
+          "totalPages", programsPage.getTotalPages()
+        )
+      ))
+      .build());
+  }
 }

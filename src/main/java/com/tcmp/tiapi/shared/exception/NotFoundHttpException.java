@@ -6,7 +6,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class NotFoundHttpException extends HttpClientErrorException {
-    public NotFoundHttpException(String statusText) {
-        super(HttpStatus.NOT_FOUND, statusText);
-    }
+  public NotFoundHttpException(String statusText) {
+    super(HttpStatus.NOT_FOUND, statusText);
+  }
 }

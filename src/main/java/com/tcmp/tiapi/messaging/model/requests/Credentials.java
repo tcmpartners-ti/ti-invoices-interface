@@ -1,6 +1,9 @@
 package com.tcmp.tiapi.messaging.model.requests;
 
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,15 +16,15 @@ import lombok.NoArgsConstructor;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Credentials {
-    @XmlElement(name = "Name")
-    private String name;
+  @XmlElement(name = "Name")
+  private String name;
 
-    @XmlElement(name = "Password")
-    private String password;
+  @XmlElement(name = "Password")
+  private String password;
 
-    @XmlElement(name = "Certificate")
-    private String certificate;
+  @XmlElement(name = "Certificate")
+  private String certificate;
 
-    @XmlElement(name = "Digest")
-    private String digest;
+  @XmlElement(name = "Digest")
+  private String digest;
 }

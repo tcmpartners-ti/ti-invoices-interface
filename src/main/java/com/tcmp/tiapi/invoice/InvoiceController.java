@@ -18,31 +18,31 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Tag(name = "Invoices", description = "Defines the invoices operations.")
 public class InvoiceController {
-    private final InvoiceService invoiceService;
+  private final InvoiceService invoiceService;
 
-    private final InvoiceMapper invoiceMapper;
+  private final InvoiceMapper invoiceMapper;
 
-    // IMPORTANT: Get operations are already defined.
+  // IMPORTANT: Get operations are already defined.
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(description = "Create a single invoice.")
-    public ResponseEntity<InvoiceCreatedDTO> createInvoice(@Valid @RequestBody InvoiceCreationDTO invoiceDTO) {
-        CreateInvoiceEventMessage invoice = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
-        String createdInvoiceUuid = invoiceService.sendAndReceiveInvoiceUUID(invoice);
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Create a single invoice.")
+  public ResponseEntity<InvoiceCreatedDTO> createInvoice(@Valid @RequestBody InvoiceCreationDTO invoiceDTO) {
+    CreateInvoiceEventMessage invoice = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
+    String createdInvoiceUuid = invoiceService.sendAndReceiveInvoiceUUID(invoice);
 
-        return ResponseEntity.ok(InvoiceCreatedDTO.builder()
-                .message("Invoice sent to be created.")
-                .invoice(new InvoiceCreatedDTO.InvoiceDTO(createdInvoiceUuid))
-                .build());
-    }
+    return ResponseEntity.ok(InvoiceCreatedDTO.builder()
+      .message("Invoice sent to be created.")
+      .invoice(new InvoiceCreatedDTO.InvoiceDTO(createdInvoiceUuid))
+      .build());
+  }
 
-    @PostMapping(value = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(description = "Create multiple invoices.")
-    public ResponseEntity<InvoicesCreatedDTO> createInvoicesBulk(@RequestParam MultipartFile invoicesFile) {
-        invoiceService.createMultipleInvoices(invoicesFile);
+  @PostMapping(value = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Create multiple invoices.")
+  public ResponseEntity<InvoicesCreatedDTO> createInvoicesBulk(@RequestParam MultipartFile invoicesFile) {
+    invoiceService.createMultipleInvoices(invoicesFile);
 
-        return ResponseEntity.ok(InvoicesCreatedDTO.builder()
-                .message("Invoices have been sent to be created.")
-                .build());
-    }
+    return ResponseEntity.ok(InvoicesCreatedDTO.builder()
+      .message("Invoices have been sent to be created.")
+      .build());
+  }
 }

@@ -11,28 +11,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 class CustomerRepositoryTest {
-    @Autowired
-    private CustomerRepository testedCustomerRepository;
+  @Autowired
+  private CustomerRepository testedCustomerRepository;
 
-    @AfterEach
-    void tearDown() {
-        testedCustomerRepository.deleteAll();
-    }
+  @AfterEach
+  void tearDown() {
+    testedCustomerRepository.deleteAll();
+  }
 
-    @Test
-    void itShouldCheckIfCustomerExistsByMnemonic() {
-        String mnemonic = "1733466420001";
+  @Test
+  void itShouldCheckIfCustomerExistsByMnemonic() {
+    String mnemonic = "1733466420001";
 
-        testedCustomerRepository.save(Customer.builder()
-                .id(CustomerId.builder()
-                        .sourceBankingBusinessCode("SBB123")
-                        .mnemonic(mnemonic).build())
-                .fullName("Customer 123")
-                // Other fields set as null for this test
-                .build());
+    testedCustomerRepository.save(Customer.builder()
+      .id(CustomerId.builder()
+        .sourceBankingBusinessCode("SBB123")
+        .mnemonic(mnemonic).build())
+      .fullName("Customer 123")
+      // Other fields set as null for this test
+      .build());
 
-        boolean expected = testedCustomerRepository.existsByIdMnemonic(mnemonic);
+    boolean expected = testedCustomerRepository.existsByIdMnemonic(mnemonic);
 
-        assertThat(expected).isTrue();
-    }
+    assertThat(expected).isTrue();
+  }
 }

@@ -8,7 +8,7 @@ import java.util.Map;
 @Data
 @Builder
 public class PaginatedResult<T> {
-    private T data;
+  private T data;
 
-    private Map<String, Object> meta;
+  private Map<String, Object> meta;
 }

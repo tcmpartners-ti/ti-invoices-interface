@@ -8,14 +8,14 @@ import java.util.Objects;
 
 @Converter
 public class DatabaseProgramStatusConverter implements AttributeConverter<ProgramStatus, String> {
-    @Override
-    public String convertToDatabaseColumn(ProgramStatus status) {
-        return Objects.requireNonNullElse(status, ProgramStatus.INACTIVE).getValue();
+  @Override
+  public String convertToDatabaseColumn(ProgramStatus status) {
+    return Objects.requireNonNullElse(status, ProgramStatus.INACTIVE).getValue();
 
-    }
+  }
 
-    @Override
-    public ProgramStatus convertToEntityAttribute(String dbData) {
-        return ProgramStatus.from(dbData);
-    }
+  @Override
+  public ProgramStatus convertToEntityAttribute(String dbData) {
+    return ProgramStatus.from(dbData);
+  }
 }

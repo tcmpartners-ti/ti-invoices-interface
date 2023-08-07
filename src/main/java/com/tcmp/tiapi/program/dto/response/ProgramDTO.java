@@ -14,19 +14,19 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProgramDTO {
-    private String id;
+  private String id;
 
-    private String name;
+  private String name;
 
-    private ProgramCustomerDTO customer;
+  private ProgramCustomerDTO customer;
 
-    private LocalDate startDate;
+  private LocalDate startDate;
 
-    private LocalDate endDate;
+  private LocalDate endDate;
 
-    private String type;
+  private String type;
 
-    private CurrencyAmountDTO creditLimit;
+  private CurrencyAmountDTO creditLimit;
 
-    private String status;
+  private String status;
 }

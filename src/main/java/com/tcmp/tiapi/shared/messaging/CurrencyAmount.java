@@ -1,7 +1,10 @@
 package com.tcmp.tiapi.shared.messaging;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +20,9 @@ import java.math.BigDecimal;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CurrencyAmount implements Serializable {
-    @XmlElement(name = "Amount", namespace = TINamespace.COMMON)
-    private BigDecimal amount;
+  @XmlElement(name = "Amount", namespace = TINamespace.COMMON)
+  private BigDecimal amount;
 
-    @XmlElement(name = "Currency", namespace = TINamespace.COMMON)
-    private String currency;
+  @XmlElement(name = "Currency", namespace = TINamespace.COMMON)
+  private String currency;
 }

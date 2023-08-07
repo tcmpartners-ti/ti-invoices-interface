@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 @Builder
 public class InvoicesCreatedDTO {
-    @Schema(name = "message", description = "Operation result message.")
-    private String message;
+  @Schema(name = "message", description = "Operation result message.")
+  private String message;
 }

@@ -1,7 +1,10 @@
 package com.tcmp.tiapi.invoice.messaging;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +19,9 @@ import java.io.Serializable;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class InvoiceContext implements Serializable {
-    @XmlElement(name = "Customer", namespace = TINamespace.COMMON)
-    private String customer;
+  @XmlElement(name = "Customer", namespace = TINamespace.COMMON)
+  private String customer;
 
-    @XmlElement(name = "TheirReference", namespace = TINamespace.COMMON)
-    private String theirReference;
+  @XmlElement(name = "TheirReference", namespace = TINamespace.COMMON)
+  private String theirReference;
 }

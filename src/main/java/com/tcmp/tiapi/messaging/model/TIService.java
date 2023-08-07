@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TIService {
-    TRADE_INNOVATION(TIService.TRADE_INNOVATION_VALUE);
+  TRADE_INNOVATION(TIService.TRADE_INNOVATION_VALUE);
 
-    public static final String TRADE_INNOVATION_VALUE = "TI";
+  public static final String TRADE_INNOVATION_VALUE = "TI";
 
-    private final String value;
+  private final String value;
 }

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, CustomerId> {
-    boolean existsByIdMnemonic(String customerMnemonic);
+  boolean existsByIdMnemonic(String customerMnemonic);
 }

@@ -6,7 +6,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class InvalidFileHttpException extends HttpClientErrorException {
-    public InvalidFileHttpException(String statusText) {
-        super(HttpStatus.BAD_REQUEST, statusText);
-    }
+  public InvalidFileHttpException(String statusText) {
+    super(HttpStatus.BAD_REQUEST, statusText);
+  }
 }

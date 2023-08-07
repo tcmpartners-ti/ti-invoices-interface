@@ -12,16 +12,16 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
-    private final CustomerRepository customerRepository;
-    private final ProgramRepository programRepository;
+  private final CustomerRepository customerRepository;
+  private final ProgramRepository programRepository;
 
-    public Page<Program> getCustomerPrograms(String customerMnemonic, PageParams pageParams) {
-        if (!customerRepository.existsByIdMnemonic(customerMnemonic)) {
-            throw new NotFoundHttpException(
-                    String.format("Could not find customer with mnemonic %s.", customerMnemonic));
-        }
-
-        return programRepository.findAllByCustomerMnemonic(
-                customerMnemonic, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+  public Page<Program> getCustomerPrograms(String customerMnemonic, PageParams pageParams) {
+    if (!customerRepository.existsByIdMnemonic(customerMnemonic)) {
+      throw new NotFoundHttpException(
+        String.format("Could not find customer with mnemonic %s.", customerMnemonic));
     }
+
+    return programRepository.findAllByCustomerMnemonic(
+      customerMnemonic, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+  }
 }

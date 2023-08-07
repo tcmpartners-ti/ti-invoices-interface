@@ -11,18 +11,18 @@ import java.util.Optional;
  * XML.
  */
 public class NamespaceFixerProcessor implements Processor {
-    @Override
-    public void process(Exchange exchange) {
-        Optional<String> body = Optional.ofNullable(exchange.getIn().getBody(String.class));
+  @Override
+  public void process(Exchange exchange) {
+    Optional<String> body = Optional.ofNullable(exchange.getIn().getBody(String.class));
 
-        body.ifPresent(originalXml -> {
-            String cleanedUpXml = removePrefixFromDefaultNamespace(originalXml);
-            exchange.getIn().setBody(cleanedUpXml);
-        });
-    }
+    body.ifPresent(originalXml -> {
+      String cleanedUpXml = removePrefixFromDefaultNamespace(originalXml);
+      exchange.getIn().setBody(cleanedUpXml);
+    });
+  }
 
-    private String removePrefixFromDefaultNamespace(String originalXml) {
-        String incorrectPrefix = ":" + TIMessagingConfig.CONTROL_PREFIX;
-        return originalXml.replaceFirst(incorrectPrefix, "");
-    }
+  private String removePrefixFromDefaultNamespace(String originalXml) {
+    String incorrectPrefix = ":" + TIMessagingConfig.CONTROL_PREFIX;
+    return originalXml.replaceFirst(incorrectPrefix, "");
+  }
 }

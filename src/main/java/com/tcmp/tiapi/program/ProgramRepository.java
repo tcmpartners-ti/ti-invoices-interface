@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProgramRepository extends JpaRepository<Program, Long> {
-    Optional<Program> findById(String programUuid);
+  Optional<Program> findById(String programUuid);
 
-    Page<Program> findAllByCustomerMnemonic(String customerMnemonic, Pageable pageable);
+  Page<Program> findAllByCustomerMnemonic(String customerMnemonic, Pageable pageable);
 }

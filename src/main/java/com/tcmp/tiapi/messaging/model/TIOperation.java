@@ -10,11 +10,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TIOperation {
-    SCF_PROGRAMME(TIOperation.SCF_PROGRAMME_VALUE),
-    CREATE_INVOICE(TIOperation.CREATE_INVOICE_VALUE);
+  SCF_PROGRAMME(TIOperation.SCF_PROGRAMME_VALUE),
+  CREATE_INVOICE(TIOperation.CREATE_INVOICE_VALUE);
 
-    public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
-    public static final String SCF_PROGRAMME_VALUE = "SCFProgramme";
+  public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
+  public static final String SCF_PROGRAMME_VALUE = "SCFProgramme";
 
-    private final String value;
+  private final String value;
 }

@@ -6,8 +6,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class InvoiceConfiguration {
-    @Bean
-    public InvoiceMapper invoiceMapper() {
-        return Mappers.getMapper(InvoiceMapper.class);
-    }
+  @Bean
+  public InvoiceMapper invoiceMapper() {
+    return Mappers.getMapper(InvoiceMapper.class);
+  }
 }

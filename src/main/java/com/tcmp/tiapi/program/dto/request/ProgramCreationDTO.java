@@ -14,23 +14,23 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProgramCreationDTO {
-    @NotBlank(message = "Program description is required.")
-    @Size(min = 1, max = 60, message = "Program description must be between 1 and 60 characters.")
-    private String description;
+  @NotBlank(message = "Program description is required.")
+  @Size(min = 1, max = 60, message = "Program description must be between 1 and 60 characters.")
+  private String description;
 
-    private ProgramCustomerDTO customer;
+  private ProgramCustomerDTO customer;
 
-    @FutureOrPresent(message = "Date must be present or future")
-    private LocalDate startDate;
+  @FutureOrPresent(message = "Date must be present or future")
+  private LocalDate startDate;
 
-    @Future(message = "Date must be in the future")
-    private LocalDate endDate;
+  @Future(message = "Date must be in the future")
+  private LocalDate endDate;
 
-    @Pattern(regexp = "[BS]", message = "Type must be 'B' or 'S' (Buyer or Seller centric)")
-    private String type;
+  @Pattern(regexp = "[BS]", message = "Type must be 'B' or 'S' (Buyer or Seller centric)")
+  private String type;
 
-    private CurrencyAmountDTO creditLimit;
+  private CurrencyAmountDTO creditLimit;
 
-    @Pattern(regexp = "[ABIR]", message = "Status must be either 'A', 'B', 'I' or 'R' ('Active', 'Blocked', 'Inactive' or 'Referred')")
-    private String status;
+  @Pattern(regexp = "[ABIR]", message = "Status must be either 'A', 'B', 'I' or 'R' ('Active', 'Blocked', 'Inactive' or 'Referred')")
+  private String status;
 }

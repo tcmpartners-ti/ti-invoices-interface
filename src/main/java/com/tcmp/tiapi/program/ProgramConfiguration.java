@@ -8,17 +8,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ProgramConfiguration {
-    @Bean
-    public ProgramMapper programMapper() {
-        return Mappers.getMapper(ProgramMapper.class);
-    }
+  @Bean
+  public ProgramMapper programMapper() {
+    return Mappers.getMapper(ProgramMapper.class);
+  }
 
-    @Bean
-    ProgramRouter programRouter(
-        JaxbDataFormat jaxbDataFormat,
-        @Value("${route.program.create.single.from}") String uriFrom,
-        @Value("${route.program.create.single.to}") String uriTo
-    ) {
-        return new ProgramRouter(jaxbDataFormat, uriFrom, uriTo);
-    }
+  @Bean
+  ProgramRouter programRouter(
+    JaxbDataFormat jaxbDataFormat,
+    @Value("${route.program.create.single.from}") String uriFrom,
+    @Value("${route.program.create.single.to}") String uriTo
+  ) {
+    return new ProgramRouter(jaxbDataFormat, uriFrom, uriTo);
+  }
 }

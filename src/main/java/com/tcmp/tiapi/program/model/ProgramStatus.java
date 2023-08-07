@@ -6,22 +6,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum ProgramStatus {
-    BLOCKED("B", "BLOCKED"),
-    REFERRED("R", "REFERRED"),
-    INACTIVE("I","INACTIVE" ),
-    ACTIVE("A", "ACTIVE");
+  BLOCKED("B", "BLOCKED"),
+  REFERRED("R", "REFERRED"),
+  INACTIVE("I", "INACTIVE"),
+  ACTIVE("A", "ACTIVE");
 
-    private final String value;
+  private final String value;
 
-    @Getter private final String display;
+  @Getter
+  private final String display;
 
-    public static ProgramStatus from(String value) {
-        for (var s : ProgramStatus.values()) {
-            if (s.value.equals(value)) {
-                return s;
-            }
-        }
-
-        throw new IllegalArgumentException("Invalid value for Program Status enum");
+  public static ProgramStatus from(String value) {
+    for (var s : ProgramStatus.values()) {
+      if (s.value.equals(value)) {
+        return s;
+      }
     }
+
+    throw new IllegalArgumentException("Invalid value for Program Status enum");
+  }
 }

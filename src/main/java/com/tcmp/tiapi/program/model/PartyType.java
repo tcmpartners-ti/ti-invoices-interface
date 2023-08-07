@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum PartyType {
-    BUYER("B"),
-    SELLER("S");
+  BUYER("B"),
+  SELLER("S");
 
-    private final String value;
+  private final String value;
 }

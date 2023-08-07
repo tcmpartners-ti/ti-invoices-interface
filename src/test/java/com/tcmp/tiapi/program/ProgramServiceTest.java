@@ -22,97 +22,97 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
-    @Mock
-    private ProgramRepository programRepository;
-    @Mock
-    private ProducerTemplate producerTemplate;
+  @Mock
+  private ProgramRepository programRepository;
+  @Mock
+  private ProducerTemplate producerTemplate;
 
-    private ProgramService testedProgramService;
+  private ProgramService testedProgramService;
 
-    @BeforeEach
-    void setUp() {
-        testedProgramService = new ProgramService(programRepository, producerTemplate);
-    }
+  @BeforeEach
+  void setUp() {
+    testedProgramService = new ProgramService(programRepository, producerTemplate);
+  }
 
-    @Test
-    void itCanGetProgramByUuid() {
-        // Given
-        String programUuid = "mockUuid";
+  @Test
+  void itCanGetProgramByUuid() {
+    // Given
+    String programUuid = "mockUuid";
 
-        // When
-        when(programRepository.findById(anyString()))
-                .thenReturn(Optional.of(Program.builder().pk(1L).build()));
+    // When
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(Program.builder().pk(1L).build()));
 
-        testedProgramService.getProgramById(programUuid);
+    testedProgramService.getProgramById(programUuid);
 
-        //Then
-        verify(programRepository).findById(programUuid);
-    }
+    //Then
+    verify(programRepository).findById(programUuid);
+  }
 
-    @Test
-    void itShouldNotChangeProgramUuidWhenInvokingRepository() {
-        // Given
-        String expectedProgramUuid = "mockUuid";
+  @Test
+  void itShouldNotChangeProgramUuidWhenInvokingRepository() {
+    // Given
+    String expectedProgramUuid = "mockUuid";
 
-        // When
-        when(programRepository.findById(anyString()))
-                .thenReturn(Optional.of(Program.builder().pk(1L).build()));
-        testedProgramService.getProgramById(expectedProgramUuid);
+    // When
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(Program.builder().pk(1L).build()));
+    testedProgramService.getProgramById(expectedProgramUuid);
 
-        // Then
-        ArgumentCaptor<String> uuidCaptor = ArgumentCaptor.forClass(String.class);
+    // Then
+    ArgumentCaptor<String> uuidCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(programRepository).findById(uuidCaptor.capture());
-        String capturedUuid = uuidCaptor.getValue();
+    verify(programRepository).findById(uuidCaptor.capture());
+    String capturedUuid = uuidCaptor.getValue();
 
-        assertEquals(capturedUuid, expectedProgramUuid);
-    }
+    assertEquals(capturedUuid, expectedProgramUuid);
+  }
 
-    @Test
-    void itShouldThrowExceptionWhenProgramNotFoundByUuid() {
-        String uuid = "mockUuid";
+  @Test
+  void itShouldThrowExceptionWhenProgramNotFoundByUuid() {
+    String uuid = "mockUuid";
 
-        // When
-        when(programRepository.findById(uuid))
-                .thenReturn(Optional.empty());
+    // When
+    when(programRepository.findById(uuid))
+      .thenReturn(Optional.empty());
 
-        // Then
-        assertThrows(NotFoundHttpException.class,
-                () -> testedProgramService.getProgramById(uuid));
-    }
+    // Then
+    assertThrows(NotFoundHttpException.class,
+      () -> testedProgramService.getProgramById(uuid));
+  }
 
-    @Test
-    void itShouldWrapProgrammeMessageAsServiceRequest() {
-        // Given
-        String expectedInvokedRoute = "direct:createProgramInTI";
-        String expectedProgrammeId = "PROG123";
-        String expectedService = TIService.TRADE_INNOVATION.getValue();
-        String expectedOperation = TIOperation.SCF_PROGRAMME.getValue();
+  @Test
+  void itShouldWrapProgrammeMessageAsServiceRequest() {
+    // Given
+    String expectedInvokedRoute = "direct:createProgramInTI";
+    String expectedProgrammeId = "PROG123";
+    String expectedService = TIService.TRADE_INNOVATION.getValue();
+    String expectedOperation = TIOperation.SCF_PROGRAMME.getValue();
 
-        SCFProgrammeMessage programmeMessage = SCFProgrammeMessage.builder()
-                .id(expectedProgrammeId)
-                .build();
+    SCFProgrammeMessage programmeMessage = SCFProgrammeMessage.builder()
+      .id(expectedProgrammeId)
+      .build();
 
-        // When
-        testedProgramService.sendAndReceiveProgramUUID(programmeMessage);
+    // When
+    testedProgramService.sendAndReceiveProgramUUID(programmeMessage);
 
-        // Then
-        ArgumentCaptor<String> routeCaptor = ArgumentCaptor.forClass(String.class);
-        //  Can't fix this deep generic warning.
-        ArgumentCaptor<ServiceRequest<SCFProgrammeMessage>> serviceRequestCaptor =
-                ArgumentCaptor.forClass(ServiceRequest.class);
+    // Then
+    ArgumentCaptor<String> routeCaptor = ArgumentCaptor.forClass(String.class);
+    //  Can't fix this deep generic warning.
+    ArgumentCaptor<ServiceRequest<SCFProgrammeMessage>> serviceRequestCaptor =
+      ArgumentCaptor.forClass(ServiceRequest.class);
 
-        verify(producerTemplate).requestBody(
-                routeCaptor.capture(), serviceRequestCaptor.capture(), any());
+    verify(producerTemplate).requestBody(
+      routeCaptor.capture(), serviceRequestCaptor.capture(), any());
 
-        String actualInvokedRoute = routeCaptor.getValue();
-        String actualProgrammeId = serviceRequestCaptor.getValue().getBody().getId();
-        String actualService = serviceRequestCaptor.getValue().getHeader().getService();
-        String actualOperation = serviceRequestCaptor.getValue().getHeader().getOperation();
+    String actualInvokedRoute = routeCaptor.getValue();
+    String actualProgrammeId = serviceRequestCaptor.getValue().getBody().getId();
+    String actualService = serviceRequestCaptor.getValue().getHeader().getService();
+    String actualOperation = serviceRequestCaptor.getValue().getHeader().getOperation();
 
-        assertEquals(expectedInvokedRoute, actualInvokedRoute);
-        assertEquals(expectedProgrammeId, actualProgrammeId);
-        assertEquals(expectedService, actualService);
-        assertEquals(expectedOperation, actualOperation);
-    }
+    assertEquals(expectedInvokedRoute, actualInvokedRoute);
+    assertEquals(expectedProgrammeId, actualProgrammeId);
+    assertEquals(expectedService, actualService);
+    assertEquals(expectedOperation, actualOperation);
+  }
 }

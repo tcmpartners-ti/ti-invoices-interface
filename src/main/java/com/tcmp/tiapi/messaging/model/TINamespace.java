@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TINamespace {
-    public static final String SCHEMA_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
+  public static final String SCHEMA_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
 
-    public static final String MESSAGES = "urn:messages.service.ti.apps.tiplus2.misys.com";
-    public static final String COMMON = "urn:common.service.ti.apps.tiplus2.misys.com";
-    public static final String CONTROL = "urn:control.services.tiplus2.misys.com";
+  public static final String MESSAGES = "urn:messages.service.ti.apps.tiplus2.misys.com";
+  public static final String COMMON = "urn:common.service.ti.apps.tiplus2.misys.com";
+  public static final String CONTROL = "urn:control.services.tiplus2.misys.com";
 }

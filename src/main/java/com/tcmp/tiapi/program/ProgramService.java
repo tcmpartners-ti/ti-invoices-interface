@@ -15,22 +15,22 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ProgramService {
-    private final ProgramRepository programRepository;
-    private final ProducerTemplate producerTemplate;
+  private final ProgramRepository programRepository;
+  private final ProducerTemplate producerTemplate;
 
-    @Value("${route.program.create.single.from}")
-    private String uriFrom;
+  @Value("${route.program.create.single.from}")
+  private String uriFrom;
 
-    public Program getProgramById(String programId) {
-        return programRepository.findById(programId)
-                .orElseThrow(() -> new NotFoundHttpException(
-                        String.format("Could not find a program with id %s.", programId)));
-    }
+  public Program getProgramById(String programId) {
+    return programRepository.findById(programId)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find a program with id %s.", programId)));
+  }
 
-    public String sendAndReceiveProgramUUID(SCFProgrammeMessage programmeMessage) {
-        ServiceRequest<SCFProgrammeMessage> createProgramRequest =
-            TIServiceRequestWrapper.wrapRequest(TIService.TRADE_INNOVATION, TIOperation.SCF_PROGRAMME, programmeMessage);
+  public String sendAndReceiveProgramUUID(SCFProgrammeMessage programmeMessage) {
+    ServiceRequest<SCFProgrammeMessage> createProgramRequest =
+      TIServiceRequestWrapper.wrapRequest(TIService.TRADE_INNOVATION, TIOperation.SCF_PROGRAMME, programmeMessage);
 
-        return producerTemplate.requestBody(uriFrom, createProgramRequest, String.class);
-    }
+    return producerTemplate.requestBody(uriFrom, createProgramRequest, String.class);
+  }
 }
