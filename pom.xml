@@ -22,7 +22,7 @@
         <java.version>17</java.version>
         <lombok.version>1.18.28</lombok.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
-        <camel.version>4.0.0-RC2</camel.version>
+        <camel.version>4.0.0</camel.version>
         <openapi.version>2.0.4</openapi.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -30,7 +30,6 @@
         <!-- Azure properties -->
         <azure.functions.maven.plugin.version>1.26.0</azure.functions.maven.plugin.version>
         <spring-boot-thin-layout.version>1.0.30.RELEASE</spring-boot-thin-layout.version>
-        <spring-cloud-function-adapter-azure-web.version>4.1.0-SNAPSHOT</spring-cloud-function-adapter-azure-web.version>
 
         <start-class>com.tcmp.tiapi.TIInvoicesAPIApplication</start-class>
 
@@ -67,7 +66,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-function-adapter-azure-web</artifactId>
-            <version>${spring-cloud-function-adapter-azure-web.version}</version>
+            <version>4.1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Camel -->
@@ -77,27 +76,22 @@
             <version>${camel.version}</version>
         </dependency>
         <dependency>
+            <!-- ActiveMQ -->
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-activemq-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <!-- XML -->
             <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-jaxb-starter</artifactId>
             <version>${camel.version}</version>
         </dependency>
         <dependency>
-            <!-- For ActiveMQ -->
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-activemq</artifactId>
-            <version>${camel.version}</version>
-        </dependency>
-        <dependency>
-            <!-- For CSV processing -->
+            <!-- CSV -->
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-bindy</artifactId>
             <version>${camel.version}</version>
-        </dependency>
-
-        <!-- Messaging -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-activemq</artifactId>
         </dependency>
 
         <!-- Mapping -->
