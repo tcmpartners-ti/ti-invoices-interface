@@ -1,20 +1,14 @@
 spring:
-  servlet:
-    multipart:
-      # Todo: verify these sizes.
-      max-file-size: 5MB
-      max-request-size: 5MB
-
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: true
   output:
     ansi:
       enabled: ALWAYS
 
-  jpa:
-    open-in-view: true
-
 springdoc:
   api-docs:
     enabled: true
-
   swagger-ui:
     path: '/swagger.html'

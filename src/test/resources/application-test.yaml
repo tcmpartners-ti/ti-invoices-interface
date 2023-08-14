@@ -10,5 +10,15 @@ spring:
     hibernate:
       ddl-auto: create-drop
 
+invoice:
+  route:
+    create:
+      queue: "DEV.TEST"
+      from: "direct:createInvoiceInTI"
+      to: "activemq:queue:${invoice.route.create.queue}"
 
-
+program:
+  route:
+    create:
+      from: "direct:createProgramInTI"
+      to: "mock:programQueue"

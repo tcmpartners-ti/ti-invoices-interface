@@ -1,12 +1,30 @@
 spring:
   datasource:
-    # Local DB
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:<DB_PORT>/<DB_NAME>
-    username: <DB_USER>
-    password: <DB_PASSWORD>
+    host: "<...>"
+    port: "<...>"
+    username: "<...>"
+    password: "<...>"
+    url: "jdbc:sqlserver://${spring.datasource.host}:${spring.datasource.port};database=TIZONE1;encrypt=true;trustServerCertificate=true;"
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   activemq:
-    user: <MQ_USER>
-    password: <MQ_PASS>
-    broker-url: tcp://localhost:61616
+    host: "<...>"
+    port: "<...>"
+    user: "<...>"
+    password: "<...>"
+    broker-url: "tcp://${spring.activemq.host}:${spring.activemq.port}"
+    packages:
+      trust-all: true
+
+invoice:
+  route:
+    create:
+      queue: "DEV.TEST"
+      from: "direct:createInvoiceInTI"
+      to: "activemq:queue:${invoice.route.create.queue}"
+
+program:
+  route:
+    create:
+      from: "direct:createProgramInTI"
+      to: "mock:programQueue"
