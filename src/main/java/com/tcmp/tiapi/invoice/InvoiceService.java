@@ -1,11 +1,13 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
+import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ExchangePattern;
@@ -23,7 +25,15 @@ import java.util.UUID;
 @Slf4j
 public class InvoiceService {
   private final ProducerTemplate producerTemplate;
+
   private final InvoiceConfiguration invoiceConfiguration;
+  private final InvoiceRepository invoiceRepository;
+
+  public InvoiceMaster getInvoiceByReference(String reference) {
+    return invoiceRepository.findByReference(reference)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find invoice with reference %s.", reference)));
+  }
 
   public String sendAndReceiveInvoiceUUID(CreateInvoiceEventMessage createInvoiceEventMessage) {
     ServiceRequest<CreateInvoiceEventMessage> createInvoiceEventMessageServiceRequest =

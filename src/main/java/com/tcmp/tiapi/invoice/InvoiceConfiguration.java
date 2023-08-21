@@ -22,8 +22,9 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceRouter invoiceRouter() {
+  public InvoiceRouter invoiceRouter(JaxbDataFormat jaxbDataFormat) {
     return new InvoiceRouter(
+      jaxbDataFormat,
       uriCreateFrom,
       uriCreateTo
     );

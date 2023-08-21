@@ -2,8 +2,10 @@ package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
+import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +24,13 @@ public class InvoiceController {
 
   private final InvoiceMapper invoiceMapper;
 
-  // IMPORTANT: Get operations are already defined.
+  @GetMapping(path = "{invoiceReference}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get an invoice by its reference.")
+  public ResponseEntity<InvoiceDTO> getInvoiceByReference(@PathVariable String invoiceReference) {
+    InvoiceMaster invoice = invoiceService.getInvoiceByReference(invoiceReference);
+
+    return ResponseEntity.ok(invoiceMapper.mapEntityToDTO(invoice));
+  }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create a single invoice.")
@@ -36,7 +44,7 @@ public class InvoiceController {
       .build());
   }
 
-  @PostMapping(value = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(path = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices.")
   public ResponseEntity<InvoicesCreatedDTO> createInvoicesBulk(@RequestParam MultipartFile invoicesFile) {
     invoiceService.createMultipleInvoices(invoicesFile);
