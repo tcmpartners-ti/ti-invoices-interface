@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("invoices")
 @RequiredArgsConstructor
 @Tag(name = "Invoices", description = "Defines the invoices operations.")
+@Slf4j
 public class InvoiceController {
   private final InvoiceService invoiceService;
 
@@ -27,6 +29,8 @@ public class InvoiceController {
   @GetMapping(path = "{invoiceReference}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its reference.")
   public ResponseEntity<InvoiceDTO> getInvoiceByReference(@PathVariable String invoiceReference) {
+    log.info("Endpoint: /invoices/{}", invoiceReference);
+
     InvoiceMaster invoice = invoiceService.getInvoiceByReference(invoiceReference);
 
     return ResponseEntity.ok(invoiceMapper.mapEntityToDTO(invoice));
@@ -36,11 +40,11 @@ public class InvoiceController {
   @Operation(description = "Create a single invoice.")
   public ResponseEntity<InvoiceCreatedDTO> createInvoice(@Valid @RequestBody InvoiceCreationDTO invoiceDTO) {
     CreateInvoiceEventMessage invoice = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
-    String createdInvoiceUuid = invoiceService.sendAndReceiveInvoiceUUID(invoice);
+    String createdInvoiceCorrelationId = invoiceService.sendInvoiceAndGetCorrelationId(invoice);
 
     return ResponseEntity.ok(InvoiceCreatedDTO.builder()
       .message("Invoice sent to be created.")
-      .invoice(new InvoiceCreatedDTO.InvoiceDTO(createdInvoiceUuid))
+      .invoice(new InvoiceCreatedDTO.InvoiceDTO(createdInvoiceCorrelationId))
       .build());
   }
 
@@ -50,7 +54,7 @@ public class InvoiceController {
     invoiceService.createMultipleInvoices(invoicesFile);
 
     return ResponseEntity.ok(InvoicesCreatedDTO.builder()
-      .message("Invoices have been sent to be created.")
+      .message("Invoices sent to be created.")
       .build());
   }
 }

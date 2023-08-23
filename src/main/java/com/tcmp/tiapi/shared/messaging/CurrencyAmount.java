@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -20,8 +19,9 @@ import java.math.BigDecimal;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CurrencyAmount implements Serializable {
+  // Use string due to specific format required by TI (#,##0.0)
   @XmlElement(name = "Amount", namespace = TINamespace.COMMON)
-  private BigDecimal amount;
+  private String amount;
 
   @XmlElement(name = "Currency", namespace = TINamespace.COMMON)
   private String currency;

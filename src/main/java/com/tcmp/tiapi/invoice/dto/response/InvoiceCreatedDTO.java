@@ -18,6 +18,6 @@ public class InvoiceCreatedDTO {
   @AllArgsConstructor
   public static class InvoiceDTO {
     @Schema(name = "id", description = "Generated UUID. (TBD)")
-    private String id;
+    private String correlationId;
   }
 }

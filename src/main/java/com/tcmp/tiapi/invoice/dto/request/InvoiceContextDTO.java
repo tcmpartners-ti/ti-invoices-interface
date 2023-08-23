@@ -22,4 +22,14 @@ public class InvoiceContextDTO {
   @Size(min = 1, max = 34, message = "Their reference must be between 1 and 34 characters long")
   @Schema(name = "theirReference", description = "Sender's reference for this transaction (if known).", minLength = 1, maxLength = 34)
   private String theirReference;
+
+  @NotBlank(message = "Input branch is required")
+  @Size(min = 1, max = 8, message = "Input branch must be between 1 and 8 characters long")
+  @Schema(name = "branch", description = "The input branch for the transaction.", minLength = 1, maxLength = 8)
+  private String branch;
+
+  @NotBlank(message = "Behalf of branch is required")
+  @Size(min = 1, max = 8, message = "Behalf of branch must be between 1 and 8 characters long")
+  @Schema(name = "behalfOfBranch", description = "The behalf of branch for the transaction.", minLength = 1, maxLength = 8)
+  private String behalfOfBranch;
 }

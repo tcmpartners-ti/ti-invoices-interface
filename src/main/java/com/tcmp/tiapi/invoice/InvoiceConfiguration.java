@@ -13,8 +13,11 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.create.from}")
   private String uriCreateFrom;
 
-  @Value("${invoice.route.create.to}")
-  private String uriCreateTo;
+  @Value("${invoice.route.create.to-pub}")
+  private String uriCreateToPub;
+
+  @Value("${invoice.route.create.to-sub}")
+  private String uriCreateToSub;
 
   @Bean
   public InvoiceMapper invoiceMapper() {
@@ -26,7 +29,8 @@ public class InvoiceConfiguration {
     return new InvoiceRouter(
       jaxbDataFormat,
       uriCreateFrom,
-      uriCreateTo
+      uriCreateToPub,
+      uriCreateToSub
     );
   }
 }

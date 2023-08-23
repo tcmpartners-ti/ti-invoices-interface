@@ -26,9 +26,6 @@ public class CreateInvoiceEventMessage implements Serializable {
   @XmlElement(name = "Context", namespace = TINamespace.MESSAGES)
   private InvoiceContext context;
 
-  @XmlElement(name = "AnchorParty", namespace = TINamespace.MESSAGES)
-  private String anchorParty;
-
   @XmlElement(name = "Programme", namespace = TINamespace.MESSAGES)
   private String programme;
 
@@ -37,6 +34,9 @@ public class CreateInvoiceEventMessage implements Serializable {
 
   @XmlElement(name = "Buyer", namespace = TINamespace.MESSAGES)
   private String buyer;
+
+  @XmlElement(name = "AnchorParty", namespace = TINamespace.MESSAGES)
+  private String anchorParty;
 
   @XmlElement(name = "ReceivedOn", namespace = TINamespace.MESSAGES)
   @XmlJavaTypeAdapter(LocalDateAdapter.class)
