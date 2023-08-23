@@ -5,7 +5,7 @@ spring:
     username: "<...>"
     password: "<...>"
     url: "jdbc:sqlserver://${spring.datasource.host}:${spring.datasource.port};database=TIZONE1;encrypt=true;trustServerCertificate=true;"
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    driver-class-name: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
   activemq:
     host: "<...>"
@@ -17,16 +17,22 @@ spring:
       trust-all: true
 
   jpa:
+    database-platform: "org.hibernate.dialect.SQLServerDialect"
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.SQLServerDialect
+        dialect: "org.hibernate.dialect.SQLServerDialect"
 
 invoice:
   route:
     create:
-      queue: "DEV.TEST"
+      queue-pub:
+        name: "BP.DIGIBANK.TO.FTI"
+      queue-sub:
+        name: "BP.DIGIBANK.TO.FTI.REPLY"
+        jndi: "queue/digibankInIncomingReply"
       from: "direct:createInvoiceInTI"
-      to: "activemq:queue:${invoice.route.create.queue}"
+      to-pub: "activemq:queue:${invoice.route.create.queue-pub.name}?replyTo=${invoice.route.create.queue-sub.jndi}"
+      to-sub: "activemq:queue:${invoice.route.create.queue-sub.name}"
 
 program:
   route:

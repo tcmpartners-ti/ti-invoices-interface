@@ -19,9 +19,14 @@ spring:
 invoice:
   route:
     create:
-      queue: "DEV.TEST"
+      queue-pub:
+        name: "BP.DIGIBANK.TO.FTI"
+      queue-sub:
+        name: "BP.DIGIBANK.TO.FTI.REPLY"
+        jndi: "queue/digibankInIncomingReply"
       from: "direct:createInvoiceInTI"
-      to: "activemq:queue:${invoice.route.create.queue}"
+      to-pub: "activemq:queue:${invoice.route.create.queue-pub.name}?replyTo=${invoice.route.create.queue-sub.jndi}"
+      to-sub: "activemq:queue:${invoice.route.create.queue-sub.name}"
 
 program:
   route:
