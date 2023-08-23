@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: ${APPLICATION_ENV:dev}
   jpa:
     open-in-view: true
   output:
