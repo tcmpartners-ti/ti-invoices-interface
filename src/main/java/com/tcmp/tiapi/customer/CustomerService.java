@@ -15,8 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -43,14 +41,12 @@ public class CustomerService {
     }
 
     // Buyer is the anchor client.
-    List<Long> counterPartiesIds = counterPartyRepository.findByCustomerMnemonicAndRole(
-        customerMnemonic,
-        CounterPartyRole.BUYER.getValue()
-      )
-      .stream().map(CounterParty::getId)
-      .toList();
+    CounterParty counterParty = counterPartyRepository
+      .findByCustomerMnemonicAndRole(customerMnemonic, CounterPartyRole.BUYER.getValue())
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find counter party with mnemonic %s.", customerMnemonic)));
 
-    return invoiceRepository.findByBuyerIdIn(
-      counterPartiesIds, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+    return invoiceRepository.findByBuyerId(
+      counterParty.getId(), PageRequest.of(pageParams.getPage(), pageParams.getSize()));
   }
 }
