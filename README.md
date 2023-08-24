@@ -33,7 +33,7 @@ the default `RestControllers` from Spring.
 
 To start the project locally with azure functions
 ```shell
-./mvnw clean package -DskipTests=true && ./mvnw azure-functions:run
+./mvnw -U clean package -DskipTests=true && ./mvnw azure-functions:run
 ```
 
 ## Deploy to Azure Functions
