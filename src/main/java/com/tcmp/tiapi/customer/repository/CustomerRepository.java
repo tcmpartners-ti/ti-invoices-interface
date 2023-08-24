@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.customer;
+package com.tcmp.tiapi.customer.repository;
 
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.model.CustomerId;

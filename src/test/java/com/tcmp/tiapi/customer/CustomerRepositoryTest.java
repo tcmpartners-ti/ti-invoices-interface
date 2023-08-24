@@ -2,6 +2,7 @@ package com.tcmp.tiapi.customer;
 
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.model.CustomerId;
+import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
