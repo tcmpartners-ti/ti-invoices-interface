@@ -9,7 +9,9 @@ import com.tcmp.tiapi.messaging.utils.TILocaleNumberFormatUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = TILocaleNumberFormatUtil.class)
+import java.math.BigDecimal;
+
+@Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class})
 public interface InvoiceMapper {
 
   @Mapping(source = "id", target = "id")
@@ -33,25 +35,52 @@ public interface InvoiceMapper {
   @Mapping(source = "isDeferCharged", target = "isDeferCharged")
   @Mapping(source = "eligibilityReasonCode", target = "eligibilityReasonCode")
 
-  @Mapping(source = "faceValueAmount", target = "faceValue.amount")
+  @Mapping(
+    target = "faceValue.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getFaceValueAmount()))"
+  )
   @Mapping(source = "faceValueCurrencyCode", target = "faceValue.currency")
-  @Mapping(source = "totalPaidAmount", target = "totalPaid.amount")
+  @Mapping(
+    target = "totalPaid.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getTotalPaidAmount()))"
+  )
   @Mapping(source = "totalPaidCurrencyCode", target = "totalPaid.currency")
-  @Mapping(source = "outstandingAmount", target = "outstanding.amount")
+  @Mapping(
+    target = "outstanding.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getFaceValueAmount()))"
+  )
   @Mapping(source = "outstandingAmountCurrencyCode", target = "outstanding.currency")
-  @Mapping(source = "advanceAvailableAmount", target = "advanceAvailable.amount")
+  @Mapping(
+    target = "advanceAvailable.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getAdvanceAvailableAmount()))"
+  )
   @Mapping(source = "advanceAvailableCurrencyCode", target = "advanceAvailable.currency")
-  @Mapping(source = "advanceAvailableEquivalentAmount", target = "advanceAvailableEquivalent.amount")
+  @Mapping(
+    target = "advanceAvailableEquivalent.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getAdvanceAvailableEquivalentAmount()))"
+  )
   @Mapping(source = "advanceAvailableEquivalentCurrencyCode", target = "advanceAvailableEquivalent.currency")
-  @Mapping(source = "discountAdvanceAmount", target = "discountAdvance.amount")
+  @Mapping(
+    target = "discountAdvance.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getDiscountAdvanceAmount()))"
+  )
   @Mapping(source = "discountAdvanceAmountCurrencyCode", target = "discountAdvance.currency")
-  @Mapping(source = "discountDealAmount", target = "discountDeal.amount")
+  @Mapping(
+    target = "discountDeal.amount",
+    expression = "java(mapNullableBigDecimal(invoiceMaster.getDiscountDealAmount()))"
+  )
   @Mapping(source = "discountDealAmountCurrencyCode", target = "discountDeal.currency")
 
   @Mapping(source = "detailsNotesForCustomer", target = "detailsNotesForCustomer")
   @Mapping(source = "securityDetails", target = "securityDetails")
   @Mapping(source = "taxDetails", target = "taxDetails")
   InvoiceDTO mapEntityToDTO(InvoiceMaster invoiceMaster);
+
+  default BigDecimal mapNullableBigDecimal(BigDecimal input) {
+    return input != null
+      ? input.divide(new BigDecimal(100))
+      : null;
+  }
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
