@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.program;
 
-import com.tcmp.tiapi.messaging.NamespaceFixerProcessor;
-import lombok.Getter;
+import com.tcmp.tiapi.messaging.router.processor.NamespaceFixerProcessor;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -12,9 +11,7 @@ import java.util.UUID;
 public class ProgramRouter extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormat;
 
-  @Getter
   private final String uriFrom;
-  @Getter
   private final String uriTo;
 
   @Override
@@ -22,6 +19,7 @@ public class ProgramRouter extends RouteBuilder {
     from(uriFrom).routeId("createProgramInTI")
       .process(ex -> ex.getIn().setHeader("fileUuid", UUID.randomUUID().toString()))
       .marshal(jaxbDataFormat)
+      // Wrap Request
       .process(new NamespaceFixerProcessor())
       .to(uriTo)
       .end()

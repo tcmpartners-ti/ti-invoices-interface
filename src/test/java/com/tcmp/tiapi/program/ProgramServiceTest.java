@@ -1,9 +1,5 @@
 package com.tcmp.tiapi.program;
 
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.TIService;
-import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
-import com.tcmp.tiapi.program.messaging.SCFProgrammeMessage;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
@@ -31,7 +27,11 @@ class ProgramServiceTest {
 
   @BeforeEach
   void setUp() {
-    testedProgramService = new ProgramService(programRepository, producerTemplate);
+    testedProgramService = new ProgramService(
+      programRepository,
+      producerTemplate,
+      new ProgramConfiguration()
+    );
   }
 
   @Test
@@ -79,40 +79,5 @@ class ProgramServiceTest {
     // Then
     assertThrows(NotFoundHttpException.class,
       () -> testedProgramService.getProgramById(uuid));
-  }
-
-  @Test
-  void itShouldWrapProgrammeMessageAsServiceRequest() {
-    // Given
-    String expectedInvokedRoute = "direct:createProgramInTI";
-    String expectedProgrammeId = "PROG123";
-    String expectedService = TIService.TRADE_INNOVATION.getValue();
-    String expectedOperation = TIOperation.SCF_PROGRAMME.getValue();
-
-    SCFProgrammeMessage programmeMessage = SCFProgrammeMessage.builder()
-      .id(expectedProgrammeId)
-      .build();
-
-    // When
-    testedProgramService.sendAndReceiveProgramUUID(programmeMessage);
-
-    // Then
-    ArgumentCaptor<String> routeCaptor = ArgumentCaptor.forClass(String.class);
-    //  Can't fix this deep generic warning.
-    ArgumentCaptor<ServiceRequest<SCFProgrammeMessage>> serviceRequestCaptor =
-      ArgumentCaptor.forClass(ServiceRequest.class);
-
-    verify(producerTemplate).requestBody(
-      routeCaptor.capture(), serviceRequestCaptor.capture(), any());
-
-    String actualInvokedRoute = routeCaptor.getValue();
-    String actualProgrammeId = serviceRequestCaptor.getValue().getBody().getId();
-    String actualService = serviceRequestCaptor.getValue().getHeader().getService();
-    String actualOperation = serviceRequestCaptor.getValue().getHeader().getOperation();
-
-    assertEquals(expectedInvokedRoute, actualInvokedRoute);
-    assertEquals(expectedProgrammeId, actualProgrammeId);
-    assertEquals(expectedService, actualService);
-    assertEquals(expectedOperation, actualOperation);
   }
 }
