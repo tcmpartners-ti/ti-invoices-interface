@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.messaging;
+package com.tcmp.tiapi.messaging.router.processor;
 
 import com.tcmp.tiapi.messaging.config.TIMessagingConfig;
 import org.apache.camel.Exchange;

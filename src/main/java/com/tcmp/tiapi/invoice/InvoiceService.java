@@ -2,12 +2,6 @@ package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.TIService;
-import com.tcmp.tiapi.messaging.model.requests.Credentials;
-import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
-import com.tcmp.tiapi.messaging.model.requests.RequestHeader;
-import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import lombok.RequiredArgsConstructor;
@@ -40,29 +34,13 @@ public class InvoiceService {
   public String sendInvoiceAndGetCorrelationId(CreateInvoiceEventMessage createInvoiceEventMessage) {
     String invoiceCorrelationId = UUID.randomUUID().toString();
 
-    RequestHeader requestHeader = RequestHeader.builder()
-      .service(TIService.TRADE_INNOVATION.getValue())
-      .operation(TIOperation.CREATE_INVOICE.getValue())
-      .replyFormat(ReplyFormat.STATUS.getValue())
-      .correlationId(invoiceCorrelationId)
-      .credentials(Credentials.builder()
-        .name("FTI_INTERFACE")
-        .build())
-      .build();
-
-    ServiceRequest<CreateInvoiceEventMessage> createInvoiceEventMessageServiceRequest =
-      ServiceRequest.<CreateInvoiceEventMessage>builder()
-        .header(requestHeader)
-        .body(createInvoiceEventMessage)
-        .build();
-
-    log.info("[CREATE INVOICE] {}", createInvoiceEventMessage);
+    log.info("[Create Invoice] {}", createInvoiceEventMessage);
 
     producerTemplate.sendBodyAndHeaders(
       invoiceConfiguration.getUriCreateFrom(),
-      createInvoiceEventMessageServiceRequest,
-      Map.of(
-        "JMSCorrelationID", invoiceCorrelationId
+      createInvoiceEventMessage,
+      Map.ofEntries(
+        Map.entry("JMSCorrelationID", invoiceCorrelationId)
       )
     );
 
@@ -73,12 +51,13 @@ public class InvoiceService {
   public void createMultipleInvoices(MultipartFile invoicesFile) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
-    try {
-      InputStreamReader inputStreamReader = new InputStreamReader(invoicesFile.getInputStream());
+    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
+      log.info("[Bulk create invoices] Sending invoices to TI.");
 
-      try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-        producerTemplate.sendBody(invoiceConfiguration.getUriCreateFrom(), bufferedReader);
-      }
+      producerTemplate.sendBody(
+        invoiceConfiguration.getUriBulkCreateFrom(),
+        bufferedReader
+      );
     } catch (IOException e) {
       throw new InvalidFileHttpException("Could not read the uploaded file");
     }

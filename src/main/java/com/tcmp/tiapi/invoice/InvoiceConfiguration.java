@@ -1,5 +1,8 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.invoice.router.BulkCreateInvoicesRouter;
+import com.tcmp.tiapi.invoice.router.CreateInvoiceRouter;
+import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.mapstruct.factory.Mappers;
@@ -12,12 +15,15 @@ import org.springframework.context.annotation.Configuration;
 public class InvoiceConfiguration {
   @Value("${invoice.route.create.from}")
   private String uriCreateFrom;
-
   @Value("${invoice.route.create.to-pub}")
   private String uriCreateToPub;
-
   @Value("${invoice.route.create.to-sub}")
   private String uriCreateToSub;
+
+  @Value("${invoice.route.create-bulk.from}")
+  private String uriBulkCreateFrom;
+  @Value("${invoice.route.create-bulk.to}")
+  private String uriBulkCreateTo;
 
   @Bean
   public InvoiceMapper invoiceMapper() {
@@ -25,12 +31,24 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceRouter invoiceRouter(JaxbDataFormat jaxbDataFormat) {
-    return new InvoiceRouter(
+  public CreateInvoiceRouter invoiceRouter(JaxbDataFormat jaxbDataFormat) {
+    return new CreateInvoiceRouter(
       jaxbDataFormat,
+      new TIServiceRequestWrapper(),
       uriCreateFrom,
       uriCreateToPub,
       uriCreateToSub
+    );
+  }
+
+  @Bean
+  public BulkCreateInvoicesRouter bulkCreateInvoicesRouter(JaxbDataFormat jaxbDataFormat, InvoiceMapper invoiceMapper) {
+    return new BulkCreateInvoicesRouter(
+      jaxbDataFormat,
+      new TIServiceRequestWrapper(),
+      invoiceMapper,
+      uriBulkCreateFrom,
+      uriBulkCreateTo
     );
   }
 }

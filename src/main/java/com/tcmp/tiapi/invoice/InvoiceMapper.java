@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
@@ -69,4 +70,22 @@ public interface InvoiceMapper {
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "settlementDate", target = "settlementDate")
   CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
+
+  @Mapping(source = "customerMnemonic", target = "context.customer")
+  @Mapping(source = "theirReference", target = "context.theirReference")
+  @Mapping(source = "branch", target = "context.branch")
+  @Mapping(source = "behalfOfBranch", target = "context.behalfOfBranch")
+  @Mapping(source = "anchorPartyMnemonic", target = "anchorParty")
+  @Mapping(source = "programmeId", target = "programme")
+  @Mapping(source = "sellerId", target = "seller")
+  @Mapping(source = "buyerId", target = "buyer")
+  @Mapping(source = "receivedOn", target = "receivedOn", dateFormat = "yyyy-MM-dd")
+  @Mapping(source = "invoiceNumber", target = "invoiceNumber")
+  @Mapping(source = "issueDate", target = "issueDate", dateFormat = "yyyy-MM-dd")
+  @Mapping(source = "faceValueAmount", target = "faceValue.amount", numberFormat = "#,###.00")
+  @Mapping(source = "faceValueCurrency", target = "faceValue.currency")
+  @Mapping(source = "outstandingAmount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
+  @Mapping(source = "outstandingCurrency", target = "outstandingAmount.currency")
+  @Mapping(source = "settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
+  CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV);
 }
