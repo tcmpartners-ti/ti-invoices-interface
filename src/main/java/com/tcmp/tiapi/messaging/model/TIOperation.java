@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
  * An enum with public constants is used to restrict the values that a function param can have and also
  * to consume the operation values from annotations.
  */
-@Getter
 @RequiredArgsConstructor
+@Getter
 public enum TIOperation {
   SCF_PROGRAMME(TIOperation.SCF_PROGRAMME_VALUE),
   CREATE_INVOICE(TIOperation.CREATE_INVOICE_VALUE);
