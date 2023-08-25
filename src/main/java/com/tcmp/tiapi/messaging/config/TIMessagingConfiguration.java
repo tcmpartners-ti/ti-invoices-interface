@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Map;
 
 @Configuration
-public class TIMessagingConfig {
+public class TIMessagingConfiguration {
 
   public static final String SCHEMA_PREFIX = "xsi";
   // This is used just to be deleted in the camel route processor.
@@ -27,16 +27,9 @@ public class TIMessagingConfig {
   );
 
   @Bean
-  JAXBContext jaxbContext() throws JAXBException {
-    return JAXBContext.newInstance(ServiceRequest.class);
-  }
+  JaxbDataFormat jaxbDataFormat() throws JAXBException {
+    JAXBContext jaxbContext = JAXBContext.newInstance(ServiceRequest.class);
 
-  /**
-   * Do not change this method, the combination of both `marshaller.setProperty()` and
-   * `jaxbDataFormat.setNamespacePrefix()` provides a correct namespace mapping.
-   */
-  @Bean
-  JaxbDataFormat jaxbDataFormat(JAXBContext jaxbContext) {
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
     jaxbDataFormat.setNamespacePrefix(namespacesPrefixes);
 
