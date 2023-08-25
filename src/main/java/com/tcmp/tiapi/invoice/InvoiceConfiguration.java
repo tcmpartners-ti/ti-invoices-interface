@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
-import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouter;
+import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouteBuilder;
 import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
@@ -44,8 +44,8 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public BulkCreateInvoicesRouter bulkCreateInvoicesRouter(JaxbDataFormat jaxbDataFormat, InvoiceMapper invoiceMapper) {
-    return new BulkCreateInvoicesRouter(
+  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(JaxbDataFormat jaxbDataFormat, InvoiceMapper invoiceMapper) {
+    return new BulkCreateInvoicesRouteBuilder(
       jaxbDataFormat,
       invoiceMapper,
       new TIServiceRequestWrapper(),

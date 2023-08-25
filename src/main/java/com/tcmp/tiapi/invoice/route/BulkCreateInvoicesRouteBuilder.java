@@ -14,7 +14,7 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.model.dataformat.BindyType;
 
 @RequiredArgsConstructor
-public class BulkCreateInvoicesRouter extends RouteBuilder {
+public class BulkCreateInvoicesRouteBuilder extends RouteBuilder {
   private static final int THREAD_POOL_SIZE_FOR_BULK_OPERATIONS = 5;
 
   private final JaxbDataFormat jaxbDataFormat;
@@ -27,7 +27,6 @@ public class BulkCreateInvoicesRouter extends RouteBuilder {
 
   @Override
   public void configure() {
-    // Desacoplar de Camel el processor
     from(uriFrom).routeId("bulkCreateInvoicesBulkInTI").threads(THREAD_POOL_SIZE_FOR_BULK_OPERATIONS)
       .split(body().tokenize("\n"))
       .filter(simple("${exchangeProperty.CamelSplitIndex} != 0")) // Ignore header
@@ -40,7 +39,7 @@ public class BulkCreateInvoicesRouter extends RouteBuilder {
         createInvoiceEventMessage
       ))
       .marshal(jaxbDataFormat)
-      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
+       .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
       .log("Sending invoice to TI queue...")
       .to(uriTo)
       .end();
