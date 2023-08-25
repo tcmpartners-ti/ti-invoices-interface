@@ -98,6 +98,7 @@ public interface InvoiceMapper {
   @Mapping(source = "outstandingAmount.amount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "settlementDate", target = "settlementDate")
+  @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
   CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
   @Mapping(source = "customerMnemonic", target = "context.customer")

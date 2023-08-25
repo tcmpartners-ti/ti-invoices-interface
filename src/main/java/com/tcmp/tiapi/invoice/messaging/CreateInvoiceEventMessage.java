@@ -58,4 +58,7 @@ public class CreateInvoiceEventMessage implements Serializable {
   @XmlElement(name = "SettlementDate", namespace = TINamespace.MESSAGES)
   @XmlJavaTypeAdapter(LocalDateAdapter.class)
   private LocalDate settlementDate;
+
+  @XmlElement(name = "InvoiceApproved", namespace = TINamespace.MESSAGES)
+  private String invoiceApproved;
 }

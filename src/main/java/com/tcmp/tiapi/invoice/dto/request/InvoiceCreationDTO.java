@@ -55,4 +55,7 @@ public class InvoiceCreationDTO {
 
   @Schema(name = "settlementDate", description = "Invoice payment due date.", format = "YYYY-mm-dd")
   private LocalDate settlementDate;
+
+  @Schema(name = "invoiceApproved", description = "For buyer centric invoices - indicates whether the invoice has been approved by the buyer for financing.")
+  private Boolean invoiceApproved;
 }
