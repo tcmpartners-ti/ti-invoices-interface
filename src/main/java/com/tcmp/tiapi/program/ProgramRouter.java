@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.program;
 
-import com.tcmp.tiapi.messaging.router.processor.NamespaceFixerProcessor;
+import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -10,6 +10,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProgramRouter extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormat;
+  private final XmlNamespaceFixer xmlNamespaceFixer;
 
   private final String uriFrom;
   private final String uriTo;
@@ -20,7 +21,7 @@ public class ProgramRouter extends RouteBuilder {
       .process(ex -> ex.getIn().setHeader("fileUuid", UUID.randomUUID().toString()))
       .marshal(jaxbDataFormat)
       // Wrap Request
-      .process(new NamespaceFixerProcessor())
+      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
       .to(uriTo)
       .end()
       .setBody(ex -> ex.getIn().getHeader("fileUuid"))

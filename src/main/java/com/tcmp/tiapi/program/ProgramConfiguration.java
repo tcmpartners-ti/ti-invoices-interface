@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.program;
 
+import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.mapstruct.factory.Mappers;
@@ -28,6 +29,7 @@ public class ProgramConfiguration {
   ProgramRouter programRouter(JaxbDataFormat jaxbDataFormat) {
     return new ProgramRouter(
       jaxbDataFormat,
+      new XmlNamespaceFixer(),
       uriCreateFrom,
       uriCreateTo
     );

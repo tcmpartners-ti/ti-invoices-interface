@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.router;
+package com.tcmp.tiapi.invoice.route;
 
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
@@ -7,7 +7,7 @@ import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
-import com.tcmp.tiapi.messaging.router.processor.NamespaceFixerProcessor;
+import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -18,8 +18,9 @@ public class BulkCreateInvoicesRouter extends RouteBuilder {
   private static final int THREAD_POOL_SIZE_FOR_BULK_OPERATIONS = 5;
 
   private final JaxbDataFormat jaxbDataFormat;
-  private final TIServiceRequestWrapper tiServiceRequestWrapper;
   private final InvoiceMapper invoiceMapper;
+  private final TIServiceRequestWrapper tiServiceRequestWrapper;
+  private final XmlNamespaceFixer xmlNamespaceFixer;
 
   private final String uriFrom;
   private final String uriTo;
@@ -38,7 +39,8 @@ public class BulkCreateInvoicesRouter extends RouteBuilder {
         ReplyFormat.STATUS,
         createInvoiceEventMessage
       ))
-      .marshal(jaxbDataFormat).process(new NamespaceFixerProcessor())
+      .marshal(jaxbDataFormat)
+      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
       .log("Sending invoice to TI queue...")
       .to(uriTo)
       .end();

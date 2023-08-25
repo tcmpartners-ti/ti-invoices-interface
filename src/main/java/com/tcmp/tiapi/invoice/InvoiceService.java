@@ -47,7 +47,6 @@ public class InvoiceService {
     return invoiceCorrelationId;
   }
 
-  // Improve this method
   public void createMultipleInvoices(MultipartFile invoicesFile) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 

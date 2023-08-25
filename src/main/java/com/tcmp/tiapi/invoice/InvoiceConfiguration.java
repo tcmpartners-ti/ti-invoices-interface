@@ -1,8 +1,9 @@
 package com.tcmp.tiapi.invoice;
 
-import com.tcmp.tiapi.invoice.router.BulkCreateInvoicesRouter;
-import com.tcmp.tiapi.invoice.router.CreateInvoiceRouter;
+import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouter;
+import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
+import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.mapstruct.factory.Mappers;
@@ -31,10 +32,11 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public CreateInvoiceRouter invoiceRouter(JaxbDataFormat jaxbDataFormat) {
-    return new CreateInvoiceRouter(
+  public CreateInvoiceRouteBuilder invoiceRouter(JaxbDataFormat jaxbDataFormat) {
+    return new CreateInvoiceRouteBuilder(
       jaxbDataFormat,
       new TIServiceRequestWrapper(),
+      new XmlNamespaceFixer(),
       uriCreateFrom,
       uriCreateToPub,
       uriCreateToSub
@@ -45,8 +47,9 @@ public class InvoiceConfiguration {
   public BulkCreateInvoicesRouter bulkCreateInvoicesRouter(JaxbDataFormat jaxbDataFormat, InvoiceMapper invoiceMapper) {
     return new BulkCreateInvoicesRouter(
       jaxbDataFormat,
-      new TIServiceRequestWrapper(),
       invoiceMapper,
+      new TIServiceRequestWrapper(),
+      new XmlNamespaceFixer(),
       uriBulkCreateFrom,
       uriBulkCreateTo
     );
