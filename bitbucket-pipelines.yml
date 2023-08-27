@@ -15,13 +15,3 @@ pipelines:
         script:
           - echo "Running tests..."
           - mvn test
-
-    - step:
-        name: Deploy
-        script:
-          - echo "Installing Azure CLI..."
-          - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          - echo "Deploying application to Azure functions..."
-          - echo $AZURE_FUNCTIONS_PUBLISH_CREDENTIALS > ./azure-functions-credentials.publishsettings
-          - az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-          - mvn azure-functions:deploy
