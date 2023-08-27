@@ -22,17 +22,27 @@ spring:
       hibernate:
         dialect: "org.hibernate.dialect.SQLServerDialect"
 
+ti:
+  queue:
+    pub:
+      name: "BP.DIGIBANK.TO.FTI"
+    reply:
+      name: "BP.DIGIBANK.TO.FTI.REPLY"
+      jndi: "queue/digibankInIncomingReply"
+
 invoice:
   route:
     create:
-      queue-pub:
-        name: "BP.DIGIBANK.TO.FTI"
-      queue-sub:
-        name: "BP.DIGIBANK.TO.FTI.REPLY"
-        jndi: "queue/digibankInIncomingReply"
       from: "direct:createInvoiceInTI"
-      to-pub: "activemq:queue:${invoice.route.create.queue-pub.name}?replyTo=${invoice.route.create.queue-sub.jndi}"
-      to-sub: "activemq:queue:${invoice.route.create.queue-sub.name}"
+      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+
+    create-bulk:
+      from: "direct:bulkCreateInvoicesInTi"
+      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+
+    creation-listener:
+      from: "direct:queue:${ti.queue.reply.name}"
+      to: "log:body"
 
 program:
   route:

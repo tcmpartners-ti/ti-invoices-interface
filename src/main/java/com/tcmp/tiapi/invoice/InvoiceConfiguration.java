@@ -2,6 +2,7 @@ package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouteBuilder;
 import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
+import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.Getter;
@@ -16,15 +17,18 @@ import org.springframework.context.annotation.Configuration;
 public class InvoiceConfiguration {
   @Value("${invoice.route.create.from}")
   private String uriCreateFrom;
-  @Value("${invoice.route.create.to-pub}")
-  private String uriCreateToPub;
-  @Value("${invoice.route.create.to-sub}")
-  private String uriCreateToSub;
+  @Value("${invoice.route.create.to}")
+  private String uriCreateTo;
 
   @Value("${invoice.route.create-bulk.from}")
   private String uriBulkCreateFrom;
   @Value("${invoice.route.create-bulk.to}")
   private String uriBulkCreateTo;
+
+  @Value("${invoice.route.creation-listener.from}")
+  private String uriCreatedEventFrom;
+  @Value("${invoice.route.creation-listener.to}")
+  private String uriCreatedEventTo;
 
   @Bean
   public InvoiceMapper invoiceMapper() {
@@ -38,8 +42,7 @@ public class InvoiceConfiguration {
       new TIServiceRequestWrapper(),
       new XmlNamespaceFixer(),
       uriCreateFrom,
-      uriCreateToPub,
-      uriCreateToSub
+      uriCreateTo
     );
   }
 
@@ -52,6 +55,14 @@ public class InvoiceConfiguration {
       new XmlNamespaceFixer(),
       uriBulkCreateFrom,
       uriBulkCreateTo
+    );
+  }
+
+  @Bean
+  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder() {
+    return new InvoiceCreatedEventListenerRouteBuilder(
+      uriCreatedEventFrom,
+      uriCreatedEventTo
     );
   }
 }

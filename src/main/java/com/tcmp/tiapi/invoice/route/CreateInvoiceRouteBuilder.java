@@ -16,13 +16,12 @@ public class CreateInvoiceRouteBuilder extends RouteBuilder {
   private final TIServiceRequestWrapper tiServiceRequestWrapper;
   private final XmlNamespaceFixer xmlNamespaceFixer;
 
-  private final String uriFromCreate;
-  private final String uriToCreatePub;
-  private final String uriFromCreateSub;
+  private final String uriFrom;
+  private final String uriTo;
 
   @Override
   public void configure() {
-    from(uriFromCreate).routeId("createInvoiceInTI")
+    from(uriFrom).routeId("createInvoiceInTI")
       .transform().body(CreateInvoiceEventMessage.class, createInvoiceEventMessage -> tiServiceRequestWrapper.wrapRequest(
         TIService.TRADE_INNOVATION,
         TIOperation.CREATE_INVOICE,
@@ -31,12 +30,7 @@ public class CreateInvoiceRouteBuilder extends RouteBuilder {
       ))
       .marshal(jaxbDataFormat)
       .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
-      .to(uriToCreatePub)
-      .end();
-
-    // Pending
-    from(uriFromCreateSub).routeId("invoiceCreationResult")
-      .log("${body}")
+      .to(uriTo)
       .end();
   }
 }

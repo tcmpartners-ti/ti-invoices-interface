@@ -26,13 +26,11 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
-  private static final String URI_FROM_DIRECT = "direct:createInvoice";
-  private static final String URI_FROM_QUEUE = "direct:activeMQ";
+  private static final String URI_FROM = "direct:createInvoice";
+  private static final String URI_TO = "mock:activeMQ";
 
-  @EndpointInject(URI_FROM_DIRECT)
+  @EndpointInject(URI_FROM)
   ProducerTemplate from;
-  @EndpointInject(URI_FROM_QUEUE)
-  ProducerTemplate fromQueue;
 
   @Mock
   private JaxbDataFormat jaxbDataFormat;
@@ -47,9 +45,8 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
       jaxbDataFormat,
       tiServiceRequestWrapper,
       xmlNamespaceFixer,
-      URI_FROM_DIRECT,
-      "mock:activeMqPub",
-      URI_FROM_QUEUE
+      URI_FROM,
+      URI_TO
     );
   }
 
