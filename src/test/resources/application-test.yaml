@@ -1,7 +1,6 @@
 spring:
   datasource:
-    # Testing DB
-    url: jdbc:h2://mem:db;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
@@ -10,12 +9,27 @@ spring:
     hibernate:
       ddl-auto: create-drop
 
+ti:
+  queue:
+    pub:
+      name: "BP.DIGIBANK.TO.FTI"
+    reply:
+      name: "BP.DIGIBANK.TO.FTI.REPLY"
+      jndi: "queue/digibankInIncomingReply"
+
 invoice:
   route:
     create:
-      queue: "DEV.TEST"
       from: "direct:createInvoiceInTI"
-      to: "activemq:queue:${invoice.route.create.queue}"
+      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+
+    create-bulk:
+      from: "direct:bulkCreateInvoicesInTi"
+      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+
+    creation-listener:
+      from: "activemq:queue:${ti.queue.reply.name}"
+      to: "log:body"
 
 program:
   route:

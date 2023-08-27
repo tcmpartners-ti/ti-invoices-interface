@@ -77,7 +77,9 @@ class InvoiceServiceTest {
 
   @Test
   void itShouldInvokeCamelRouteWhenCreatingInvoice() {
-    CreateInvoiceEventMessage createInvoiceEventMessage = CreateInvoiceEventMessage.builder().build();
+    CreateInvoiceEventMessage createInvoiceEventMessage = CreateInvoiceEventMessage.builder()
+      .invoiceNumber("INV123")
+      .build();
 
     ArgumentCaptor<String> routeCaptor =
       ArgumentCaptor.forClass(String.class);
