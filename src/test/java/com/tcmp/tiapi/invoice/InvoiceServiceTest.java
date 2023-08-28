@@ -120,8 +120,35 @@ class InvoiceServiceTest {
 
     testedInvoiceService.createMultipleInvoices(multipartFile);
 
-    verify(producerTemplate).sendBody(routeCaptor.capture(), bufferedReaderCaptor.capture());
+    verify(producerTemplate).sendBodyAndHeaders(
+      routeCaptor.capture(),
+      bufferedReaderCaptor.capture(),
+      any(Map.class)
+    );
     assertThat(routeCaptor.getValue()).isEqualTo(expectedRoute);
+  }
+
+  @Test
+  void itShouldSetBatchIdHeader() throws IOException {
+    String fileContent = "A,B,C";
+    InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
+    MultipartFile multipartFile = new MockMultipartFile("invoices.csv", inputStream);
+    String expectedRoute = "direct:createBulkInvoices";
+
+    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
+
+    when(invoiceConfiguration.getUriBulkCreateFrom())
+      .thenReturn(expectedRoute);
+
+    testedInvoiceService.createMultipleInvoices(multipartFile);
+
+    verify(producerTemplate).sendBodyAndHeaders(
+      anyString(),
+      any(BufferedReader.class),
+      headersCaptor.capture()
+    );
+
+    assertThat(headersCaptor.getValue().get("batchId")).isNotNull();
   }
 
   @Test
