@@ -52,13 +52,16 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
 
   @Test
   void itShouldFollowConversionFlow() throws IOException {
-    from.sendBody(CreateInvoiceEventMessage.builder().build());
+    from.sendBody(CreateInvoiceEventMessage.builder()
+      .invoiceNumber("INV123")
+      .build());
 
     verify(tiServiceRequestWrapper)
       .wrapRequest(
         any(TIService.class),
         any(TIOperation.class),
         any(ReplyFormat.class),
+        anyString(),
         any(CreateInvoiceEventMessage.class)
       );
     verify(jaxbDataFormat).marshal(any(), any(), any());
@@ -77,6 +80,7 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
     ArgumentCaptor<TIService> serviceArgumentCaptor = ArgumentCaptor.forClass(TIService.class);
     ArgumentCaptor<TIOperation> operationArgumentCaptor = ArgumentCaptor.forClass(TIOperation.class);
     ArgumentCaptor<ReplyFormat> replyFormatArgumentCaptor = ArgumentCaptor.forClass(ReplyFormat.class);
+    ArgumentCaptor<String> correlationIdArgumentCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CreateInvoiceEventMessage> messageArgumentCaptor = ArgumentCaptor.forClass(CreateInvoiceEventMessage.class);
 
     verify(tiServiceRequestWrapper)
@@ -84,6 +88,7 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
         serviceArgumentCaptor.capture(),
         operationArgumentCaptor.capture(),
         replyFormatArgumentCaptor.capture(),
+        correlationIdArgumentCaptor.capture(),
         messageArgumentCaptor.capture()
       );
     assertThat(serviceArgumentCaptor.getValue()).isEqualTo(expectedService);

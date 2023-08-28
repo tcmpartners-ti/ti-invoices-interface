@@ -31,33 +31,36 @@ public class InvoiceService {
         String.format("Could not find an invoice with reference %s.", reference)));
   }
 
-  public String sendInvoiceAndGetCorrelationId(CreateInvoiceEventMessage createInvoiceEventMessage) {
-    String invoiceCorrelationId = UUID.randomUUID().toString();
-
-    log.info("[Create Invoice] {}", createInvoiceEventMessage);
+  public void sendInvoiceAndGetCorrelationId(CreateInvoiceEventMessage createInvoiceEventMessage) {
+    log.info("[Invoice: Create] {}", createInvoiceEventMessage);
 
     producerTemplate.sendBodyAndHeaders(
       invoiceConfiguration.getUriCreateFrom(),
       createInvoiceEventMessage,
       Map.ofEntries(
-        Map.entry("JMSCorrelationID", invoiceCorrelationId)
+        Map.entry("JMSCorrelationID", createInvoiceEventMessage.getInvoiceNumber())
       )
     );
-
-    return invoiceCorrelationId;
   }
 
   public void createMultipleInvoices(MultipartFile invoicesFile) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
-    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
-      log.info("[Bulk create invoices] Sending invoices to TI.");
+    // Ojo: temporal
+    String batchId = UUID.randomUUID().toString().substring(0, 20);
 
-      producerTemplate.sendBody(
+    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
+      log.info("[Invoice: bulk create] Sending invoices to TI.");
+
+      producerTemplate.sendBodyAndHeaders(
         invoiceConfiguration.getUriBulkCreateFrom(),
-        bufferedReader
+        bufferedReader,
+        Map.ofEntries(
+          Map.entry("batchId", batchId)
+        )
       );
     } catch (IOException e) {
+      log.error("[Invoice: bulk create] Invalid file uploaded");
       throw new InvalidFileHttpException("Could not read the uploaded file");
     }
   }

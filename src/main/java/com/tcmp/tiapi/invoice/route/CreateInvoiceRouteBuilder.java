@@ -26,6 +26,7 @@ public class CreateInvoiceRouteBuilder extends RouteBuilder {
         TIService.TRADE_INNOVATION,
         TIOperation.CREATE_INVOICE,
         ReplyFormat.STATUS,
+        createInvoiceEventMessage.getInvoiceNumber(), // CorrelationId
         createInvoiceEventMessage
       ))
       .marshal(jaxbDataFormat)
