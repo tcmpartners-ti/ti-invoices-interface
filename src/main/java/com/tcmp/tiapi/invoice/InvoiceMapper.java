@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public interface InvoiceMapper {
 
   @Mapping(source = "id", target = "id")
-  @Mapping(source = "reference", target = "reference")
+  @Mapping(source = "reference", target = "invoiceNumber")
   @Mapping(source = "buyerPartyId", target = "buyerPartyId")
   @Mapping(source = "createFinanceEventId", target = "createFinanceEventId")
   @Mapping(source = "batchId", target = "batchId")
