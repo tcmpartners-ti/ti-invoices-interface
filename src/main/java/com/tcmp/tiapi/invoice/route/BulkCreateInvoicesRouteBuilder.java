@@ -31,15 +31,23 @@ public class BulkCreateInvoicesRouteBuilder extends RouteBuilder {
       .split(body().tokenize("\n"))
       .filter(simple("${exchangeProperty.CamelSplitIndex} != 0")) // Ignore header
       .unmarshal().bindy(BindyType.Csv, InvoiceCreationRowCSV.class)
-      .transform().body(InvoiceCreationRowCSV.class, invoiceMapper::mapCSVRowToFTIMessage)
+      .transform().body(InvoiceCreationRowCSV.class, (body, headers) -> {
+        String batchId = (String) headers.get("batchId");
+
+        CreateInvoiceEventMessage eventMessage = invoiceMapper.mapCSVRowToFTIMessage(body);
+        eventMessage.setBatchId(batchId);
+
+        return eventMessage;
+      })
       .transform().body(CreateInvoiceEventMessage.class, createInvoiceEventMessage -> tiServiceRequestWrapper.wrapRequest(
         TIService.TRADE_INNOVATION,
         TIOperation.CREATE_INVOICE,
         ReplyFormat.STATUS,
+        createInvoiceEventMessage.getInvoiceNumber(),
         createInvoiceEventMessage
       ))
       .marshal(jaxbDataFormat)
-       .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
+      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
       .log("Sending invoice to TI queue...")
       .to(uriTo)
       .end();

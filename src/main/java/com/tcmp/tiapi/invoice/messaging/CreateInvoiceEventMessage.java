@@ -42,6 +42,9 @@ public class CreateInvoiceEventMessage implements Serializable {
   @XmlJavaTypeAdapter(LocalDateAdapter.class)
   private LocalDate receivedOn;
 
+  @XmlElement(name = "BatchID", namespace = TINamespace.MESSAGES)
+  private String batchId;
+
   @XmlElement(name = "InvoiceNumber", namespace = TINamespace.MESSAGES)
   private String invoiceNumber;
 
