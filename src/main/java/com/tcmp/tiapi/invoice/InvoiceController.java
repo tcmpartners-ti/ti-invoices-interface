@@ -25,18 +25,18 @@ public class InvoiceController {
 
   private final InvoiceMapper invoiceMapper;
 
-  @GetMapping(path = "{invoiceReference}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(description = "Get an invoice by its reference.")
-  public InvoiceDTO getInvoiceByReference(@PathVariable String invoiceReference) {
-    log.info("Endpoint: /invoices/{}", invoiceReference);
+  @GetMapping(path = "{invoiceNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get an invoice by its number.")
+  public InvoiceDTO getInvoiceByNumber(@PathVariable String invoiceNumber) {
+    log.info("Endpoint: /invoices/{}", invoiceNumber);
 
-    InvoiceMaster invoice = invoiceService.getInvoiceByReference(invoiceReference);
+    InvoiceMaster invoice = invoiceService.getInvoiceByReference(invoiceNumber);
 
     return invoiceMapper.mapEntityToDTO(invoice);
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(description = "Create a single invoice.")
+  @Operation(description = "Create a single invoice in Trade Innovation.")
   public InvoiceCreatedDTO createInvoice(@Valid @RequestBody InvoiceCreationDTO invoiceDTO) {
     CreateInvoiceEventMessage invoice = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
     invoiceService.sendInvoiceAndGetCorrelationId(invoice);
@@ -47,9 +47,9 @@ public class InvoiceController {
   }
 
   @PostMapping(path = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(description = "Create multiple invoices.")
-  public InvoicesCreatedDTO createInvoicesBulk(@RequestParam MultipartFile invoicesFile) {
-    invoiceService.createMultipleInvoices(invoicesFile);
+  @Operation(description = "Create multiple invoices in Trade Innovation.")
+  public InvoicesCreatedDTO bulkCreateInvoices(@RequestPart MultipartFile invoicesFile, @RequestPart String batchId) {
+    invoiceService.createMultipleInvoices(invoicesFile, batchId);
 
     return InvoicesCreatedDTO.builder()
       .message("Invoices sent to be created.")
