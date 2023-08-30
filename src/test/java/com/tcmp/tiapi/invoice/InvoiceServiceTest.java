@@ -118,7 +118,7 @@ class InvoiceServiceTest {
     when(invoiceConfiguration.getUriBulkCreateFrom())
       .thenReturn(expectedRoute);
 
-    testedInvoiceService.createMultipleInvoices(multipartFile);
+    testedInvoiceService.createMultipleInvoices(multipartFile, "123");
 
     verify(producerTemplate).sendBodyAndHeaders(
       routeCaptor.capture(),
@@ -140,7 +140,7 @@ class InvoiceServiceTest {
     when(invoiceConfiguration.getUriBulkCreateFrom())
       .thenReturn(expectedRoute);
 
-    testedInvoiceService.createMultipleInvoices(multipartFile);
+    testedInvoiceService.createMultipleInvoices(multipartFile, "123");
 
     verify(producerTemplate).sendBodyAndHeaders(
       anyString(),
@@ -158,7 +158,7 @@ class InvoiceServiceTest {
 
     // Call the method and assert exception
     assertThrows(InvalidFileHttpException.class,
-      () -> testedInvoiceService.createMultipleInvoices(multipartFile));
+      () -> testedInvoiceService.createMultipleInvoices(multipartFile, "123"));
   }
 
   @Test
@@ -169,6 +169,6 @@ class InvoiceServiceTest {
       .thenThrow(new IOException("Simulated read error"));
 
     assertThrows(InvalidFileHttpException.class,
-      () -> testedInvoiceService.createMultipleInvoices(problematicFile));
+      () -> testedInvoiceService.createMultipleInvoices(problematicFile, "123"));
   }
 }
