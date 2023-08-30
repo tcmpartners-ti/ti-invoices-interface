@@ -1,7 +1,13 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.customer.model.CounterParty;
+import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
+import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.program.ProgramRepository;
+import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.exception.BadRequestHttpException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
@@ -26,14 +32,36 @@ public class InvoiceService {
 
   private final InvoiceConfiguration invoiceConfiguration;
   private final InvoiceRepository invoiceRepository;
+  private final CounterPartyRepository counterPartyRepository;
+  private final ProgramRepository programRepository;
+  private final InvoiceMapper invoiceMapper;
 
-  public InvoiceMaster getInvoiceByReference(String reference) {
-    return invoiceRepository.findByReference(reference)
+  public InvoiceDTO getInvoiceByReference(String reference) {
+    InvoiceMaster invoiceMaster = invoiceRepository.findByReference(reference)
       .orElseThrow(() -> new NotFoundHttpException(
         String.format("Could not find an invoice with reference %s.", reference)));
+    CounterParty buyer = getCounterPartyById(invoiceMaster.getBuyerId());
+    CounterParty seller = getCounterPartyById(invoiceMaster.getSellerId());
+    Program program = getProgramById(invoiceMaster.getProgrammeId());
+
+    return invoiceMapper.mapEntityToDTO(invoiceMaster, buyer, seller, program);
   }
 
-  public void sendInvoiceAndGetCorrelationId(CreateInvoiceEventMessage createInvoiceEventMessage) {
+  private CounterParty getCounterPartyById(Long counterPartyId) {
+    return counterPartyRepository.findById(counterPartyId)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find a counter party with id %s.", counterPartyId)));
+  }
+
+  private Program getProgramById(Long programId) {
+    return programRepository.findByPk(programId)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find a program with id %s.", programId)));
+  }
+
+  public void createSingleInvoiceInTi(InvoiceCreationDTO invoiceDTO) {
+    CreateInvoiceEventMessage createInvoiceEventMessage = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
+
     log.info("[Invoice: Create] {}", createInvoiceEventMessage);
 
     producerTemplate.sendBodyAndHeaders(
@@ -45,7 +73,7 @@ public class InvoiceService {
     );
   }
 
-  public void createMultipleInvoices(MultipartFile invoicesFile, String batchId) {
+  public void createMultipleInvoicesInTi(MultipartFile invoicesFile, String batchId) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
     if (batchId.length() > MAX_BATCH_ID_LENGTH) {
