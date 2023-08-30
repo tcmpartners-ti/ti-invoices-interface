@@ -33,11 +33,7 @@ public class BulkCreateInvoicesRouteBuilder extends RouteBuilder {
       .unmarshal().bindy(BindyType.Csv, InvoiceCreationRowCSV.class)
       .transform().body(InvoiceCreationRowCSV.class, (body, headers) -> {
         String batchId = (String) headers.get("batchId");
-
-        CreateInvoiceEventMessage eventMessage = invoiceMapper.mapCSVRowToFTIMessage(body);
-        eventMessage.setBatchId(batchId);
-
-        return eventMessage;
+        return invoiceMapper.mapCSVRowToFTIMessage(body, batchId);
       })
       .transform().body(CreateInvoiceEventMessage.class, createInvoiceEventMessage -> tiServiceRequestWrapper.wrapRequest(
         TIService.TRADE_INNOVATION,
