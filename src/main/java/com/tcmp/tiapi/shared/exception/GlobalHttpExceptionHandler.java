@@ -38,4 +38,15 @@ public class GlobalHttpExceptionHandler {
         "error", e.getMessage()
       ));
   }
+
+  @ExceptionHandler(BadRequestHttpException.class)
+  public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestHttpException e) {
+    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity.status(badRequest)
+      .body(Map.of(
+        "statusCode", badRequest.value(),
+        "error", e.getMessage()
+      ));
+  }
 }
