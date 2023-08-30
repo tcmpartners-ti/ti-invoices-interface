@@ -1,18 +1,20 @@
-FROM mcr.microsoft.com/azure-functions/java:4-java17-build AS installer-env
+# Use a Maven image for building
+FROM maven:3.8.4-openjdk-17-slim AS build
 
-COPY . /build/java-function-app
-RUN cd /build/java-function-app && \
-    mkdir -p /home/site/wwwroot && \
-    mvn clean package -Dmaven.test.skip=true && \
-    cd ./target/azure-functions/ && \
-    cd $(ls -d */|head -n 1) && \
-    cp -a . /home/site/wwwroot
+WORKDIR /app
 
-FROM mcr.microsoft.com/azure-functions/java:4-java17
+COPY pom.xml .
+COPY src ./src
 
-ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+RUN mvn package -DskipTests
 
-COPY --from=installer-env ["/home/site/wwwroot", "/home/site/wwwroot"]
 
-EXPOSE 80
+FROM openjdk:17-slim
+
+WORKDIR /app
+
+COPY --from=build /app/target/invoices-0.0.1.jar /app/invoices.jar
+
+ENV APPLICATION_ENV=prod
+
+CMD ["java", "-jar", "/app/invoices.jar"]
