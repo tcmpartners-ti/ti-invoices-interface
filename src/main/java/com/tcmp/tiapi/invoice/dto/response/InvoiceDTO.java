@@ -48,7 +48,7 @@ public class InvoiceDTO {
   @Schema(name = "isApproved")
   private Boolean isApproved;
 
-  @Schema(name = "status")
+  @Schema(name = "status", maxLength = 1, description = "O = Outstanding; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured; C = Cancelled")
   private Character status;
 
   @Schema(name = "detailsReceivedOn")
