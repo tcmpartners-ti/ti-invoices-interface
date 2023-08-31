@@ -7,6 +7,8 @@ import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.InvoiceRepository;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.program.ProgramRepository;
+import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.PaginatedResult;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,8 +24,9 @@ import java.util.stream.Collectors;
 public class SellerService {
   private final CounterPartyRepository counterPartyRepository;
   private final InvoiceRepository invoiceRepository;
-  private final InvoiceMapper invoiceMapper;
+  private final ProgramRepository programRepository;
 
+  private final InvoiceMapper invoiceMapper;
 
   public PaginatedResult<InvoiceDTO> getSellerInvoices(String sellerMnemonic, PageParams pageParams) {
     List<Long> sellerCounterpartyIds = counterPartyRepository.findByCustomerMnemonicAndRole(sellerMnemonic, CounterPartyRole.SELLER.getValue())
@@ -39,18 +39,24 @@ public class SellerService {
 
     List<Long> buyerCounterpartyIds = invoiceMasterPage.get().map(InvoiceMaster::getBuyerId).toList();
 
-    Set<Long> uniqueCounterPartiesIds = new HashSet<>();
-    uniqueCounterPartiesIds.addAll(sellerCounterpartyIds);
-    uniqueCounterPartiesIds.addAll(buyerCounterpartyIds);
+    List<Long> uniqueCounterPartiesIds = getUniqueCounterPartiesIds(buyerCounterpartyIds, sellerCounterpartyIds);
 
-    Map<Long, CounterParty> idToCounterParty = counterPartyRepository.findByIdIn(uniqueCounterPartiesIds.stream().toList())
-      .stream().collect(Collectors.toMap(CounterParty::getId, counterParty -> counterParty));
+    Map<Long, CounterParty> idToCounterParty = counterPartyRepository.findByIdIn(uniqueCounterPartiesIds)
+      .stream()
+      .collect(Collectors.toMap(CounterParty::getId, counterParty -> counterParty));
+
+    List<Long> uniqueProgramIds = invoiceMasterPage.stream()
+      .map(InvoiceMaster::getProgrammeId)
+      .distinct()
+      .toList();
+    Map<Long, Program> idToProgram = programRepository.findByPkIn(uniqueProgramIds)
+      .stream().collect(Collectors.toMap(Program::getPk, program -> program));
 
     List<InvoiceDTO> pageData = invoiceMasterPage.stream().map(invoiceMaster -> invoiceMapper.mapEntityToDTO(
       invoiceMaster,
       idToCounterParty.getOrDefault(invoiceMaster.getBuyerId(), null),
       idToCounterParty.getOrDefault(invoiceMaster.getSellerId(), null),
-      null
+      idToProgram.getOrDefault(invoiceMaster.getProgrammeId(), null)
     )).toList();
 
     return PaginatedResult.<InvoiceDTO>builder()
@@ -64,5 +70,10 @@ public class SellerService {
       .build();
   }
 
-//  private List<>
+  private List<Long> getUniqueCounterPartiesIds(List<Long> buyerCounterpartyIds, List<Long> sellerCounterpartyIds) {
+    List<Long> mergedIds = new ArrayList<>(buyerCounterpartyIds);
+    mergedIds.addAll(sellerCounterpartyIds);
+
+    return mergedIds.stream().distinct().toList();
+  }
 }
