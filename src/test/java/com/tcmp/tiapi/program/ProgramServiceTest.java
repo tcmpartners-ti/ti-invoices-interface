@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.program;
 
+import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
@@ -21,7 +22,7 @@ class ProgramServiceTest {
   @Mock
   private ProgramRepository programRepository;
   @Mock
-  private ProducerTemplate producerTemplate;
+  private ProgramMapper programMapper;
 
   private ProgramService testedProgramService;
 
@@ -29,37 +30,30 @@ class ProgramServiceTest {
   void setUp() {
     testedProgramService = new ProgramService(
       programRepository,
-      producerTemplate,
-      new ProgramConfiguration()
+      programMapper
     );
   }
 
   @Test
   void itCanGetProgramByUuid() {
-    // Given
     String programUuid = "mockUuid";
 
-    // When
     when(programRepository.findById(anyString()))
       .thenReturn(Optional.of(Program.builder().pk(1L).build()));
 
     testedProgramService.getProgramById(programUuid);
 
-    //Then
     verify(programRepository).findById(programUuid);
   }
 
   @Test
   void itShouldNotChangeProgramUuidWhenInvokingRepository() {
-    // Given
     String expectedProgramUuid = "mockUuid";
 
-    // When
     when(programRepository.findById(anyString()))
       .thenReturn(Optional.of(Program.builder().pk(1L).build()));
     testedProgramService.getProgramById(expectedProgramUuid);
 
-    // Then
     ArgumentCaptor<String> uuidCaptor = ArgumentCaptor.forClass(String.class);
 
     verify(programRepository).findById(uuidCaptor.capture());
@@ -72,12 +66,30 @@ class ProgramServiceTest {
   void itShouldThrowExceptionWhenProgramNotFoundByUuid() {
     String uuid = "mockUuid";
 
-    // When
     when(programRepository.findById(uuid))
       .thenReturn(Optional.empty());
 
-    // Then
     assertThrows(NotFoundHttpException.class,
       () -> testedProgramService.getProgramById(uuid));
+  }
+
+  @Test
+  void itShouldMapEntityToDto() {
+    String expectedProgramId = "123";
+
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(Program.builder()
+        .id(expectedProgramId)
+        .build()));
+    when(programMapper.mapEntityToDTO(any(Program.class)))
+      .thenReturn(ProgramDTO.builder()
+        .id(expectedProgramId)
+        .build());
+
+    testedProgramService.getProgramById(expectedProgramId);
+
+    ArgumentCaptor<Program> programCaptor = ArgumentCaptor.forClass(Program.class);
+    verify(programMapper).mapEntityToDTO(programCaptor.capture());
+    assertEquals(expectedProgramId, programCaptor.getValue().getId());
   }
 }
