@@ -20,8 +20,8 @@ public class ProgramService {
         String.format("Could not find a program with id %s.", programId)));
   }
 
-  public String sendAndReceiveProgramUUID(SCFProgrammeMessage programmeMessage) {
-    return producerTemplate.requestBody(
+  public void sendProgramToBeCreated(SCFProgrammeMessage programmeMessage) {
+    producerTemplate.requestBody(
       programConfiguration.getUriCreateFrom(),
       programmeMessage,
       String.class

@@ -22,7 +22,7 @@ import java.time.LocalDate;
 @XmlRootElement(name = "SCFProgramme", namespace = TINamespace.MESSAGES)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SCFProgrammeMessage {
-  @XmlElement(name = "ProgrammeId", namespace = TINamespace.MESSAGES)
+  @XmlElement(name = "ProgrammeID", namespace = TINamespace.MESSAGES)
   private String id;
 
   @XmlElement(name = "ProgrammeDescription", namespace = TINamespace.MESSAGES)
