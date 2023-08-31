@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +56,7 @@ class InvoiceRepositoryTest {
       .buyerId(buyerId)
       .build());
 
-    Page<InvoiceMaster> invoiceMasterPage = testedInvoiceRepository.findByBuyerId(buyerId,
+    Page<InvoiceMaster> invoiceMasterPage = testedInvoiceRepository.findByBuyerIdIn(List.of(buyerId),
       PageRequest.of(0, 10));
 
     assertNotNull(invoiceMasterPage);
