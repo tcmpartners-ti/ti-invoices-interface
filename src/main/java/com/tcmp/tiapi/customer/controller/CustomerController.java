@@ -1,5 +1,6 @@
-package com.tcmp.tiapi.customer;
+package com.tcmp.tiapi.customer.controller;
 
+import com.tcmp.tiapi.customer.service.CustomerService;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,13 +32,13 @@ public class CustomerController {
   private final InvoiceMapper invoiceMapper;
 
   @GetMapping("{customerMnemonic}/programs")
-  public ResponseEntity<PaginatedResult<ProgramDTO>> getCustomerProgramsByMnemonic(
+  public PaginatedResult<ProgramDTO> getCustomerProgramsByMnemonic(
     PageParams pageParams,
     @PathVariable String customerMnemonic
   ) {
     Page<Program> programsPage = customerService.getCustomerPrograms(customerMnemonic, pageParams);
 
-    return ResponseEntity.ok(PaginatedResult.<ProgramDTO>builder()
+    return PaginatedResult.<ProgramDTO>builder()
       .data(programsPage.get().map(programMapper::mapEntityToDTO).toList())
       .meta(Map.of(
         "pagination", Map.of(
@@ -46,24 +46,24 @@ public class CustomerController {
           "totalPages", programsPage.getTotalPages()
         )
       ))
-      .build());
+      .build();
   }
 
   @GetMapping("{customerMnemonic}/invoices")
-  public ResponseEntity<PaginatedResult<InvoiceDTO>> getCustomerInvoicesByMnemonic(
+  public PaginatedResult<InvoiceDTO> getCustomerInvoicesByMnemonic(
     PageParams pageParams,
     @PathVariable String customerMnemonic
   ) {
     Page<InvoiceMaster> invoices = customerService.getCustomerInvoices(customerMnemonic, pageParams);
 
-    return ResponseEntity.ok(PaginatedResult.<InvoiceDTO>builder()
-      .data(invoices.stream().map(invoiceMapper::mapEntityToDTO).toList())
+    return PaginatedResult.<InvoiceDTO>builder()
+      .data(invoices.stream().map(i -> invoiceMapper.mapEntityToDTO(i, null, null, null)).toList())
       .meta(Map.of(
         "pagination", Map.of(
           "isLastPage", invoices.isLast(),
           "totalPages", invoices.getTotalPages()
         )
       ))
-      .build());
+      .build();
   }
 }

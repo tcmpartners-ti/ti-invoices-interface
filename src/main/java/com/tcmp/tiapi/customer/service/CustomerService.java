@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.customer;
+package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.model.CounterPartyRole;
@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,6 @@ public class CustomerService {
       customerMnemonic, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
   }
 
-  // Todo: check with functional team.
   public Page<InvoiceMaster> getCustomerInvoices(String customerMnemonic, PageParams pageParams) {
     if (!customerRepository.existsByIdMnemonic(customerMnemonic)) {
       throw new NotFoundHttpException(
@@ -41,12 +42,11 @@ public class CustomerService {
     }
 
     // Buyer is the anchor client.
-    CounterParty counterParty = counterPartyRepository
-      .findByCustomerMnemonicAndRole(customerMnemonic, CounterPartyRole.BUYER.getValue())
-      .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find counter party with mnemonic %s.", customerMnemonic)));
+    List<Long> counterPartyIds = counterPartyRepository.findByCustomerMnemonicAndRole(customerMnemonic, CounterPartyRole.BUYER.getValue())
+      .stream().map(CounterParty::getId)
+      .toList();
 
-    return invoiceRepository.findByBuyerId(
-      counterParty.getId(), PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+    return invoiceRepository.findByBuyerIdIn(
+      counterPartyIds, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
   }
 }
