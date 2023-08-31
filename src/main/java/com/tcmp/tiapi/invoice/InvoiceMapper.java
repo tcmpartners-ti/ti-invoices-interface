@@ -12,6 +12,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class})
 public interface InvoiceMapper {
@@ -66,9 +67,10 @@ public interface InvoiceMapper {
   InvoiceDTO mapEntityToDTO(InvoiceMaster invoiceMaster, CounterParty buyer, CounterParty seller, Program program);
 
   default BigDecimal mapNullableBigDecimal(BigDecimal input) {
-    return input != null
-      ? input.divide(new BigDecimal(100))
-      : null;
+    if (input == null) return null;
+
+    BigDecimal scaledInput = input.setScale(2, RoundingMode.HALF_UP);
+    return scaledInput.divide(new BigDecimal(100), RoundingMode.HALF_UP);
   }
 
   @Mapping(source = "context.customer", target = "context.customer")
