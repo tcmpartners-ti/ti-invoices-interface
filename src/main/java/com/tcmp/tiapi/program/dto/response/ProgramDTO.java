@@ -35,5 +35,5 @@ public class ProgramDTO {
   private CurrencyAmountDTO creditLimit;
 
   @Schema(name = "status", description = "Program status. B=Blocked, R=Referred, I=Inactive, A=Active.")
-  private String status;
+  private Character status;
 }

@@ -1,6 +1,5 @@
 package com.tcmp.tiapi.program.model;
 
-import com.tcmp.tiapi.program.converter.DatabaseProgramStatusConverter;
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,8 +20,7 @@ public class Program {
   private Long pk;
 
   @Column(name = "STATUS")
-  @Convert(converter = DatabaseProgramStatusConverter.class)
-  private ProgramStatus status;
+  private Character status;
 
   @Column(name = "ID", length = 35)
   private String id;
