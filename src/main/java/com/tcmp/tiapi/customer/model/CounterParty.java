@@ -22,7 +22,7 @@ public class CounterParty {
 
   @Size(max = 20)
   @Column(name = "CPARTY", length = 20)
-  private String counterPartyMnemonic;
+  private String mnemonic;
 
   @Column(name = "ROLE")
   private Character role;
