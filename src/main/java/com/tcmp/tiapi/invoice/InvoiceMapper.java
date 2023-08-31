@@ -8,13 +8,13 @@ import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.messaging.utils.TILocaleNumberFormatUtil;
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
-@Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class})
+@Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class, MonetaryAmountUtils.class})
 public interface InvoiceMapper {
 
   @Mapping(source = "invoiceMaster.id", target = "id")
@@ -46,32 +46,25 @@ public interface InvoiceMapper {
   @Mapping(source = "invoiceMaster.isDeferCharged", target = "isDeferCharged")
   @Mapping(source = "invoiceMaster.eligibilityReasonCode", target = "eligibilityReasonCode")
 
-  @Mapping(target = "faceValue.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getFaceValueAmount()))")
+  @Mapping(target = "faceValue.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getFaceValueAmount()))")
   @Mapping(source = "invoiceMaster.faceValueCurrencyCode", target = "faceValue.currency")
-  @Mapping(target = "totalPaid.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getTotalPaidAmount()))")
+  @Mapping(target = "totalPaid.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getTotalPaidAmount()))")
   @Mapping(source = "invoiceMaster.totalPaidCurrencyCode", target = "totalPaid.currency")
-  @Mapping(target = "outstanding.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getFaceValueAmount()))")
+  @Mapping(target = "outstanding.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getFaceValueAmount()))")
   @Mapping(source = "invoiceMaster.outstandingAmountCurrencyCode", target = "outstanding.currency")
-  @Mapping(target = "advanceAvailable.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getAdvanceAvailableAmount()))")
+  @Mapping(target = "advanceAvailable.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getAdvanceAvailableAmount()))")
   @Mapping(source = "invoiceMaster.advanceAvailableCurrencyCode", target = "advanceAvailable.currency")
-  @Mapping(target = "advanceAvailableEquivalent.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getAdvanceAvailableEquivalentAmount()))")
+  @Mapping(target = "advanceAvailableEquivalent.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getAdvanceAvailableEquivalentAmount()))")
   @Mapping(source = "invoiceMaster.advanceAvailableEquivalentCurrencyCode", target = "advanceAvailableEquivalent.currency")
-  @Mapping(target = "discountAdvance.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getDiscountAdvanceAmount()))")
+  @Mapping(target = "discountAdvance.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getDiscountAdvanceAmount()))")
   @Mapping(source = "invoiceMaster.discountAdvanceAmountCurrencyCode", target = "discountAdvance.currency")
-  @Mapping(target = "discountDeal.amount", expression = "java(mapNullableBigDecimal(invoiceMaster.getDiscountDealAmount()))")
+  @Mapping(target = "discountDeal.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getDiscountDealAmount()))")
   @Mapping(source = "invoiceMaster.discountDealAmountCurrencyCode", target = "discountDeal.currency")
 
   @Mapping(source = "invoiceMaster.detailsNotesForCustomer", target = "detailsNotesForCustomer")
   @Mapping(source = "invoiceMaster.securityDetails", target = "securityDetails")
   @Mapping(source = "invoiceMaster.taxDetails", target = "taxDetails")
   InvoiceDTO mapEntityToDTO(InvoiceMaster invoiceMaster, CounterParty buyer, CounterParty seller, Program program);
-
-  default BigDecimal mapNullableBigDecimal(BigDecimal input) {
-    if (input == null) return null;
-
-    BigDecimal scaledInput = input.setScale(2, RoundingMode.HALF_UP);
-    return scaledInput.divide(new BigDecimal(100), RoundingMode.HALF_UP);
-  }
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")

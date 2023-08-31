@@ -3,7 +3,6 @@ package com.tcmp.tiapi.program;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
-import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
