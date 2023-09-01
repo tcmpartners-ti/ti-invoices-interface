@@ -2,10 +2,16 @@ package com.tcmp.tiapi.customer.repository;
 
 import com.tcmp.tiapi.customer.model.CounterParty;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
 public interface CounterPartyRepository extends JpaRepository<CounterParty, Long> {
+
   List<CounterParty> findByIdIn(List<Long> counterPartiesIds);
+
   List<CounterParty> findByCustomerMnemonicAndRole(String customerMnemonic, Character role);
+
+  @Query("SELECT DISTINCT c.id FROM CounterParty c WHERE c.customerMnemonic = :customerMnemonic AND c.role = :role")
+  List<Long> findUniqueIdsByCustomerMnemonicAndRole(String customerMnemonic, Character role);
 }

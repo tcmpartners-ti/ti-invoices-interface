@@ -13,6 +13,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class, MonetaryAmountUtils.class})
 public interface InvoiceMapper {
@@ -105,4 +108,22 @@ public interface InvoiceMapper {
   @Mapping(source = "invoiceCreationRowCSV.settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
+
+  default  List<InvoiceDTO> mapEntitiesToDTOs(
+    List<InvoiceMaster> invoiceMasters,
+    Map<Long, CounterParty> idToCounterparty,
+    Map<Long, Program> idToProgram
+  ) {
+    List<InvoiceDTO> invoicesDTOs = new ArrayList<>(invoiceMasters.size());
+    for (InvoiceMaster invoiceMaster : invoiceMasters) {
+      invoicesDTOs.add(mapEntityToDTO(
+        invoiceMaster,
+        idToCounterparty.get(invoiceMaster.getBuyerId()),
+        idToCounterparty.get(invoiceMaster.getSellerId()),
+        idToProgram.get(invoiceMaster.getProgrammeId())
+      ));
+    }
+
+    return invoicesDTOs;
+  }
 }

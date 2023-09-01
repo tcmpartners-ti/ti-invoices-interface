@@ -7,7 +7,7 @@ import com.tcmp.tiapi.shared.dto.response.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("sellers")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Sellers", description = "Defines the sellers operations.")
 public class SellerController {
   private final SellerService sellerService;
 
-  @GetMapping(path = "{sellerMnemonic}/invoices")
+  @GetMapping(path = "{sellerMnemonic}/invoices", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get seller's invoices by its mnemonic (ruc).")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(
     PageParams pageParams,
