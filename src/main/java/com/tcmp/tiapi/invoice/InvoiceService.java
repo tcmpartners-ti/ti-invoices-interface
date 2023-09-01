@@ -40,6 +40,7 @@ public class InvoiceService {
     InvoiceMaster invoiceMaster = invoiceRepository.findByReference(reference)
       .orElseThrow(() -> new NotFoundHttpException(
         String.format("Could not find an invoice with reference %s.", reference)));
+
     CounterParty buyer = getCounterPartyById(invoiceMaster.getBuyerId());
     CounterParty seller = getCounterPartyById(invoiceMaster.getSellerId());
     Program program = getProgramById(invoiceMaster.getProgrammeId());

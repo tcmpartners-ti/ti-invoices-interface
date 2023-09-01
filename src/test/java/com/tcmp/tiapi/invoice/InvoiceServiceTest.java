@@ -1,20 +1,21 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
-import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramRepository;
+import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.shared.exception.BadRequestHttpException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -28,25 +29,23 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceServiceTest {
-  @Mock
-  private ProducerTemplate producerTemplate;
-  @Mock
-  private InvoiceConfiguration invoiceConfiguration;
-  @Mock
-  private InvoiceRepository invoiceRepository;
-  @Mock
-  private CounterPartyRepository counterPartyRepository;
-  @Mock
-  private ProgramRepository programRepository;
-  @Mock
-  private InvoiceMapper invoiceMapper;
+  @Mock private ProducerTemplate producerTemplate;
+  @Mock private InvoiceConfiguration invoiceConfiguration;
+  @Mock private InvoiceRepository invoiceRepository;
+  @Mock private CounterPartyRepository counterPartyRepository;
+  @Mock private ProgramRepository programRepository;
+  @Mock private InvoiceMapper invoiceMapper;
+
+  @Captor private ArgumentCaptor<String> routeCaptor;
+  @Captor private ArgumentCaptor<CreateInvoiceEventMessage> messageCaptor;
+  @Captor private ArgumentCaptor<Map<String, Object>> headersCaptor;
+  @Captor private ArgumentCaptor<BufferedReader> bufferedReaderCaptor;
 
   private InvoiceService testedInvoiceService;
 
@@ -63,9 +62,11 @@ class InvoiceServiceTest {
   }
 
   @Test
-  @Disabled("DI has changed, new repositories need to be injected.")
   void itShouldGetInvoiceByReference() {
     String invoiceReference = "INV123";
+    Long expectedBuyerId = 1L;
+    Long expectedSellerId = 2L;
+    Long expectedProgramId = 1L;
 
     when(invoiceRepository.findByReference(invoiceReference))
       .thenReturn(Optional.of(InvoiceMaster.builder()
@@ -75,11 +76,28 @@ class InvoiceServiceTest {
         .programmeId(1L)
         .reference(invoiceReference)
         .build()));
+    when(counterPartyRepository.findById(anyLong()))
+      .thenReturn(Optional.of(CounterParty.builder()
+        .id(expectedBuyerId)
+        .build()));
+    when(counterPartyRepository.findById(anyLong()))
+      .thenReturn(Optional.of(CounterParty.builder()
+        .id(expectedSellerId)
+        .build()));
+    when(programRepository.findByPk(anyLong()))
+      .thenReturn(Optional.of(Program.builder()
+        .pk(expectedProgramId)
+        .build()));
 
-    InvoiceDTO invoiceMaster = testedInvoiceService.getInvoiceByReference(invoiceReference);
+    testedInvoiceService.getInvoiceByReference(invoiceReference);
 
     verify(invoiceRepository).findByReference(invoiceReference);
-    assertNotNull(invoiceMaster);
+    verify(invoiceMapper).mapEntityToDTO(
+      any(InvoiceMaster.class),
+      any(CounterParty.class),
+      any(CounterParty.class),
+      any(Program.class)
+    );
   }
 
   @Test
@@ -99,13 +117,6 @@ class InvoiceServiceTest {
     InvoiceCreationDTO invoiceCreationDTO = InvoiceCreationDTO.builder()
       .invoiceNumber("INV123")
       .build();
-
-    ArgumentCaptor<String> routeCaptor =
-      ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<CreateInvoiceEventMessage> messageCaptor =
-      ArgumentCaptor.forClass(CreateInvoiceEventMessage.class);
-    ArgumentCaptor<Map<String, Object>> headersCaptor =
-      ArgumentCaptor.forClass(Map.class);
 
     String expectedRoute = "direct:mockCreate";
 
@@ -136,8 +147,6 @@ class InvoiceServiceTest {
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", inputStream);
     String expectedRoute = "direct:createBulkInvoices";
 
-    ArgumentCaptor<String> routeCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<BufferedReader> bufferedReaderCaptor = ArgumentCaptor.forClass(BufferedReader.class);
     when(invoiceConfiguration.getUriBulkCreateFrom())
       .thenReturn(expectedRoute);
 
@@ -146,7 +155,7 @@ class InvoiceServiceTest {
     verify(producerTemplate).sendBodyAndHeaders(
       routeCaptor.capture(),
       bufferedReaderCaptor.capture(),
-      any(Map.class)
+      any()
     );
     assertThat(routeCaptor.getValue()).isEqualTo(expectedRoute);
   }
@@ -157,8 +166,6 @@ class InvoiceServiceTest {
     InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", inputStream);
     String expectedRoute = "direct:createBulkInvoices";
-
-    ArgumentCaptor<Map<String, Object>> headersCaptor = ArgumentCaptor.forClass(Map.class);
 
     when(invoiceConfiguration.getUriBulkCreateFrom())
       .thenReturn(expectedRoute);
@@ -176,10 +183,8 @@ class InvoiceServiceTest {
 
   @Test
   void itShouldThrowExceptionWhenFileIsEmpty() {
-    // Prepare test data
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", new byte[0]);
 
-    // Call the method and assert exception
     assertThrows(InvalidFileHttpException.class,
       () -> testedInvoiceService.createMultipleInvoicesInTi(multipartFile, "123"));
   }
@@ -193,5 +198,14 @@ class InvoiceServiceTest {
 
     assertThrows(InvalidFileHttpException.class,
       () -> testedInvoiceService.createMultipleInvoicesInTi(problematicFile, "123"));
+  }
+
+  @Test
+  void itShouldThrowExceptionWhenBatchIdTooLong() {
+    String lengthExceedingBatchId = "XXXXXXXXXXXXXXXXXXXXX";
+    MultipartFile mockMultipartFile = mock(MultipartFile.class);
+
+    assertThrows(BadRequestHttpException.class, () ->
+      testedInvoiceService.createMultipleInvoicesInTi(mockMultipartFile, lengthExceedingBatchId));
   }
 }
