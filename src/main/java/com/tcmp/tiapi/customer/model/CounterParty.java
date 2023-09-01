@@ -2,16 +2,18 @@ package com.tcmp.tiapi.customer.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Table(name = "SCFCPARTY")
+@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@Entity
-@Table(name = "SCFCPARTY")
 public class CounterParty {
   @Id
   @Column(name = "KEY97", nullable = false)
