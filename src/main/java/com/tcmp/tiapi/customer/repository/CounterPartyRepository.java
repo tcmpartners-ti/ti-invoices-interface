@@ -10,8 +10,6 @@ public interface CounterPartyRepository extends JpaRepository<CounterParty, Long
 
   List<CounterParty> findByIdIn(List<Long> counterPartiesIds);
 
-  List<CounterParty> findByCustomerMnemonicAndRole(String customerMnemonic, Character role);
-
   @Query("SELECT DISTINCT c.id FROM CounterParty c WHERE c.customerMnemonic = :customerMnemonic AND c.role = :role")
   List<Long> findUniqueIdsByCustomerMnemonicAndRole(String customerMnemonic, Character role);
 }

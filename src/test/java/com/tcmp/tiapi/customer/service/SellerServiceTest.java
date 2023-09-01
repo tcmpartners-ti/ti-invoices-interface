@@ -1,6 +1,5 @@
 package com.tcmp.tiapi.customer.service;
 
-import com.tcmp.tiapi.customer.model.CounterPartyRole;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.InvoiceRepository;
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -34,6 +34,11 @@ class SellerServiceTest {
   private ProgramRepository programRepository;
   @Mock
   private InvoiceMapper invoiceMapper;
+
+  @Captor
+  private ArgumentCaptor<List<Long>> counterpartyArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<PageRequest> pageRequestArgumentCaptor;
 
   private SellerService sellerService;
 
@@ -75,8 +80,6 @@ class SellerServiceTest {
     );
     PageParams expectedPageParams = new PageParams();
 
-    ArgumentCaptor<List<Long>> sellerIdsCaptor = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
     when(counterPartyRepository.findUniqueIdsByCustomerMnemonicAndRole(anyString(), anyChar()))
       .thenReturn(expectedSellerIds);
     when(invoiceRepository.findBySellerIdIn(anyList(), any(PageRequest.class)))
@@ -85,8 +88,8 @@ class SellerServiceTest {
     sellerService.getSellerInvoices(expectedSellerMnemonic, new PageParams());
 
     verify(invoiceRepository)
-      .findBySellerIdIn(sellerIdsCaptor.capture(), pageRequestCaptor.capture());
-    assertEquals(expectedPageParams.getPage(), pageRequestCaptor.getValue().getPageNumber());
-    assertEquals(expectedPageParams.getSize(), pageRequestCaptor.getValue().getPageSize());
+      .findBySellerIdIn(counterpartyArgumentCaptor.capture(), pageRequestArgumentCaptor.capture());
+    assertEquals(expectedPageParams.getPage(), pageRequestArgumentCaptor.getValue().getPageNumber());
+    assertEquals(expectedPageParams.getSize(), pageRequestArgumentCaptor.getValue().getPageSize());
   }
 }
