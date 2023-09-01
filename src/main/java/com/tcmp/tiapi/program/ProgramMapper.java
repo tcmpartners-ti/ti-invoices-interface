@@ -6,6 +6,8 @@ import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(imports = {MonetaryAmountUtils.class})
 public interface ProgramMapper {
   @Mapping(source = "id", target = "id")
@@ -18,4 +20,6 @@ public interface ProgramMapper {
   @Mapping(target = "creditLimit.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(program.getAvailableLimitAmount()))")
   @Mapping(source = "status", target = "status")
   ProgramDTO mapEntityToDTO(Program program);
+
+  List<ProgramDTO> mapEntitiesToDTOs(List<Program> programs);
 }

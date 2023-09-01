@@ -4,12 +4,11 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
 public class PaginatedResult<T> {
   private List<T> data;
 
-  private Map<String, Object> meta;
+  private PaginatedResultMeta meta;
 }
