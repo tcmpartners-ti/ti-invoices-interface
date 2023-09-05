@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @CsvRecord(separator = ",")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Getter
 @Setter
 @ToString

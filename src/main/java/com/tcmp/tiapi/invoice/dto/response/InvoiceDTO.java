@@ -11,97 +11,97 @@ import java.time.LocalDate;
 @Builder
 public class InvoiceDTO {
 
-  @Schema(name = "id", description = "TI identifier.")
+  @Schema(description = "TI identifier.")
   private Long id;
 
   // Business identifier
-  @Schema(name = "invoiceNumber", description = "Invoice number (unique identifier).")
+  @Schema(description = "Invoice number (unique identifier).")
   private String invoiceNumber;
 
-  @Schema(name = "buyerPartyId")
+  @Schema
   private Long buyerPartyId;
 
-  @Schema(name = "createFinanceEventId")
+  @Schema
   private Long createFinanceEventId;
 
-  @Schema(name = "batchId")
+  @Schema
   private String batchId;
 
-  @Schema(name = "buyer")
+  @Schema
   private InvoiceCounterPartyDTO buyer;
 
-  @Schema(name = "seller")
+  @Schema
   private InvoiceCounterPartyDTO seller;
 
-  @Schema(name = "programme")
-  private InvoiceProgramDTO program;
+  @Schema
+  private InvoiceProgramDTO programme;
 
-  @Schema(name = "bulkPaymentMasterId")
+  @Schema
   private Long bulkPaymentMasterId;
 
-  @Schema(name = "subTypeCategory", maxLength = 1, description = "F = Pool based factoring; R = Buyer centric finance; D = Seller centric finance")
+  @Schema(maxLength = 1, description = "F = Pool based factoring; R = Buyer centric finance; D = Seller centric finance")
   private Character subTypeCategory;
 
-  @Schema(name = "programType", maxLength = 1, description = "B = Buyer centric; S = Seller centric.")
+  @Schema(maxLength = 1, description = "B = Buyer centric; S = Seller centric.")
   private Character programType;
 
-  @Schema(name = "isApproved")
+  @Schema
   private Boolean isApproved;
 
-  @Schema(name = "status", maxLength = 1, description = "O = Outstanding; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured; C = Cancelled")
+  @Schema(maxLength = 1, description = "O = Outstanding; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured; C = Cancelled")
   private Character status;
 
-  @Schema(name = "detailsReceivedOn")
+  @Schema
   private LocalDate detailsReceivedOn;
 
-  @Schema(name = "settlementDate")
+  @Schema
   private LocalDate settlementDate;
 
-  @Schema(name = "isDisclosed")
+  @Schema
   private Boolean isDisclosed;
 
-  @Schema(name = "isRecourse")
+  @Schema
   private Boolean isRecourse;
 
-  @Schema(name = "isDrawDownEligible")
+  @Schema
   private Boolean isDrawDownEligible;
 
-  @Schema(name = "preferredCurrencyCode")
+  @Schema
   private String preferredCurrencyCode;
 
-  @Schema(name = "isDeferCharged")
+  @Schema
   private Boolean isDeferCharged;
 
-  @Schema(name = "eligibilityReasonCode", maxLength = 1, description = "A = -; B = Forced ineligible; C = Invoice has duplicate reference; c = Forced eligible (Invoice has duplicate reference); D = Invoice status is overdue; d = Forced eligible (Invoice status is overdue); E = Invoice has invalid issue date; e = Forced eligible (Invoice has invalid issue date); F = Invoice is post-dated; f = Forced eligible (Invoice is post-dated); G = Invoice is stale; g = Forced eligible (Invoice is stale); H = Invoice has invalid seller; h = Forced eligible (Invoice has invalid seller); I = Invoice has invalid buyer; i = Forced eligible (Invoice has invalid buyer); J = Invoice has blocked buyer; j = Forced eligible (Invoice has blocked buyer); K = Invoice has invalid seller buyer relationship; k = Forced eligible (Invoice has invalid seller buyer relationship); L = Invoice has invalid settlement date; l = Forced eligible (Invoice has invalid settlement date); M = Invoice settlement date outside of maximum period; m = Forced eligible (Invoice settlement date outside of maximum period); N = Invoice status is dishonoured; n = Forced eligible (Invoice status is dishonoured); O = Invoice status is cancelled; o = Forced eligible (Invoice status is cancelled); P = Invoice status is under inquiry; p = Forced eligible (Invoice status is under inquiry); Q = Invoice status is paid; q = Forced eligible (Invoice status is paid); R = Invoice has referred buyer; r = Forced eligible (Invoice has referred buyer); S = Invoice is being financed; T = Invoice requires approval; t = Forced eligible (Invoice requires approval); U = Invoice has blocked seller; u = Forced eligible (Invoice has blocked seller); V = Invoice has referred seller; v = Forced eligible (Invoice has referred seller); W = Invoice has invalid received on date; w = Forced eligible (Invoice has invalid received on date); X = Invoice programme or seller buyer limits fully utilised; x = Forced eligible (Invoice programme or seller buyer limits fully utilised); Y = Invoice is already financed; Z = Invoice is booked off; 0 = Gateway transaction refused.")
+  @Schema(maxLength = 1, description = "A = -; B = Forced ineligible; C = Invoice has duplicate reference; c = Forced eligible (Invoice has duplicate reference); D = Invoice status is overdue; d = Forced eligible (Invoice status is overdue); E = Invoice has invalid issue date; e = Forced eligible (Invoice has invalid issue date); F = Invoice is post-dated; f = Forced eligible (Invoice is post-dated); G = Invoice is stale; g = Forced eligible (Invoice is stale); H = Invoice has invalid seller; h = Forced eligible (Invoice has invalid seller); I = Invoice has invalid buyer; i = Forced eligible (Invoice has invalid buyer); J = Invoice has blocked buyer; j = Forced eligible (Invoice has blocked buyer); K = Invoice has invalid seller buyer relationship; k = Forced eligible (Invoice has invalid seller buyer relationship); L = Invoice has invalid settlement date; l = Forced eligible (Invoice has invalid settlement date); M = Invoice settlement date outside of maximum period; m = Forced eligible (Invoice settlement date outside of maximum period); N = Invoice status is dishonoured; n = Forced eligible (Invoice status is dishonoured); O = Invoice status is cancelled; o = Forced eligible (Invoice status is cancelled); P = Invoice status is under inquiry; p = Forced eligible (Invoice status is under inquiry); Q = Invoice status is paid; q = Forced eligible (Invoice status is paid); R = Invoice has referred buyer; r = Forced eligible (Invoice has referred buyer); S = Invoice is being financed; T = Invoice requires approval; t = Forced eligible (Invoice requires approval); U = Invoice has blocked seller; u = Forced eligible (Invoice has blocked seller); V = Invoice has referred seller; v = Forced eligible (Invoice has referred seller); W = Invoice has invalid received on date; w = Forced eligible (Invoice has invalid received on date); X = Invoice programme or seller buyer limits fully utilised; x = Forced eligible (Invoice programme or seller buyer limits fully utilised); Y = Invoice is already financed; Z = Invoice is booked off; 0 = Gateway transaction refused.")
   private Character eligibilityReasonCode;
 
-  @Schema(name = "faceValue")
+  @Schema
   private CurrencyAmountDTO faceValue;
 
-  @Schema(name = "totalPaid")
+  @Schema
   private CurrencyAmountDTO totalPaid;
 
-  @Schema(name = "outstanding")
+  @Schema
   private CurrencyAmountDTO outstanding;
 
-  @Schema(name = "advanceAvailable")
+  @Schema
   private CurrencyAmountDTO advanceAvailable;
 
-  @Schema(name = "advanceAvailableEquivalent")
+  @Schema
   private CurrencyAmountDTO advanceAvailableEquivalent;
 
-  @Schema(name = "discountAdvance")
+  @Schema
   private CurrencyAmountDTO discountAdvance;
 
-  @Schema(name = "discountDeal")
+  @Schema
   private CurrencyAmountDTO discountDeal;
 
-  @Schema(name = "detailsNotesForCustomer", maxLength = 520, description = "Details notes for customer.")
+  @Schema(maxLength = 520, description = "Details notes for customer.")
   private String detailsNotesForCustomer;
 
-  @Schema(name = "securityDetails", maxLength = 370, description = "Invoice security details.")
+  @Schema(maxLength = 370, description = "Invoice security details.")
   private String securityDetails;
 
-  @Schema(name = "taxDetails", maxLength = 148, description = "Invoice tax details.")
+  @Schema(maxLength = 148, description = "Invoice tax details.")
   private String taxDetails;
 }

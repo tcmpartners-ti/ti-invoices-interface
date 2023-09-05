@@ -32,8 +32,8 @@ public interface InvoiceMapper {
   @Mapping(source = "seller.id", target = "seller.id")
   @Mapping(source = "seller.mnemonic", target = "seller.mnemonic")
   @Mapping(source = "seller.name", target = "seller.name")
-  @Mapping(source = "program.id", target = "program.id")
-  @Mapping(source = "program.description", target = "program.description")
+  @Mapping(source = "program.id", target = "programme.id")
+  @Mapping(source = "program.description", target = "programme.description")
 
   @Mapping(source = "invoiceMaster.bulkPaymentMasterId", target = "bulkPaymentMasterId")
   @Mapping(source = "invoiceMaster.subTypeCategory", target = "subTypeCategory")
@@ -86,7 +86,7 @@ public interface InvoiceMapper {
   @Mapping(source = "outstandingAmount.amount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "settlementDate", target = "settlementDate")
-  @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
+  @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() != null && invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
   CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
   @Mapping(source = "invoiceCreationRowCSV.customerMnemonic", target = "context.customer")
