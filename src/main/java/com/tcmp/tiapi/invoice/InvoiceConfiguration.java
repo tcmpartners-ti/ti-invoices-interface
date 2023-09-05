@@ -5,9 +5,11 @@ import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
+import com.tcmp.tiapi.titobp.service.OperationalGatewayService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,9 +38,12 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public CreateInvoiceRouteBuilder invoiceRouter(JaxbDataFormat jaxbDataFormat) {
+  public CreateInvoiceRouteBuilder invoiceRouter(
+    @Qualifier("jaxbDataFormatServiceRequest")
+    JaxbDataFormat jaxbDataFormatServiceRequest
+  ) {
     return new CreateInvoiceRouteBuilder(
-      jaxbDataFormat,
+      jaxbDataFormatServiceRequest,
       new TIServiceRequestWrapper(),
       new XmlNamespaceFixer(),
       uriCreateFrom,
@@ -47,9 +52,13 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(JaxbDataFormat jaxbDataFormat, InvoiceMapper invoiceMapper) {
+  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(
+    @Qualifier("jaxbDataFormatServiceRequest")
+    JaxbDataFormat jaxbDataFormatServiceRequest,
+    InvoiceMapper invoiceMapper
+  ) {
     return new BulkCreateInvoicesRouteBuilder(
-      jaxbDataFormat,
+      jaxbDataFormatServiceRequest,
       invoiceMapper,
       new TIServiceRequestWrapper(),
       new XmlNamespaceFixer(),
@@ -59,8 +68,14 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder() {
+  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder(
+    @Qualifier("jaxbDataFormatServiceResponse")
+    JaxbDataFormat jaxbDataFormatServiceResponse,
+    OperationalGatewayService operationalGatewayService
+  ) {
     return new InvoiceCreatedEventListenerRouteBuilder(
+      jaxbDataFormatServiceResponse,
+      operationalGatewayService,
       uriCreatedEventFrom,
       uriCreatedEventTo
     );

@@ -2,9 +2,11 @@ package com.tcmp.tiapi.messaging.config;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
+import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,12 +29,20 @@ public class TIMessagingConfiguration {
   );
 
   @Bean
-  JaxbDataFormat jaxbDataFormat() throws JAXBException {
+  @Qualifier("jaxbDataFormatServiceRequest")
+  JaxbDataFormat jaxbDataFormatServiceRequest() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(ServiceRequest.class);
 
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
     jaxbDataFormat.setNamespacePrefix(namespacesPrefixes);
 
     return jaxbDataFormat;
+  }
+
+  @Bean
+  @Qualifier("jaxbDataFormatServiceResponse")
+  JaxbDataFormat jaxbDataFormatServiceResponse() throws JAXBException {
+    JAXBContext jaxbServiceResponseContext = JAXBContext.newInstance(ServiceResponse.class);
+    return new JaxbDataFormat(jaxbServiceResponseContext);
   }
 }
