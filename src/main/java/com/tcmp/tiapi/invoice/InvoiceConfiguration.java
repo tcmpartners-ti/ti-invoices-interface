@@ -5,7 +5,6 @@ import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
-import com.tcmp.tiapi.titobp.service.OperationalGatewayService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.mapstruct.factory.Mappers;
@@ -68,14 +67,8 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder(
-    @Qualifier("jaxbDataFormatServiceResponse")
-    JaxbDataFormat jaxbDataFormatServiceResponse,
-    OperationalGatewayService operationalGatewayService
-  ) {
+  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder() {
     return new InvoiceCreatedEventListenerRouteBuilder(
-      jaxbDataFormatServiceResponse,
-      operationalGatewayService,
       uriCreatedEventFrom,
       uriCreatedEventTo
     );
