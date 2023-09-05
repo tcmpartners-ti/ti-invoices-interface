@@ -37,7 +37,7 @@ public class InvoiceService {
   private final InvoiceMapper invoiceMapper;
 
   public InvoiceDTO getInvoiceByReference(String reference) {
-    InvoiceMaster invoiceMaster = invoiceRepository.findByReference(reference)
+    InvoiceMaster invoiceMaster = invoiceRepository.findFirstByReference(reference)
       .orElseThrow(() -> new NotFoundHttpException(
         String.format("Could not find an invoice with reference %s.", reference)));
 
