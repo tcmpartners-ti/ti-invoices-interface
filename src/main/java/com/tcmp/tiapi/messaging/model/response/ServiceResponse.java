@@ -1,22 +1,16 @@
 package com.tcmp.tiapi.messaging.model.response;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
-@XmlRootElement(name = "ServiceResponse")
+@XmlRootElement(name = "ServiceResponse", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
 public class ServiceResponse {
-  @XmlAttribute(namespace = TINamespace.CONTROL)
-  private String controlNamespace;
-
-  @XmlAttribute(namespace = TINamespace.CONTROL)
-  private String messagesNamespace;
-
-  @XmlAttribute(namespace = TINamespace.COMMON)
-  private String commonNamespace;
-
-  @XmlElement(name = "ResponseHeader")
+  @XmlElement(name = "ResponseHeader", namespace = TINamespace.CONTROL)
   private ResponseHeader responseHeader;
 }
