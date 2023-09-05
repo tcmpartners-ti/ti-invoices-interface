@@ -68,7 +68,7 @@ class InvoiceServiceTest {
     Long expectedSellerId = 2L;
     Long expectedProgramId = 1L;
 
-    when(invoiceRepository.findByReference(invoiceReference))
+    when(invoiceRepository.findFirstByReference(invoiceReference))
       .thenReturn(Optional.of(InvoiceMaster.builder()
         .id(1L)
         .buyerId(1L)
@@ -91,7 +91,7 @@ class InvoiceServiceTest {
 
     testedInvoiceService.getInvoiceByReference(invoiceReference);
 
-    verify(invoiceRepository).findByReference(invoiceReference);
+    verify(invoiceRepository).findFirstByReference(invoiceReference);
     verify(invoiceMapper).mapEntityToDTO(
       any(InvoiceMaster.class),
       any(CounterParty.class),
@@ -104,7 +104,7 @@ class InvoiceServiceTest {
   void itShouldThrowExceptionWhenInvoiceNotFoundByReference() {
     String invoiceReference = "INV123";
 
-    when(invoiceRepository.findByReference(anyString()))
+    when(invoiceRepository.findFirstByReference(anyString()))
       .thenReturn(Optional.empty());
 
     assertThrows(NotFoundHttpException.class,

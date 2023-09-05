@@ -35,7 +35,7 @@ class InvoiceRepositoryTest {
       .reference(invoiceReference)
       .build());
 
-    Optional<InvoiceMaster> actualInvoice = testedInvoiceRepository.findByReference(invoiceReference);
+    Optional<InvoiceMaster> actualInvoice = testedInvoiceRepository.findFirstByReference(invoiceReference);
 
     assertTrue(actualInvoice.isPresent());
   }
