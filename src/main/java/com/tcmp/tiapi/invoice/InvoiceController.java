@@ -5,6 +5,7 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,14 @@ public class InvoiceController {
 
   @PostMapping(path = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices in Trade Innovation.")
-  public InvoicesCreatedDTO bulkCreateInvoices(@RequestPart MultipartFile invoicesFile, @RequestPart String batchId) {
+  public InvoicesCreatedDTO bulkCreateInvoices(
+    @RequestPart
+    @Schema(description = "Invoices file in CSV format.")
+    MultipartFile invoicesFile,
+    @RequestPart
+    @Schema(maxLength = 20, description = "Invoices batch identifier.")
+    String batchId
+  ) {
     invoiceService.createMultipleInvoicesInTi(invoicesFile, batchId);
 
     return InvoicesCreatedDTO.builder()
