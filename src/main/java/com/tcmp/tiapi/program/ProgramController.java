@@ -1,6 +1,9 @@
 package com.tcmp.tiapi.program;
 
+import com.tcmp.tiapi.customer.dto.CounterPartyDTO;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.shared.dto.request.PageParams;
+import com.tcmp.tiapi.shared.dto.response.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,5 +26,17 @@ public class ProgramController {
   @Operation(description = "Get a program by its identifier.")
   public ProgramDTO getProgramById(@PathVariable String programId) {
     return programService.getProgramById(programId);
+  }
+
+  @GetMapping(path = "{programId}/sellers", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get a program's sellers by its identifier")
+  public PaginatedResult<CounterPartyDTO> getProgramSellersById(
+    @PathVariable String programId,
+    PageParams pageParams
+  ) {
+    return programService.getProgramSellersById(
+      programId,
+      pageParams
+    );
   }
 }
