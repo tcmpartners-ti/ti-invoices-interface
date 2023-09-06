@@ -20,7 +20,7 @@ public class CounterParty {
   private Long id;
 
   @Column(name = "PROGRAMME")
-  private Long programmeId;
+  private Long programmePk;
 
   @Size(max = 20)
   @Column(name = "CPARTY", length = 20)
@@ -47,27 +47,27 @@ public class CounterParty {
 
   @Size(max = 35)
   @Column(name = "CPARTYNA1", length = 35)
-  private String nameAndAdressLine1;
+  private String nameAndAddressLine1;
 
   @Size(max = 35)
   @Column(name = "CPARTYNA2", length = 35)
-  private String nameAndAdressLine2;
+  private String nameAndAddressLine2;
 
   @Size(max = 35)
   @Column(name = "CPARTYNA3", length = 35)
-  private String nameAndAdressLine3;
+  private String nameAndAddressLine3;
 
   @Size(max = 35)
   @Column(name = "CPARTYNA4", length = 35)
-  private String nameAndAdressLine4;
+  private String nameAndAddressLine4;
 
   @Size(max = 35)
   @Column(name = "CPARTYNA5", length = 35)
-  private String nameAndAdressLine5;
+  private String nameAndAddressLine5;
 
   @Lob
   @Column(name = "CPARTYNAF")
-  private String nameAndAdressFreeFormat;
+  private String nameAndAddressFreeFormat;
 
   @Size(max = 15)
   @Column(name = "ZIP", length = 15)
