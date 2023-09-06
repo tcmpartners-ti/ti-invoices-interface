@@ -1,73 +1,83 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.messaging.utils.TILocaleNumberFormatUtil;
+import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import com.tcmp.tiapi.shared.utils.StringMappingUtils;
+import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Mapper(uses = TILocaleNumberFormatUtil.class, imports = {BigDecimal.class, MonetaryAmountUtils.class})
-public interface InvoiceMapper {
+@Mapper(
+  uses = {
+    CurrencyAmountMapper.class,
+    CounterPartyMapper.class,
+    ProgramMapper.class
+  },
+  componentModel = MappingConstants.ComponentModel.SPRING,
+  injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+  imports = {
+    BigDecimal.class,
+    MonetaryAmountUtils.class,
+    StringMappingUtils.class
+  }
+)
+public abstract class InvoiceMapper {
+  @Autowired protected CurrencyAmountMapper currencyMapper;
+  @Autowired protected CounterPartyMapper counterPartyMapper;
+  @Autowired protected ProgramMapper programMapper;
 
-  @Mapping(source = "invoiceMaster.id", target = "id")
-  @Mapping(source = "invoiceMaster.reference", target = "invoiceNumber")
-  @Mapping(source = "invoiceMaster.buyerPartyId", target = "buyerPartyId")
-  @Mapping(source = "invoiceMaster.createFinanceEventId", target = "createFinanceEventId")
-  @Mapping(source = "invoiceMaster.batchId", target = "batchId")
+  @Mapping(source = "invoice.id", target = "id")
+  @Mapping(target = "invoiceNumber", expression = "java(StringMappingUtils.trimNullable(invoice.getReference()))")
+  @Mapping(source = "invoice.buyerPartyId", target = "buyerPartyId")
+  @Mapping(source = "invoice.createFinanceEventId", target = "createFinanceEventId")
+  @Mapping(target = "batchId", expression = "java(StringMappingUtils.trimNullable(invoice.getBatchId()))")
 
-  @Mapping(source = "buyer.id", target = "buyer.id")
-  @Mapping(source = "buyer.mnemonic", target = "buyer.mnemonic")
-  @Mapping(source = "buyer.name", target = "buyer.name")
-  @Mapping(source = "seller.id", target = "seller.id")
-  @Mapping(source = "seller.mnemonic", target = "seller.mnemonic")
-  @Mapping(source = "seller.name", target = "seller.name")
-  @Mapping(source = "program.id", target = "programme.id")
-  @Mapping(source = "program.description", target = "programme.description")
+  @Mapping(target = "buyer", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(buyer))")
+  @Mapping(target = "seller", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(seller))")
+  @Mapping(target = "programme", expression = "java(programMapper.mapEntityToInvoiceDTO(program))")
 
-  @Mapping(source = "invoiceMaster.bulkPaymentMasterId", target = "bulkPaymentMasterId")
-  @Mapping(source = "invoiceMaster.subTypeCategory", target = "subTypeCategory")
-  @Mapping(source = "invoiceMaster.programType", target = "programType")
-  @Mapping(source = "invoiceMaster.isApproved", target = "isApproved")
-  @Mapping(source = "invoiceMaster.status", target = "status")
-  @Mapping(source = "invoiceMaster.detailsReceivedOn", target = "detailsReceivedOn")
-  @Mapping(source = "invoiceMaster.settlementDate", target = "settlementDate")
-  @Mapping(source = "invoiceMaster.isDisclosed", target = "isDisclosed")
-  @Mapping(source = "invoiceMaster.isRecourse", target = "isRecourse")
-  @Mapping(source = "invoiceMaster.isDrawDownEligible", target = "isDrawDownEligible")
-  @Mapping(source = "invoiceMaster.preferredCurrencyCode", target = "preferredCurrencyCode")
-  @Mapping(source = "invoiceMaster.isDeferCharged", target = "isDeferCharged")
-  @Mapping(source = "invoiceMaster.eligibilityReasonCode", target = "eligibilityReasonCode")
+  @Mapping(source = "invoice.bulkPaymentMasterId", target = "bulkPaymentMasterId")
+  @Mapping(source = "invoice.subTypeCategory", target = "subTypeCategory")
+  @Mapping(source = "invoice.programType", target = "programType")
+  @Mapping(source = "invoice.isApproved", target = "isApproved")
+  @Mapping(source = "invoice.status", target = "status")
+  @Mapping(source = "invoice.detailsReceivedOn", target = "detailsReceivedOn")
+  @Mapping(source = "invoice.settlementDate", target = "settlementDate")
+  @Mapping(source = "invoice.isDisclosed", target = "isDisclosed")
+  @Mapping(source = "invoice.isRecourse", target = "isRecourse")
+  @Mapping(source = "invoice.isDrawDownEligible", target = "isDrawDownEligible")
+  @Mapping(target = "preferredCurrencyCode", expression = "java(StringMappingUtils.trimNullable(invoice.getPreferredCurrencyCode()))")
+  @Mapping(source = "invoice.isDeferCharged", target = "isDeferCharged")
+  @Mapping(source = "invoice.eligibilityReasonCode", target = "eligibilityReasonCode")
 
-  @Mapping(target = "faceValue.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getFaceValueAmount()))")
-  @Mapping(source = "invoiceMaster.faceValueCurrencyCode", target = "faceValue.currency")
-  @Mapping(target = "totalPaid.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getTotalPaidAmount()))")
-  @Mapping(source = "invoiceMaster.totalPaidCurrencyCode", target = "totalPaid.currency")
-  @Mapping(target = "outstanding.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getFaceValueAmount()))")
-  @Mapping(source = "invoiceMaster.outstandingAmountCurrencyCode", target = "outstanding.currency")
-  @Mapping(target = "advanceAvailable.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getAdvanceAvailableAmount()))")
-  @Mapping(source = "invoiceMaster.advanceAvailableCurrencyCode", target = "advanceAvailable.currency")
-  @Mapping(target = "advanceAvailableEquivalent.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getAdvanceAvailableEquivalentAmount()))")
-  @Mapping(source = "invoiceMaster.advanceAvailableEquivalentCurrencyCode", target = "advanceAvailableEquivalent.currency")
-  @Mapping(target = "discountAdvance.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getDiscountAdvanceAmount()))")
-  @Mapping(source = "invoiceMaster.discountAdvanceAmountCurrencyCode", target = "discountAdvance.currency")
-  @Mapping(target = "discountDeal.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(invoiceMaster.getDiscountDealAmount()))")
-  @Mapping(source = "invoiceMaster.discountDealAmountCurrencyCode", target = "discountDeal.currency")
+  @Mapping(target = "faceValue", expression = "java(currencyMapper.mapToDto(invoice.getFaceValueAmount(), invoice.getFaceValueCurrencyCode()))")
+  @Mapping(target = "totalPaid", expression = "java(currencyMapper.mapToDto(invoice.getTotalPaidAmount(), invoice.getTotalPaidCurrencyCode()))")
+  @Mapping(target = "outstanding", expression = "java(currencyMapper.mapToDto(invoice.getOutstandingAmount(), invoice.getOutstandingAmountCurrencyCode()))")
+  @Mapping(target = "advanceAvailable", expression = "java(currencyMapper.mapToDto(invoice.getAdvanceAvailableAmount(), invoice.getAdvanceAvailableCurrencyCode()))")
+  @Mapping(target = "advanceAvailableEquivalent", expression = "java(currencyMapper.mapToDto(invoice.getAdvanceAvailableEquivalentAmount(), invoice.getAdvanceAvailableEquivalentCurrencyCode()))")
+  @Mapping(target = "discountAdvance", expression = "java(currencyMapper.mapToDto(invoice.getDiscountAdvanceAmount(), invoice.getDiscountAdvanceAmountCurrencyCode()))")
+  @Mapping(target = "discountDeal", expression = "java(currencyMapper.mapToDto(invoice.getDiscountDealAmount(), invoice.getDiscountDealAmountCurrencyCode()))")
 
-  @Mapping(source = "invoiceMaster.detailsNotesForCustomer", target = "detailsNotesForCustomer")
-  @Mapping(source = "invoiceMaster.securityDetails", target = "securityDetails")
-  @Mapping(source = "invoiceMaster.taxDetails", target = "taxDetails")
-  InvoiceDTO mapEntityToDTO(InvoiceMaster invoiceMaster, CounterParty buyer, CounterParty seller, Program program);
+  @Mapping(source = "invoice.detailsNotesForCustomer", target = "detailsNotesForCustomer")
+  @Mapping(source = "invoice.securityDetails", target = "securityDetails")
+  @Mapping(source = "invoice.taxDetails", target = "taxDetails")
+  public abstract InvoiceDTO mapEntityToDTO(InvoiceMaster invoice, CounterParty buyer, CounterParty seller, Program program);
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
@@ -87,7 +97,7 @@ public interface InvoiceMapper {
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "settlementDate", target = "settlementDate")
   @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() != null && invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
-  CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
+  public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
   @Mapping(source = "invoiceCreationRowCSV.customerMnemonic", target = "context.customer")
   @Mapping(source = "invoiceCreationRowCSV.theirReference", target = "context.theirReference")
@@ -107,9 +117,9 @@ public interface InvoiceMapper {
   @Mapping(source = "invoiceCreationRowCSV.outstandingCurrency", target = "outstandingAmount.currency")
   @Mapping(source = "invoiceCreationRowCSV.settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
-  CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
+  public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
 
-  default  List<InvoiceDTO> mapEntitiesToDTOs(
+  public List<InvoiceDTO> mapEntitiesToDTOs(
     List<InvoiceMaster> invoiceMasters,
     Map<Long, CounterParty> idToCounterparty,
     Map<Long, Program> idToProgram

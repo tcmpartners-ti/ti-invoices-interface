@@ -7,7 +7,6 @@ import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,11 +29,6 @@ public class InvoiceConfiguration {
   private String uriCreatedEventFrom;
   @Value("${invoice.route.creation-listener.to}")
   private String uriCreatedEventTo;
-
-  @Bean
-  public InvoiceMapper invoiceMapper() {
-    return Mappers.getMapper(InvoiceMapper.class);
-  }
 
   @Bean
   public CreateInvoiceRouteBuilder invoiceRouter(
