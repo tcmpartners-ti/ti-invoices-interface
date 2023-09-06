@@ -36,9 +36,6 @@ public class InvoiceCreationDTO {
   @Schema(name = "buyer", description = "The customer who is the debit party on the invoice(s).", minLength = 1, maxLength = 20)
   private String buyer;
 
-  @Schema(name = "receivedOn", description = "Date of receipt of the incoming message.", format = "YYYY-mm-dd")
-  private LocalDate receivedOn;
-
   @Size(min = 1, max = 34, message = "Invoice number must be between 1 and 34 characters long")
   private String invoiceNumber;
 
