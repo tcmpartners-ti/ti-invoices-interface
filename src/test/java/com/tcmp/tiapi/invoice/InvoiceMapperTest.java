@@ -8,14 +8,17 @@ import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.model.Program;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+@SpringBootTest
 class InvoiceMapperTest {
-  InvoiceMapper invoiceMapper = Mappers.getMapper(InvoiceMapper.class);
+  @Autowired InvoiceMapper testedInvoiceMapper;
 
   @Test
   void itShouldMapEntityToDTO() {
@@ -36,7 +39,7 @@ class InvoiceMapperTest {
       .id("IDEAL01")
       .build();
 
-    InvoiceDTO invoiceDto = invoiceMapper.mapEntityToDTO(source, buyer, seller, program);
+    InvoiceDTO invoiceDto = testedInvoiceMapper.mapEntityToDTO(source, buyer, seller, program);
 
     assertEquals(source.getId(), invoiceDto.getId());
     assertEquals(buyer.getId(), invoiceDto.getBuyer().getId());
@@ -46,7 +49,7 @@ class InvoiceMapperTest {
 
   @Test
   void itShouldReturnNullIfEverySourceIsNull() {
-    InvoiceDTO invoiceDTO = invoiceMapper.mapEntityToDTO(null, null, null, null);
+    InvoiceDTO invoiceDTO = testedInvoiceMapper.mapEntityToDTO(null, null, null, null);
 
     assertNull(invoiceDTO);
   }
@@ -60,7 +63,7 @@ class InvoiceMapperTest {
       .programme("SUP123")
       .build();
 
-    CreateInvoiceEventMessage createInvoiceMessage = invoiceMapper.mapDTOToFTIMessage(invoiceCreationDTO);
+    CreateInvoiceEventMessage createInvoiceMessage = testedInvoiceMapper.mapDTOToFTIMessage(invoiceCreationDTO);
 
     assertEquals(invoiceCreationDTO.getInvoiceNumber(), createInvoiceMessage.getInvoiceNumber());
     assertEquals(invoiceCreationDTO.getBuyer(), createInvoiceMessage.getBuyer());
@@ -79,11 +82,11 @@ class InvoiceMapperTest {
       .outstandingAmount(BigDecimal.TEN)
       .build();
 
-    CreateInvoiceEventMessage createInvoiceMessage = invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, null);
+    CreateInvoiceEventMessage createInvoiceMessage = testedInvoiceMapper.mapCSVRowToFTIMessage(invoiceRow, null);
 
     assertEquals(invoiceRow.getInvoiceNumber(), createInvoiceMessage.getInvoiceNumber());
     assertEquals(invoiceRow.getBuyerId(), createInvoiceMessage.getBuyer());
-    assertEquals(invoiceRow.getSellerId() , createInvoiceMessage.getSeller());
+    assertEquals(invoiceRow.getSellerId(), createInvoiceMessage.getSeller());
     assertEquals(invoiceRow.getProgrammeId(), createInvoiceMessage.getProgramme());
   }
 }
