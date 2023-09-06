@@ -1,27 +1,43 @@
 package com.tcmp.tiapi.program;
 
+import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
+import com.tcmp.tiapi.customer.model.CounterParty;
+import com.tcmp.tiapi.customer.model.CounterPartyRole;
+import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.jaxb.SpringDataJaxb;
 
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProgramServiceTest {
-  @Mock
-  private ProgramRepository programRepository;
-  @Mock
-  private ProgramMapper programMapper;
+  @Mock private ProgramRepository programRepository;
+  @Mock private CounterPartyRepository counterPartyRepository;
+  @Mock private ProgramMapper programMapper;
+  @Mock private CounterPartyMapper counterPartyMapper;
+
+  @Captor ArgumentCaptor<String> programIdArgumentCaptor;
+  @Captor ArgumentCaptor<Program> programArgumentCaptor;
+  @Captor ArgumentCaptor<Long> programPkArgumentCaptor;
+  @Captor ArgumentCaptor<Character> counterPartyRoleArgumentCaptor;
+  @Captor ArgumentCaptor<PageRequest> pageRequestArgumentCaptor;
 
   private ProgramService testedProgramService;
 
@@ -29,12 +45,14 @@ class ProgramServiceTest {
   void setUp() {
     testedProgramService = new ProgramService(
       programRepository,
-      programMapper
+      counterPartyRepository,
+      programMapper,
+      counterPartyMapper
     );
   }
 
   @Test
-  void itCanGetProgramByUuid() {
+  void getProgramById_itCanGetProgramByUuid() {
     String programUuid = "mockUuid";
 
     when(programRepository.findById(anyString()))
@@ -46,23 +64,21 @@ class ProgramServiceTest {
   }
 
   @Test
-  void itShouldNotChangeProgramUuidWhenInvokingRepository() {
-    String expectedProgramUuid = "mockUuid";
+  void getProgramById_itShouldNotChangeProgramUuidWhenInvokingRepository() {
+    String expectedProgramId = "mockUuid";
 
     when(programRepository.findById(anyString()))
       .thenReturn(Optional.of(Program.builder().pk(1L).build()));
-    testedProgramService.getProgramById(expectedProgramUuid);
+    testedProgramService.getProgramById(expectedProgramId);
 
-    ArgumentCaptor<String> uuidCaptor = ArgumentCaptor.forClass(String.class);
+    verify(programRepository).findById(programIdArgumentCaptor.capture());
+    String capturedUuid = programIdArgumentCaptor.getValue();
 
-    verify(programRepository).findById(uuidCaptor.capture());
-    String capturedUuid = uuidCaptor.getValue();
-
-    assertEquals(capturedUuid, expectedProgramUuid);
+    assertEquals(capturedUuid, expectedProgramId);
   }
 
   @Test
-  void itShouldThrowExceptionWhenProgramNotFoundByUuid() {
+  void getProgramById_itShouldThrowExceptionWhenProgramNotFoundByUuid() {
     String uuid = "mockUuid";
 
     when(programRepository.findById(uuid))
@@ -73,7 +89,7 @@ class ProgramServiceTest {
   }
 
   @Test
-  void itShouldMapEntityToDto() {
+  void getProgramById_itShouldMapEntityToDto() {
     String expectedProgramId = "123";
 
     when(programRepository.findById(anyString()))
@@ -87,8 +103,61 @@ class ProgramServiceTest {
 
     testedProgramService.getProgramById(expectedProgramId);
 
-    ArgumentCaptor<Program> programCaptor = ArgumentCaptor.forClass(Program.class);
-    verify(programMapper).mapEntityToDTO(programCaptor.capture());
-    assertEquals(expectedProgramId, programCaptor.getValue().getId());
+    verify(programMapper).mapEntityToDTO(programArgumentCaptor.capture());
+    assertEquals(expectedProgramId, programArgumentCaptor.getValue().getId());
+  }
+
+  @Test
+  void getProgramSellersById_itShouldThrowExceptionWhenProgramNotFound() {
+    String expectedProgramId = "IDEAL01";
+    PageParams expectedPageParams = new PageParams();
+
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.empty());
+
+    assertThrows(NotFoundHttpException.class,
+      () -> testedProgramService.getProgramSellersById(expectedProgramId, expectedPageParams));
+  }
+
+  @Test
+  void getProgramSellersById_itShouldCallCounterPartyRepository() {
+    Long expectedProgramPk = 1L;
+    String expectedProgramId = "IDEAL01";
+    Character expectedCounterPartyRole = CounterPartyRole.SELLER.getValue();
+    Program expectedProgram = Program.builder()
+      .pk(expectedProgramPk)
+      .id(expectedProgramId)
+      .build();
+    List<CounterParty> expectedCounterParties = List.of(
+      CounterParty.builder()
+        .id(1L)
+        .mnemonic("1722466420")
+        .build()
+    );
+
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(expectedProgram));
+    when(counterPartyRepository.findByProgrammePkAndRole(
+      anyLong(),
+      any(Character.class),
+      any(PageRequest.class)
+    ))
+      .thenReturn(new PageImpl<>(expectedCounterParties));
+
+    PageParams pageParams = new PageParams();
+    testedProgramService.getProgramSellersById(
+      expectedProgramId,
+      pageParams
+    );
+
+    verify(counterPartyRepository).findByProgrammePkAndRole(
+      programPkArgumentCaptor.capture(),
+      counterPartyRoleArgumentCaptor.capture(),
+      pageRequestArgumentCaptor.capture()
+    );
+
+    assertEquals(expectedProgramPk, programPkArgumentCaptor.getValue());
+    assertEquals(expectedCounterPartyRole, counterPartyRoleArgumentCaptor.getValue());
+    assertNotNull(pageRequestArgumentCaptor.getValue());
   }
 }
