@@ -76,7 +76,7 @@ class InvoiceMapperTest {
   @Test
   void itShouldMapCSVRowToFTIMessage() {
     InvoiceCreationRowCSV invoiceRow = InvoiceCreationRowCSV.builder()
-      .branch("BPEC")
+      .behalfOfBranch("BPEC")
       .buyerId("Supermaxi")
       .sellerId("CocaCola")
       .programmeId("SUP123")

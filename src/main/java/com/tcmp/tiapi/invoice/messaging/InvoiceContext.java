@@ -19,9 +19,6 @@ import java.io.Serializable;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class InvoiceContext implements Serializable {
-  @XmlElement(name = "Branch", namespace = TINamespace.COMMON)
-  private String branch;
-
   @XmlElement(name = "Customer", namespace = TINamespace.COMMON)
   private String customer;
 

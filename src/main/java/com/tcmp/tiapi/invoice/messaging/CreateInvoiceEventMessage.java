@@ -38,10 +38,6 @@ public class CreateInvoiceEventMessage implements Serializable {
   @XmlElement(name = "AnchorParty", namespace = TINamespace.MESSAGES)
   private String anchorParty;
 
-  @XmlElement(name = "ReceivedOn", namespace = TINamespace.MESSAGES)
-  @XmlJavaTypeAdapter(LocalDateAdapter.class)
-  private LocalDate receivedOn;
-
   @XmlElement(name = "BatchID", namespace = TINamespace.MESSAGES)
   private String batchId;
 
