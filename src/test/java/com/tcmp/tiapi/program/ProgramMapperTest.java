@@ -3,15 +3,19 @@ package com.tcmp.tiapi.program;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.Program;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SpringBootTest
+@ActiveProfiles("test")
 class ProgramMapperTest {
-  private final ProgramMapper programMapper = Mappers.getMapper(ProgramMapper.class);
+  @Autowired ProgramMapper programMapper;
 
   @Test
-  void itShouldMapEntityToDto() {
+  void mapEntityToDTO_itShouldMapEntityToDto() {
     String expectedId = "Program123";
     String expectedCustomerMnemonic = "Customer123";
     Program programMock = Program.builder()

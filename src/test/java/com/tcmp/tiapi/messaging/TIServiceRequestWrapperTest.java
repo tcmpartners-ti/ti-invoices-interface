@@ -21,14 +21,13 @@ class TIServiceRequestWrapperTest {
   }
 
   @Test
-  void itShouldWrapMessage() {
-    // Given
+  void wrapRequest_itShouldWrapMessage() {
     String expectedProgrammeId = "PROG123";
 
     SCFProgrammeMessage programmeMessage = SCFProgrammeMessage.builder()
       .id(expectedProgrammeId)
       .build();
-    // When
+
     ServiceRequest<SCFProgrammeMessage> serviceRequest =
       testedServiceRequestWrapper.wrapRequest(
         TIService.TRADE_INNOVATION,
@@ -38,7 +37,6 @@ class TIServiceRequestWrapperTest {
         programmeMessage
       );
 
-    // Then
     String actualProgrammeId = serviceRequest.getBody().getId();
     assertEquals(expectedProgrammeId, actualProgrammeId);
   }

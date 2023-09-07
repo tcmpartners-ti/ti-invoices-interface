@@ -18,8 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DataJpaTest
 class InvoiceRepositoryTest {
 
-  @Autowired
-  private InvoiceRepository testedInvoiceRepository;
+  @Autowired private InvoiceRepository testedInvoiceRepository;
 
   @AfterEach
   void tearDown() {
@@ -27,7 +26,7 @@ class InvoiceRepositoryTest {
   }
 
   @Test
-  void itShouldFindInvoiceByReference() {
+  void findFirstByReference_itShouldFindInvoiceByReference() {
     String invoiceReference = "INVOICE123";
 
     testedInvoiceRepository.save(InvoiceMaster.builder()
@@ -41,7 +40,7 @@ class InvoiceRepositoryTest {
   }
 
   @Test
-  void itShouldFindByBuyerId() {
+  void findByBuyerIdIn_itShouldFindByBuyerId() {
     Long buyerId = 1L;
 
     testedInvoiceRepository.save(InvoiceMaster.builder()

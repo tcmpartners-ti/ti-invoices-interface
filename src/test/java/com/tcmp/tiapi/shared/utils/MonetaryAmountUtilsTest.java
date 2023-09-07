@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 class MonetaryAmountUtilsTest {
   @Test
-  void itShouldConvertCentsToDollars() {
+  void convertCentsToDollars_itShouldConvertCentsToDollars() {
     BigDecimal cents = BigDecimal.valueOf(10000); // 100.00 cents
     BigDecimal expectedDollars = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
 
@@ -25,7 +25,7 @@ class MonetaryAmountUtilsTest {
   }
 
   @Test
-  void itShouldConvertCentsToDollarsWithRounding() {
+  void convertCentsToDollars_itShouldConvertCentsToDollarsWithRounding() {
     BigDecimal cents = BigDecimal.valueOf(5678);
     BigDecimal expectedDollars = BigDecimal.valueOf(56.78).setScale(2, RoundingMode.HALF_UP);
 
@@ -35,7 +35,7 @@ class MonetaryAmountUtilsTest {
   }
 
   @Test
-  void itShouldConvertCentsToDollarsWithRoundingMock() {
+  void convertCentsToDollars_itShouldConvertCentsToDollarsWithRoundingMock() {
     BigDecimal cents = mock(BigDecimal.class);
     when(cents.setScale(anyInt(), any(RoundingMode.class)))
       .thenReturn(cents); // Mock scale operation
@@ -56,7 +56,7 @@ class MonetaryAmountUtilsTest {
     "5, 0.05",
     "1, 0.01"
   })
-  void itShouldConvertCentsToDollars(int cents, String expectedDollars) {
+  void convertCentsToDollars_itShouldConvertCentsToDollars(int cents, String expectedDollars) {
     BigDecimal centsBigDecimal = BigDecimal.valueOf(cents);
     BigDecimal expectedDollarsBigDecimal = new BigDecimal(expectedDollars);
 

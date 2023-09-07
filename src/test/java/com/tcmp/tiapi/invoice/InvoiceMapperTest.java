@@ -23,7 +23,7 @@ class InvoiceMapperTest {
   @Autowired InvoiceMapper testedInvoiceMapper;
 
   @Test
-  void itShouldMapEntityToDTO() {
+  void mapEntityToDTO_itShouldMapEntityToDTO() {
     InvoiceMaster source = InvoiceMaster.builder()
       .id(1L)
       .reference("Invoice123")
@@ -50,14 +50,14 @@ class InvoiceMapperTest {
   }
 
   @Test
-  void itShouldReturnNullIfEverySourceIsNull() {
+  void mapEntityToDTO_itShouldReturnNullIfEverySourceIsNull() {
     InvoiceDTO invoiceDTO = testedInvoiceMapper.mapEntityToDTO(null, null, null, null);
 
     assertNull(invoiceDTO);
   }
 
   @Test
-  void itShouldMapDTOToFTIMessage() {
+  void mapDTOToFTIMessage_itShouldMapDTOToFTIMessage() {
     InvoiceCreationDTO invoiceCreationDTO = InvoiceCreationDTO.builder()
       .invoiceNumber("Invoice123")
       .buyer("Supermaxi")
@@ -74,7 +74,7 @@ class InvoiceMapperTest {
   }
 
   @Test
-  void itShouldMapCSVRowToFTIMessage() {
+  void mapCSVRowToFTIMessage_itShouldMapCSVRowToFTIMessage() {
     InvoiceCreationRowCSV invoiceRow = InvoiceCreationRowCSV.builder()
       .behalfOfBranch("BPEC")
       .buyerId("Supermaxi")

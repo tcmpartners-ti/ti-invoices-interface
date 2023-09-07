@@ -62,7 +62,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldGetInvoiceByReference() {
+  void getInvoiceByReference_itShouldGetInvoiceByReference() {
     String invoiceReference = "INV123";
     Long expectedBuyerId = 1L;
     Long expectedSellerId = 2L;
@@ -101,7 +101,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldThrowExceptionWhenInvoiceNotFoundByReference() {
+  void getInvoiceByReference_itShouldThrowExceptionWhenInvoiceNotFoundByReference() {
     String invoiceReference = "INV123";
 
     when(invoiceRepository.findFirstByReference(anyString()))
@@ -113,7 +113,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldInvokeCamelRouteWhenCreatingInvoice() {
+  void createSingleInvoiceInTi_itShouldInvokeCamelRouteWhenCreatingInvoice() {
     InvoiceCreationDTO invoiceCreationDTO = InvoiceCreationDTO.builder()
       .invoiceNumber("INV123")
       .build();
@@ -141,7 +141,7 @@ class InvoiceServiceTest {
 
 
   @Test
-  void itShouldSendToCamelRouteIfFileIsCorrect() throws IOException {
+  void createMultipleInvoicesInTi_itShouldSendToCamelRouteIfFileIsCorrect() throws IOException {
     String fileContent = "A,B,C";
     InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", inputStream);
@@ -161,7 +161,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldSetBatchIdHeader() throws IOException {
+  void createMultipleInvoicesInTi_itShouldSetBatchIdHeader() throws IOException {
     String fileContent = "A,B,C";
     InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", inputStream);
@@ -182,7 +182,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldThrowExceptionWhenFileIsEmpty() {
+  void createMultipleInvoicesInTi_itShouldThrowExceptionWhenFileIsEmpty() {
     MultipartFile multipartFile = new MockMultipartFile("invoices.csv", new byte[0]);
 
     assertThrows(InvalidFileHttpException.class,
@@ -190,7 +190,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldThrowExceptionWhenInvalidFile() throws IOException {
+  void createMultipleInvoicesInTi_itShouldThrowExceptionWhenInvalidFile() throws IOException {
     MultipartFile problematicFile = mock(MultipartFile.class);
 
     when(problematicFile.getInputStream())
@@ -201,7 +201,7 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void itShouldThrowExceptionWhenBatchIdTooLong() {
+  void createMultipleInvoicesInTi_itShouldThrowExceptionWhenBatchIdTooLong() {
     String lengthExceedingBatchId = "XXXXXXXXXXXXXXXXXXXXX";
     MultipartFile mockMultipartFile = mock(MultipartFile.class);
 

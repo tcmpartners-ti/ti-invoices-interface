@@ -29,15 +29,11 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
   private static final String URI_FROM = "direct:createInvoice";
   private static final String URI_TO = "mock:activeMQ";
 
-  @EndpointInject(URI_FROM)
-  ProducerTemplate from;
+  @EndpointInject(URI_FROM) ProducerTemplate from;
 
-  @Mock
-  private JaxbDataFormat jaxbDataFormat;
-  @Mock
-  private TIServiceRequestWrapper tiServiceRequestWrapper;
-  @Mock
-  private XmlNamespaceFixer xmlNamespaceFixer;
+  @Mock private JaxbDataFormat jaxbDataFormat;
+  @Mock private TIServiceRequestWrapper tiServiceRequestWrapper;
+  @Mock private XmlNamespaceFixer xmlNamespaceFixer;
 
   @Override
   protected RoutesBuilder createRouteBuilder() {

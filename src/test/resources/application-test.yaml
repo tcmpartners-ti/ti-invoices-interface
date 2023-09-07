@@ -17,6 +17,14 @@ ti:
       name: "BP.DIGIBANK.TO.FTI.REPLY"
       jndi: "queue/digibankInIncomingReply"
 
+bp:
+  api-gee:
+    base-url: "http://localhost:5000"
+    services:
+      business-banking:
+        operational-gateway:
+          url: "${bp.api-gee.base-url}/business-banking/v1/operational-gateway"
+
 invoice:
   route:
     create:

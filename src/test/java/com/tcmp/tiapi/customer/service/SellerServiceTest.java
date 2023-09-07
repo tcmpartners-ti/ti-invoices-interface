@@ -26,19 +26,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SellerServiceTest {
 
-  @Mock
-  private CounterPartyRepository counterPartyRepository;
-  @Mock
-  private InvoiceRepository invoiceRepository;
-  @Mock
-  private ProgramRepository programRepository;
-  @Mock
-  private InvoiceMapper invoiceMapper;
+  @Mock private CounterPartyRepository counterPartyRepository;
+  @Mock private InvoiceRepository invoiceRepository;
+  @Mock private ProgramRepository programRepository;
+  @Mock private InvoiceMapper invoiceMapper;
 
-  @Captor
-  private ArgumentCaptor<List<Long>> counterpartyArgumentCaptor;
-  @Captor
-  private ArgumentCaptor<PageRequest> pageRequestArgumentCaptor;
+  @Captor private ArgumentCaptor<List<Long>> counterpartyArgumentCaptor;
+  @Captor private ArgumentCaptor<PageRequest> pageRequestArgumentCaptor;
 
   private SellerService sellerService;
 
@@ -53,7 +47,7 @@ class SellerServiceTest {
   }
 
   @Test
-  void itShouldThrowExceptionIfNoInvoicesAreFound() {
+  void getSellerInvoices_itShouldThrowExceptionIfNoInvoicesAreFound() {
     String expectedSellerMnemonic = "1722466421001";
     PageParams expectedPageParams = new PageParams();
 
@@ -65,7 +59,7 @@ class SellerServiceTest {
   }
 
   @Test
-  void itShouldCallInvoiceRepositoryWithCorrectArguments() {
+  void getSellerInvoices_itShouldCallInvoiceRepositoryWithCorrectArguments() {
     String expectedSellerMnemonic = "1722466421001";
     List<Long> expectedSellerIds = List.of(1L, 2L);
     List<InvoiceMaster> expectedInvoices = List.of(

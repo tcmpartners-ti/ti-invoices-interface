@@ -24,12 +24,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BuyerServiceTest {
-  @Mock
-  private CustomerRepository customerRepository;
-  @Mock
-  private ProgramRepository programRepository;
-  @Mock
-  private ProgramMapper programMapper;
+  @Mock private CustomerRepository customerRepository;
+  @Mock private ProgramRepository programRepository;
+  @Mock private ProgramMapper programMapper;
 
   private BuyerService testedBuyerService;
 
@@ -43,7 +40,7 @@ class BuyerServiceTest {
   }
 
   @Test
-  void itShouldThrowNotFoundExceptionWhenCustomerNotFound() {
+  void getBuyerProgramsByMnemonic_itShouldThrowNotFoundExceptionWhenCustomerNotFound() {
     String expectedBuyerMnemonic = "1722466421001";
     PageParams pageParams = new PageParams();
 
@@ -60,7 +57,7 @@ class BuyerServiceTest {
   }
 
   @Test
-  void itShouldRequestPageFromReceivedParams() {
+  void getBuyerProgramsByMnemonic_itShouldRequestPageFromReceivedParams() {
     String expectedBuyerMnemonic = "1722466421001";
     PageParams expectedPageParams = new PageParams();
 

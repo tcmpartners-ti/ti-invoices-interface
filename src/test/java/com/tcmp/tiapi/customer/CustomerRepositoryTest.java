@@ -12,8 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 class CustomerRepositoryTest {
-  @Autowired
-  private CustomerRepository testedCustomerRepository;
+  @Autowired private CustomerRepository testedCustomerRepository;
 
   @AfterEach
   void tearDown() {
@@ -21,7 +20,7 @@ class CustomerRepositoryTest {
   }
 
   @Test
-  void itShouldCheckIfCustomerExistsByMnemonic() {
+  void existsByIdMnemonic_itShouldCheckIfCustomerExistsByMnemonic() {
     String mnemonic = "1733466420001";
 
     testedCustomerRepository.save(Customer.builder()
@@ -38,7 +37,7 @@ class CustomerRepositoryTest {
   }
 
   @Test
-  void itShouldCheckIfCustomerDoesntExistByMnemonic() {
+  void existsByIdMnemonic_itShouldCheckIfCustomerDoesntExistByMnemonic() {
     String nonExistingMnemonic = "123";
 
     boolean actualExists = testedCustomerRepository.existsByIdMnemonic(nonExistingMnemonic);
