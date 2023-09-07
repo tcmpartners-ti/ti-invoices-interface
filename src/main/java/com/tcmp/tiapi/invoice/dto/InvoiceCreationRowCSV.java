@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@CsvRecord(separator = ";")
+@CsvRecord(separator = ",")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
