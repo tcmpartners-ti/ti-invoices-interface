@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -16,6 +17,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvoiceCreationDTO {
+  private static final String DATE_FORMAT = "dd-MM-yyyy";
+
   @Valid
   @Schema(name = "context")
   private InvoiceContextDTO context;
@@ -39,7 +42,8 @@ public class InvoiceCreationDTO {
   @Size(min = 1, max = 34, message = "Invoice number must be between 1 and 34 characters long")
   private String invoiceNumber;
 
-  @Schema(name = "issueDate", description = "The date the invoice(s) were issued.", format = "YYYY-mm-dd")
+  @JsonFormat(pattern = DATE_FORMAT)
+  @Schema(name = "issueDate", description = "The date the invoice(s) were issued.", format = DATE_FORMAT)
   private LocalDate issueDate;
 
   @Valid
@@ -50,7 +54,8 @@ public class InvoiceCreationDTO {
   @Schema(name = "outstandingAmount", description = "Face value amount less any related adjustments.")
   private CurrencyAmountDTO outstandingAmount;
 
-  @Schema(name = "settlementDate", description = "Invoice payment due date.", format = "YYYY-mm-dd")
+  @JsonFormat(pattern = DATE_FORMAT)
+  @Schema(name = "settlementDate", description = "Invoice payment due date.", format = DATE_FORMAT)
   private LocalDate settlementDate;
 
   @Schema(name = "invoiceApproved", description = "For buyer centric invoices - indicates whether the invoice has been approved by the buyer for financing.")

@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvoiceDTO {
+  private static final String DATE_FORMAT = "dd-MM-yyyy";
 
   @Schema(description = "TI identifier.")
   private Long id;
@@ -55,9 +57,11 @@ public class InvoiceDTO {
   @Schema(maxLength = 1, description = "O = Outstanding; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured; C = Cancelled")
   private Character status;
 
+  @JsonFormat(pattern = DATE_FORMAT)
   @Schema
   private LocalDate detailsReceivedOn;
 
+  @JsonFormat(pattern = DATE_FORMAT)
   @Schema
   private LocalDate settlementDate;
 
