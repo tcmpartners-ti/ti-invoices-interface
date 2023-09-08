@@ -37,7 +37,7 @@ class BuyerControllerTest {
         .id("Program123")
         .build()
     );
-    String expectedResponseBody = "{\"data\":[{\"id\":\"Program123\",\"description\":null,\"customer\":null,\"startDate\":null,\"endDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null}],\"meta\":null}";
+    String expectedResponseBody = "{\"data\":[{\"id\":\"Program123\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null}],\"meta\":null}";
 
     when(buyerService.getBuyerProgramsByMnemonic(anyString(), any(PageParams.class)))
       .thenReturn(PaginatedResult.<ProgramDTO>builder()
