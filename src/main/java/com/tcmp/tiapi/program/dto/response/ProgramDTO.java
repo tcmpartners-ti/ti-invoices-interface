@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.program.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcmp.tiapi.program.dto.request.ProgramCustomerDTO;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,25 +16,29 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProgramDTO {
-  @Schema(name = "id", description = "Program identifier.", maxLength = 35)
+  private static final String DATE_FORMAT = "dd-MM-yyyy";
+
+  @Schema(description = "Program identifier.", maxLength = 35)
   private String id;
 
-  @Schema(name = "description", description = "Program description.", maxLength = 60)
+  @Schema(description = "Program description.", maxLength = 60)
   private String description;
 
   private ProgramCustomerDTO customer;
 
-  @Schema(name = "startDate", description = "Program start date in format yyyy-MM-dd.")
+  @JsonFormat(pattern = DATE_FORMAT)
+  @Schema(description = "Program start date in format yyyy-MM-dd.")
   private LocalDate startDate;
 
-  @Schema(name = "endDate", description = "Program end date in format yyyy-MM-dd.")
-  private LocalDate endDate;
+  @JsonFormat(pattern = DATE_FORMAT)
+  @Schema(description = "Program end date in format yyyy-MM-dd.")
+  private LocalDate expiryDate;
 
-  @Schema(name = "type", description = "Program type. B=Buyer centric, S=Seller centric.")
+  @Schema(description = "Program type. B=Buyer centric, S=Seller centric.")
   private String type;
 
   private CurrencyAmountDTO creditLimit;
 
-  @Schema(name = "status", description = "Program status. B=Blocked, R=Referred, I=Inactive, A=Active.")
+  @Schema(description = "Program status. B=Blocked, R=Referred, I=Inactive, A=Active.")
   private Character status;
 }
