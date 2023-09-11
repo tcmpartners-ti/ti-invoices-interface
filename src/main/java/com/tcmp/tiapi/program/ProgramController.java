@@ -3,7 +3,7 @@ package com.tcmp.tiapi.program;
 import com.tcmp.tiapi.customer.dto.CounterPartyDTO;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
-import com.tcmp.tiapi.shared.dto.response.PaginatedResult;
+import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
