@@ -3,7 +3,7 @@ package com.tcmp.tiapi.customer.controller;
 import com.tcmp.tiapi.customer.service.BuyerService;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
-import com.tcmp.tiapi.shared.dto.response.PaginatedResult;
+import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
