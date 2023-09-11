@@ -1,10 +1,12 @@
 package com.tcmp.tiapi.invoice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouteBuilder;
 import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
+import com.tcmp.tiapi.titoapigee.service.OperationalGatewayService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,6 +54,7 @@ public class InvoiceConfiguration {
   ) {
     return new BulkCreateInvoicesRouteBuilder(
       jaxbDataFormatServiceRequest,
+      new ObjectMapper(),
       invoiceMapper,
       new TIServiceRequestWrapper(),
       new XmlNamespaceFixer(),
@@ -61,8 +64,15 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder() {
+  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder(
+    @Qualifier("jaxbDataFormatServiceResponse")
+    JaxbDataFormat jaxbDataFormatServiceResponse,
+    OperationalGatewayService operationalGatewayService
+  ) {
     return new InvoiceCreatedEventListenerRouteBuilder(
+      jaxbDataFormatServiceResponse,
+      new ObjectMapper(),
+      operationalGatewayService,
       uriCreatedEventFrom,
       uriCreatedEventTo
     );
