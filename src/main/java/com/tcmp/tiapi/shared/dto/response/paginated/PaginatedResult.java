@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.shared.dto.response;
+package com.tcmp.tiapi.shared.dto.response.paginated;
 
 import lombok.Builder;
 import lombok.Data;

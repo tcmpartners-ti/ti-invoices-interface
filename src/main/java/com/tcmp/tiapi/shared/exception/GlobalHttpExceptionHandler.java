@@ -1,52 +1,53 @@
 package com.tcmp.tiapi.shared.exception;
 
 
+import com.tcmp.tiapi.shared.dto.response.error.ErrorDetails;
+import com.tcmp.tiapi.shared.dto.response.error.SimpleHttpErrorMessage;
+import com.tcmp.tiapi.shared.dto.response.error.ValidationHttpErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.Map;
-import java.util.Optional;
-
 @ControllerAdvice
 public class GlobalHttpExceptionHandler {
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, Object>> handleBodyValidationException(MethodArgumentNotValidException exception) {
+  public ResponseEntity<ValidationHttpErrorMessage> handleBodyValidationException(MethodArgumentNotValidException exception) {
     HttpStatus badRequest = HttpStatus.BAD_REQUEST;
 
     return ResponseEntity.status(badRequest)
-      .body(Map.of(
-        "statusCode", badRequest.value(),
-        "message", "Could not validate the provided body.",
-        "errors", exception.getFieldErrors().stream().map(error -> Map.of(
-          "field", error.getField(),
-          "error", Optional.ofNullable(error.getDefaultMessage()).orElse("Internal error.")
+      .body(new ValidationHttpErrorMessage(
+        badRequest.value(),
+        "Could not validate the provided body.",
+        exception.getFieldErrors().stream().map(e -> new ErrorDetails(
+          e.getField(),
+          e.getDefaultMessage()
         )).toList()
       ));
   }
 
   @ExceptionHandler(NotFoundHttpException.class)
-  public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundHttpException e) {
+  public ResponseEntity<SimpleHttpErrorMessage> handleNotFoundException(NotFoundHttpException e) {
     HttpStatus notFound = HttpStatus.NOT_FOUND;
 
     return ResponseEntity.status(notFound)
-      .body(Map.of(
-        "statusCode", notFound.value(),
-        "error", e.getMessage()
+      .body(new SimpleHttpErrorMessage(
+        notFound.value(),
+        e.getMessage()
       ));
   }
 
   @ExceptionHandler(BadRequestHttpException.class)
-  public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestHttpException e) {
+  public ResponseEntity<SimpleHttpErrorMessage> handleBadRequestException(BadRequestHttpException e) {
     HttpStatus badRequest = HttpStatus.BAD_REQUEST;
 
     return ResponseEntity.status(badRequest)
-      .body(Map.of(
-        "statusCode", badRequest.value(),
-        "error", e.getMessage()
+      .body(new SimpleHttpErrorMessage(
+        badRequest.value(),
+        e.getMessage()
       ));
   }
 }
+

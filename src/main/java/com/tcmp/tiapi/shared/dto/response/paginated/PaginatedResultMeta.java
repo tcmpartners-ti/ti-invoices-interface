@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.shared.dto.response;
+package com.tcmp.tiapi.shared.dto.response.paginated;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
