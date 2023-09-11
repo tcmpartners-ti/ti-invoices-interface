@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.messaging.model.requests;
 
-import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.program.messaging.SCFProgrammeMessage;

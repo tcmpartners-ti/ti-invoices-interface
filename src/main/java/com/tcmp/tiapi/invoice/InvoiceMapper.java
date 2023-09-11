@@ -3,9 +3,10 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceCorrelationPayload;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
-import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
@@ -114,6 +115,8 @@ public abstract class InvoiceMapper {
   @Mapping(source = "invoiceCreationRowCSV.settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
+
+  public abstract InvoiceCorrelationPayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
 
   public List<InvoiceDTO> mapEntitiesToDTOs(
     List<InvoiceMaster> invoiceMasters,

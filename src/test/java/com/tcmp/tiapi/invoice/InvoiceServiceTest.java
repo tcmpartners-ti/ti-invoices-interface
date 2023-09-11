@@ -3,7 +3,7 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
-import com.tcmp.tiapi.invoice.messaging.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramRepository;
 import com.tcmp.tiapi.program.model.Program;
