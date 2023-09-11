@@ -61,7 +61,7 @@ class BuyerControllerTest {
   void getBuyerProgramsByMnemonic_itShouldReturnNotFoundMessage() throws Exception {
     String expectedBuyerMnemonic = "a";
     String expectedResponseErrorMessage = String.format("Could not find customer with mnemonic %s.", expectedBuyerMnemonic);
-    String expectedResponseBody = "{\"statusCode\":404,\"error\":\"" + expectedResponseErrorMessage + "\"}";
+    String expectedResponseBody = "{\"status\":404,\"error\":\"" + expectedResponseErrorMessage + "\"}";
 
     when(buyerService.getBuyerProgramsByMnemonic(anyString(), any(PageParams.class)))
       .thenThrow(new NotFoundHttpException(expectedResponseErrorMessage));
