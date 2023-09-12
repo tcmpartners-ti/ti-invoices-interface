@@ -3,7 +3,7 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceCorrelationPayload;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceTiMessagePayload;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
@@ -83,6 +83,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
   @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
+  @Mapping(source = "context.behalfOfBranch", target = "context.branch")
   @Mapping(target = "batchId", expression = "java(null)")
   @Mapping(source = "anchorParty", target = "anchorParty")
   @Mapping(source = "programme", target = "programme")
@@ -116,7 +117,7 @@ public abstract class InvoiceMapper {
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
 
-  public abstract InvoiceCorrelationPayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
+  public abstract InvoiceTiMessagePayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
 
   public List<InvoiceDTO> mapEntitiesToDTOs(
     List<InvoiceMaster> invoiceMasters,

@@ -20,6 +20,9 @@ import java.io.Serializable;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class InvoiceContext implements Serializable {
+  @XmlElement(name = "Branch", namespace = TINamespace.COMMON)
+  private String branch;
+
   @Size(min = 1, max = 20, message = "Customer must be between 1 and 20 characters.")
   @XmlElement(name = "Customer", namespace = TINamespace.COMMON)
   private String customer;
