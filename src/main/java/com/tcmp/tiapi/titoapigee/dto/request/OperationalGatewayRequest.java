@@ -4,7 +4,9 @@ import lombok.Builder;
 
 @Builder
 public record OperationalGatewayRequest(
-  OperationalGatewayRequestData data
+  ReferenceData referenceData,
+  OperationalGatewayRequestPayload payload
 ) {
+
 }
 
