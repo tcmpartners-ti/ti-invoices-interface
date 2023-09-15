@@ -102,7 +102,7 @@ public class InvoiceService {
   public void financeInvoice(InvoiceFinancingDTO invoiceFinancingDTO) {
     FinanceBuyerCentricInvoiceEventMessage financeInvoiceMessage = invoiceMapper.mapFinancingDTOToFTIMessage(invoiceFinancingDTO);
 
-    producerTemplate.asyncSendBody(
+    producerTemplate.sendBody(
       invoiceConfiguration.getUriFinanceFrom(),
       financeInvoiceMessage
     );
