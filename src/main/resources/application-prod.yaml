@@ -1,3 +1,6 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   datasource:
     host: "<...>"
@@ -30,6 +33,21 @@ ti:
       name: "BP.DIGIBANK.TO.FTI.REPLY"
       jndi: "queue/digibankInIncomingReply"
 
+bp:
+  api-gee:
+    headers:
+      device: "TradeInnovationInterface"
+
+    app-id: ""
+    api-encryption-key: ""
+    api-secret: ""
+
+    base-url: "http://localhost:5000"
+    services:
+      business-banking:
+        operational-gateway:
+          url: "${bp.api-gee.base-url}/business-banking/v1/operational-gateway"
+
 invoice:
   route:
     create:
@@ -41,8 +59,13 @@ invoice:
       to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
 
     creation-listener:
-      from: "direct:queue:${ti.queue.reply.name}"
-      to: "log:body"
+      # Temporal
+      from: "direct:${ti.queue.reply.name}"
+      to: "direct:sendNotificationToApiGee"
+
+    finance:
+      from: "direct:financeInvoiceInTI"
+      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
 
 program:
   route:
