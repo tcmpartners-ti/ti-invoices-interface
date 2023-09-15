@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.titoapigee.service;
 
-import com.tcmp.tiapi.invoice.dto.request.InvoiceTiMessagePayload;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceNotificationPayload;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.client.ApiGeeHeaderSigner;
 import com.tcmp.tiapi.titoapigee.client.OperationalGatewayClient;
@@ -26,9 +26,18 @@ public class OperationalGatewayService {
   private final OperationalGatewayMapper operationalGatewayMapper;
   private final ApiGeeHeaderSigner apiGeeHeaderSigner;
 
-  public void sendInvoiceCreationResult(ServiceResponse serviceResponse, InvoiceTiMessagePayload invoiceInfo) {
+  public void sendInvoiceCreationResult(ServiceResponse serviceResponse, String invoiceNumber) {
+    if (invoiceNumber == null) {
+      throw new UnrecoverableApiGeeRequestException("No invoice number was provided.");
+    }
+
     OperationalGatewayRequestPayload requestPayload = operationalGatewayMapper.mapTiServiceResponseToOperationalGatewayPayload(
-      serviceResponse, invoiceInfo);
+      serviceResponse, InvoiceNotificationPayload.builder()
+        .id("test")
+        .buyer("")
+        .batchId("")
+        .invoiceNumber("")
+        .build());
 
     ApiGeeBaseRequest<OperationalGatewayRequest> requestBody = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
       .data(OperationalGatewayRequest.builder()
