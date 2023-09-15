@@ -1,20 +1,18 @@
-# Use a Maven image for building
-FROM maven:3.8.4-openjdk-17-slim AS build
+# Use the official Gradle image as the build environment
+FROM gradle:8.3.0-jdk17 AS build
 
 WORKDIR /app
 
-COPY pom.xml .
-COPY src ./src
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src/ src/
 
-RUN mvn package -DskipTests
-
+RUN gradle build --no-daemon
 
 FROM openjdk:17-slim
 
 WORKDIR /app
 
-COPY --from=build /app/target/invoices-0.0.1.jar /app/invoices.jar
-
+COPY --from=build /app/build/libs/invoices-0.0.1.jar invoices.jar
 ENV APPLICATION_ENV=prod
 
 CMD ["java", "-jar", "/app/invoices.jar"]
