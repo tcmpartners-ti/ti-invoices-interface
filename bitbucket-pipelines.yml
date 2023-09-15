@@ -1,4 +1,4 @@
-image: maven:3.9.3-amazoncorretto-17-debian
+image: gradle:8.3.0-jdk17
 
 pipelines:
   default:
@@ -8,10 +8,10 @@ pipelines:
           - gradle
         script:
           - echo "Building invoices..."
-          - ./gradlew clean build -x test
+          - gradle build
 
     - step:
         name: Test
         script:
           - echo "Running tests..."
-          - mvn test
+          - gradle test
