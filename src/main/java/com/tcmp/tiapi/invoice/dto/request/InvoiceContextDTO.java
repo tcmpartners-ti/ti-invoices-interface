@@ -16,15 +16,15 @@ import lombok.NoArgsConstructor;
 public class InvoiceContextDTO {
   @NotBlank(message = "Customer's mnemonic is required")
   @Size(min = 1, max = 20, message = "Customer's mnemonic must be between 1 and 20 characters long")
-  @Schema(name = "customer", description = "Sender's customer mnemonic.", minLength = 1, maxLength = 20)
+  @Schema(description = "Sender's customer mnemonic.", minLength = 1, maxLength = 20)
   private String customer;
 
   @Size(min = 1, max = 34, message = "Their reference must be between 1 and 34 characters long")
-  @Schema(name = "theirReference", description = "Sender's reference for this transaction (if known).", minLength = 1, maxLength = 34)
+  @Schema(description = "Sender's reference for this transaction (if known).", minLength = 1, maxLength = 34)
   private String theirReference;
 
   @NotBlank(message = "Behalf of branch is required")
   @Size(min = 1, max = 8, message = "Behalf of branch must be between 1 and 8 characters long")
-  @Schema(name = "behalfOfBranch", description = "The behalf of branch for the transaction.", minLength = 1, maxLength = 8)
+  @Schema(description = "The behalf of branch for the transaction.", minLength = 1, maxLength = 8)
   private String behalfOfBranch;
 }

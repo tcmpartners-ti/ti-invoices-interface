@@ -20,44 +20,44 @@ public class InvoiceCreationDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
 
   @Valid
-  @Schema(name = "context")
+  @Schema
   private InvoiceContextDTO context;
 
   @Size(min = 1, max = 20, message = "The anchor party's mnemonic should be between 1 and 20 characters long")
-  @Schema(name = "anchorParty", description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
+  @Schema(description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
   private String anchorParty;
 
   @Size(max = 35, message = "The program id should be up to 35 characters long")
-  @Schema(name = "programme", description = "Indicates the credit line to which the invoice relates.", maxLength = 35)
+  @Schema(description = "Indicates the credit line to which the invoice relates.", maxLength = 35)
   private String programme;
 
   @Size(min = 1, max = 20, message = "Credited party id must be between 1 and 20 characters long")
-  @Schema(name = "seller", description = "The customer who is the credit party on the invoice(s).", minLength = 1, maxLength = 20)
+  @Schema(description = "The customer who is the credit party on the invoice(s).", minLength = 1, maxLength = 20)
   private String seller;
 
   @Size(min = 1, max = 20, message = "Debited party id must be between 1 and 20 characters long")
-  @Schema(name = "buyer", description = "The customer who is the debit party on the invoice(s).", minLength = 1, maxLength = 20)
+  @Schema(description = "The customer who is the debit party on the invoice(s).", minLength = 1, maxLength = 20)
   private String buyer;
 
   @Size(min = 1, max = 34, message = "Invoice number must be between 1 and 34 characters long")
   private String invoiceNumber;
 
   @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(name = "issueDate", description = "The date the invoice(s) were issued.", format = DATE_FORMAT)
+  @Schema(description = "The date the invoice(s) were issued.", format = DATE_FORMAT)
   private LocalDate issueDate;
 
   @Valid
-  @Schema(name = "faceValue", description = "The total amount of the invoice in the denominated currency.")
+  @Schema(description = "The total amount of the invoice in the denominated currency.")
   private CurrencyAmountDTO faceValue;
 
   @Valid
-  @Schema(name = "outstandingAmount", description = "Face value amount less any related adjustments.")
+  @Schema(description = "Face value amount less any related adjustments.")
   private CurrencyAmountDTO outstandingAmount;
 
   @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(name = "settlementDate", description = "Invoice payment due date.", format = DATE_FORMAT)
+  @Schema(description = "Invoice payment due date.", format = DATE_FORMAT)
   private LocalDate settlementDate;
 
-  @Schema(name = "invoiceApproved", description = "For buyer centric invoices - indicates whether the invoice has been approved by the buyer for financing.")
+  @Schema(description = "For buyer centric invoices - indicates whether the invoice has been approved by the buyer for financing.")
   private Boolean invoiceApproved;
 }

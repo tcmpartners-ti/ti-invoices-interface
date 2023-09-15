@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 
@@ -26,6 +27,8 @@ import java.time.LocalDate;
 @XmlRootElement(name = "TFINVNEW", namespace = TINamespace.MESSAGES)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CreateInvoiceEventMessage implements Serializable {
+  @Serial private static final long serialVersionUID = 8917249871L;
+
   private static final String DATE_FORMAT = "dd-MM-yyyy";
 
   @Valid

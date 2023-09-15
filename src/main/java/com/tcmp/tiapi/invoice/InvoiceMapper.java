@@ -3,10 +3,14 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceTiMessagePayload;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceNumberDTO;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceNotificationPayload;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.InvoiceNumbers;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
@@ -117,7 +121,35 @@ public abstract class InvoiceMapper {
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
 
-  public abstract InvoiceTiMessagePayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
+  @Mapping(source = "context.customer", target = "context.customer")
+  @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
+  @Mapping(source = "context.behalfOfBranch", target = "context.branch")
+  @Mapping(source = "context.theirReference", target = "context.theirReference")
+  @Mapping(source = "programme", target = "programme")
+  @Mapping(source = "seller", target = "seller")
+  @Mapping(source = "buyer", target = "buyer")
+  @Mapping(source = "anchorParty", target = "anchorParty")
+  @Mapping(source = "productType", target = "productType")
+  @Mapping(source = "maturityDate", target = "maturityDate")
+  @Mapping(source = "financeCurrency", target = "financeCurrency")
+  @Mapping(source = "financePercent", target = "financePercent")
+  @Mapping(source = "financeDate", target = "financeDate")
+  @Mapping(source = "invoiceNumbers", target = "invoiceNumbersContainer.invoiceNumbers")
+  public abstract FinanceBuyerCentricInvoiceEventMessage mapFinancingDTOToFTIMessage(InvoiceFinancingDTO invoiceFinancingDTO);
+
+  @Mapping(source = "invoiceNumber", target = "invoiceNumber")
+  @Mapping(source = "issueDate", target = "issueDate")
+  @Mapping(source = "outstanding.amount", target = "outstandingAmount")
+  @Mapping(source = "outstanding.currency", target = "outstandingAmountCurrency")
+  protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);
+
+  protected abstract List<InvoiceNumbers> mapDTOsToInvoiceNumbersList(List<InvoiceNumberDTO> invoiceNumberDTOs);
+
+  @Mapping(source = "invoiceNumber", target = "id")
+  @Mapping(source = "batchId", target = "batchId")
+  @Mapping(source = "invoiceNumber", target = "invoiceNumber")
+  @Mapping(source = "buyer", target = "buyer")
+  public abstract InvoiceNotificationPayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
 
   public List<InvoiceDTO> mapEntitiesToDTOs(
     List<InvoiceMaster> invoiceMasters,

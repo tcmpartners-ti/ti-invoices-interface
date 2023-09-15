@@ -1,8 +1,10 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
+import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -53,6 +55,16 @@ public class InvoiceController {
 
     return InvoicesCreatedDTO.builder()
       .message("Invoices sent to be created.")
+      .build();
+  }
+
+  @PostMapping(path = "finance", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Finance invoice in Trade Innovation.")
+  public InvoiceFinancedDTO financeInvoice(@Valid @RequestBody InvoiceFinancingDTO invoiceFinancingDTO) {
+    invoiceService.financeInvoice(invoiceFinancingDTO);
+
+    return InvoiceFinancedDTO.builder()
+      .message("Invoice financing request sent.")
       .build();
   }
 }
