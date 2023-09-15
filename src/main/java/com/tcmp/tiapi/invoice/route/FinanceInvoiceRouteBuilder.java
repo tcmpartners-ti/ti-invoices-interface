@@ -26,7 +26,7 @@ public class FinanceInvoiceRouteBuilder extends RouteBuilder {
       .transform().body(FinanceBuyerCentricInvoiceEventMessage.class, this::wrapToServiceRequest)
       .marshal(jaxbDataFormat)
       .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
-      .to("log:body", uriTo)
+      .to(uriTo)
       .end();
   }
 

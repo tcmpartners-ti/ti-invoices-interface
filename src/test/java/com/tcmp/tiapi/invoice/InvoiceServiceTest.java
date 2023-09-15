@@ -3,7 +3,9 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramRepository;
 import com.tcmp.tiapi.program.model.Program;
@@ -207,5 +209,21 @@ class InvoiceServiceTest {
 
     assertThrows(BadRequestHttpException.class, () ->
       testedInvoiceService.createMultipleInvoicesInTi(mockMultipartFile, lengthExceedingBatchId));
+  }
+
+  @Test
+  void financeInvoice_itShouldSendMessageToTI() {
+    String expectedUriFrom = "direct:financeInvoiceInTi";
+    FinanceBuyerCentricInvoiceEventMessage expectedMessage = FinanceBuyerCentricInvoiceEventMessage.builder()
+      .build();
+
+    when(invoiceConfiguration.getUriFinanceFrom())
+      .thenReturn(expectedUriFrom);
+    when(invoiceMapper.mapFinancingDTOToFTIMessage(any(InvoiceFinancingDTO.class)))
+      .thenReturn(expectedMessage);
+
+    testedInvoiceService.financeInvoice(InvoiceFinancingDTO.builder().build());
+
+    verify(producerTemplate).sendBody(expectedUriFrom, expectedMessage);
   }
 }
