@@ -4,8 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record PayloadInvoice(
-  String batchId, // Might be complicated
+  String batchId,
   String invoiceNumber,
-  String buyer // Might be complicated
+  String buyer
 ) {
 }
