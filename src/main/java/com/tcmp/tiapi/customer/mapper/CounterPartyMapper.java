@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.customer.mapper;
 
-import com.tcmp.tiapi.customer.dto.CounterPartyDTO;
+import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCounterPartyDTO;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;

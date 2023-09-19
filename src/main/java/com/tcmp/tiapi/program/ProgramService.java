@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.program;
 
-import com.tcmp.tiapi.customer.dto.CounterPartyDTO;
+import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.model.CounterPartyRole;
