@@ -29,9 +29,9 @@ dependencies {
   annotationProcessor("org.projectlombok:lombok:1.18.28")
   annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 
+  compileOnly("org.springframework.boot:spring-boot-devtools:3.1.3")
   compileOnly("org.projectlombok:lombok:1.18.28")
   runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:11.2.3.jre17")
-  runtimeOnly("org.springframework.boot:spring-boot-devtools:3.1.2")
   testImplementation("org.springframework.boot:spring-boot-starter-test:3.1.2")
   testImplementation("com.h2database:h2:2.2.220")
   testImplementation("org.apache.camel:camel-test-junit5:4.0.0")
