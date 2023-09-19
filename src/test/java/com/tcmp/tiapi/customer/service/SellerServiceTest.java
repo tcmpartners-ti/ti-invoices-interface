@@ -1,8 +1,9 @@
 package com.tcmp.tiapi.customer.service;
 
+import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
-import com.tcmp.tiapi.invoice.InvoiceRepository;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -31,7 +33,6 @@ class SellerServiceTest {
   @Mock private ProgramRepository programRepository;
   @Mock private InvoiceMapper invoiceMapper;
 
-  @Captor private ArgumentCaptor<List<Long>> counterpartyArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest> pageRequestArgumentCaptor;
 
   private SellerService sellerService;
@@ -49,13 +50,14 @@ class SellerServiceTest {
   @Test
   void getSellerInvoices_itShouldThrowExceptionIfNoInvoicesAreFound() {
     String expectedSellerMnemonic = "1722466421001";
+    SearchSellerInvoicesParams expectedSearchParams = SearchSellerInvoicesParams.builder().build();
     PageParams expectedPageParams = new PageParams();
 
     when(counterPartyRepository.findUniqueIdsByCustomerMnemonicAndRole(anyString(), anyChar()))
       .thenReturn(List.of());
 
     assertThrows(NotFoundHttpException.class, () ->
-      sellerService.getSellerInvoices(expectedSellerMnemonic, expectedPageParams));
+      sellerService.getSellerInvoices(expectedSellerMnemonic, expectedSearchParams, expectedPageParams));
   }
 
   @Test
@@ -76,13 +78,17 @@ class SellerServiceTest {
 
     when(counterPartyRepository.findUniqueIdsByCustomerMnemonicAndRole(anyString(), anyChar()))
       .thenReturn(expectedSellerIds);
-    when(invoiceRepository.findBySellerIdIn(anyList(), any(PageRequest.class)))
+    when(invoiceRepository.findAll(any(Specification.class), any(PageRequest.class)))
       .thenReturn(new PageImpl<>(expectedInvoices));
 
-    sellerService.getSellerInvoices(expectedSellerMnemonic, new PageParams());
+    sellerService.getSellerInvoices(
+      expectedSellerMnemonic,
+      SearchSellerInvoicesParams.builder().build(),
+      new PageParams()
+    );
 
     verify(invoiceRepository)
-      .findBySellerIdIn(counterpartyArgumentCaptor.capture(), pageRequestArgumentCaptor.capture());
+      .findAll(any(Specification.class), pageRequestArgumentCaptor.capture());
     assertEquals(expectedPageParams.getPage(), pageRequestArgumentCaptor.getValue().getPageNumber());
     assertEquals(expectedPageParams.getSize(), pageRequestArgumentCaptor.getValue().getPageSize());
   }
