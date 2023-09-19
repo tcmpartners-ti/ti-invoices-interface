@@ -8,11 +8,11 @@ COPY src/ src/
 
 RUN gradle build --no-daemon
 
-FROM openjdk:17-slim
+FROM amazoncorretto:17.0.8-alpine3.18
 
 WORKDIR /app
 
 COPY --from=build /app/build/libs/invoices-0.0.1.jar invoices.jar
-ENV APPLICATION_ENV=prod
+ENV PORT=80
 
 CMD ["java", "-jar", "/app/invoices.jar"]
