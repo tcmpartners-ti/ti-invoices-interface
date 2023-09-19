@@ -1,44 +1,29 @@
 spring:
   datasource:
-    host: "<...>"
-    port: "<...>"
-    username: "<...>"
-    password: "<...>"
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    username: ${DB_USER}
+    password: ${DB_PASS}
     url: "jdbc:sqlserver://${spring.datasource.host}:${spring.datasource.port};database=TIZONE1;encrypt=true;trustServerCertificate=true;"
     driver-class-name: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
   activemq:
-    host: "<...>"
-    port: "<...>"
-    user: "<...>"
-    password: "<...>"
+    host: ${MQ_HOST}
+    port: ${MQ_PORT}
+    user: ${MQ_USER}
+    password: ${MQ_PASS}
     broker-url: "tcp://${spring.activemq.host}:${spring.activemq.port}"
     packages:
       trust-all: true
-
-  jpa:
-    show-sql: true
-    database-platform: "org.hibernate.dialect.SQLServerDialect"
-    properties:
-      hibernate:
-        dialect: "org.hibernate.dialect.SQLServerDialect"
-
-ti:
-  queue:
-    pub:
-      name: "BP.DIGIBANK.TO.FTI"
-    reply:
-      name: "BP.DIGIBANK.TO.FTI.REPLY"
-      jndi: "queue/digibankInIncomingReply"
 
 bp:
   api-gee:
     headers:
       device: "TradeInnovationInterface"
 
-    app-id: "<...>"
-    api-encryption-key: "<...>"
-    api-secret: "<...>"
+    app-id: ${API_GEE_APP_ID}
+    api-encryption-key: ${API_GEE_KEY}
+    api-secret: ${API_GEE_SECRET}
 
     base-url: "http://localhost:5000"
     services:
