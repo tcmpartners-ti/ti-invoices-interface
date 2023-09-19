@@ -37,9 +37,6 @@ public class FinanceBuyerCentricInvoiceEventMessage {
   @XmlElement(name = "AnchorParty", namespace = TINamespace.MESSAGES)
   private String anchorParty;
 
-  @XmlElement(name = "ProductType", namespace = TINamespace.MESSAGES)
-  private String productType;
-
   @XmlElement(name = "MaturityDate", namespace = TINamespace.MESSAGES)
   @XmlJavaTypeAdapter(LocalDateAdapter.class)
   private LocalDate maturityDate;

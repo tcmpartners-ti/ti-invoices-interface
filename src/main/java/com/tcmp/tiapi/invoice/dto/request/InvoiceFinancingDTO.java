@@ -21,7 +21,7 @@ public class InvoiceFinancingDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
 
   @Valid
-  @Schema()
+  @Schema
   private InvoiceContextDTO context;
 
   @Size(max = 35, message = "The program id should be up to 35 characters long")
@@ -39,10 +39,6 @@ public class InvoiceFinancingDTO {
   @Size(min = 1, max = 20, message = "The anchor party's mnemonic should be between 1 and 20 characters long")
   @Schema(description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
   private String anchorParty;
-
-  @Size(max = 3, message = "Product type must be up to 3 characters.")
-  @Schema(maxLength = 3, description = "Product type code.")
-  private String productType;
 
   @JsonFormat(pattern = DATE_FORMAT)
   @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT)

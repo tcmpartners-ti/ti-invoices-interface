@@ -5,7 +5,6 @@ import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceNumberDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceNotificationPayload;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
@@ -103,23 +102,24 @@ public abstract class InvoiceMapper {
   @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() != null && invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
   public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
-  @Mapping(source = "invoiceCreationRowCSV.customerMnemonic", target = "context.customer")
-  @Mapping(source = "invoiceCreationRowCSV.theirReference", target = "context.theirReference")
-  @Mapping(source = "invoiceCreationRowCSV.behalfOfBranch", target = "context.behalfOfBranch")
-  @Mapping(source = "invoiceCreationRowCSV.anchorPartyMnemonic", target = "anchorParty")
+  @Mapping(source = "invoiceRow.customerMnemonic", target = "context.customer")
+  @Mapping(source = "invoiceRow.theirReference", target = "context.theirReference")
+  @Mapping(source = "invoiceRow.behalfOfBranch", target = "context.branch")
+  @Mapping(source = "invoiceRow.behalfOfBranch", target = "context.behalfOfBranch")
+  @Mapping(source = "invoiceRow.anchorPartyMnemonic", target = "anchorParty")
   @Mapping(source = "batchId", target = "batchId")
-  @Mapping(source = "invoiceCreationRowCSV.programmeId", target = "programme")
-  @Mapping(source = "invoiceCreationRowCSV.sellerId", target = "seller")
-  @Mapping(source = "invoiceCreationRowCSV.buyerId", target = "buyer")
-  @Mapping(source = "invoiceCreationRowCSV.invoiceNumber", target = "invoiceNumber")
-  @Mapping(source = "invoiceCreationRowCSV.issueDate", target = "issueDate", dateFormat = "yyyy-MM-dd")
-  @Mapping(source = "invoiceCreationRowCSV.faceValueAmount", target = "faceValue.amount", numberFormat = "#,###.00")
-  @Mapping(source = "invoiceCreationRowCSV.faceValueCurrency", target = "faceValue.currency")
-  @Mapping(source = "invoiceCreationRowCSV.outstandingAmount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
-  @Mapping(source = "invoiceCreationRowCSV.outstandingCurrency", target = "outstandingAmount.currency")
-  @Mapping(source = "invoiceCreationRowCSV.settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
+  @Mapping(source = "invoiceRow.programmeId", target = "programme")
+  @Mapping(source = "invoiceRow.sellerId", target = "seller")
+  @Mapping(source = "invoiceRow.buyerId", target = "buyer")
+  @Mapping(source = "invoiceRow.invoiceNumber", target = "invoiceNumber")
+  @Mapping(source = "invoiceRow.issueDate", target = "issueDate", dateFormat = "yyyy-MM-dd")
+  @Mapping(source = "invoiceRow.faceValueAmount", target = "faceValue.amount", numberFormat = "#,###.00")
+  @Mapping(source = "invoiceRow.faceValueCurrency", target = "faceValue.currency")
+  @Mapping(source = "invoiceRow.outstandingAmount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
+  @Mapping(source = "invoiceRow.outstandingCurrency", target = "outstandingAmount.currency")
+  @Mapping(source = "invoiceRow.settlementDate", target = "settlementDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
-  public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceCreationRowCSV, String batchId);
+  public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(InvoiceCreationRowCSV invoiceRow, String batchId);
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
@@ -129,7 +129,6 @@ public abstract class InvoiceMapper {
   @Mapping(source = "seller", target = "seller")
   @Mapping(source = "buyer", target = "buyer")
   @Mapping(source = "anchorParty", target = "anchorParty")
-  @Mapping(source = "productType", target = "productType")
   @Mapping(source = "maturityDate", target = "maturityDate")
   @Mapping(source = "financeCurrency", target = "financeCurrency")
   @Mapping(source = "financePercent", target = "financePercent")
@@ -144,12 +143,6 @@ public abstract class InvoiceMapper {
   protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);
 
   protected abstract List<InvoiceNumbers> mapDTOsToInvoiceNumbersList(List<InvoiceNumberDTO> invoiceNumberDTOs);
-
-  @Mapping(source = "invoiceNumber", target = "id")
-  @Mapping(source = "batchId", target = "batchId")
-  @Mapping(source = "invoiceNumber", target = "invoiceNumber")
-  @Mapping(source = "buyer", target = "buyer")
-  public abstract InvoiceNotificationPayload mapFTIMessageToCorrelationPayload(CreateInvoiceEventMessage eventMessage);
 
   public List<InvoiceDTO> mapEntitiesToDTOs(
     List<InvoiceMaster> invoiceMasters,
