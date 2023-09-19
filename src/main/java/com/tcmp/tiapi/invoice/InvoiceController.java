@@ -2,6 +2,7 @@ package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
@@ -26,9 +27,14 @@ public class InvoiceController {
 
   @GetMapping(path = "{invoiceNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its number.")
-  public InvoiceDTO getInvoiceByNumber(@PathVariable String invoiceNumber) {
+  public InvoiceDTO getInvoiceByNumber(
+    @Valid
+    InvoiceSearchParams searchParams,
+    @PathVariable
+    String invoiceNumber
+  ) {
     log.info("Endpoint: /invoices/{}", invoiceNumber);
-    return invoiceService.getInvoiceByReference(invoiceNumber);
+    return invoiceService.getInvoiceByReference(searchParams, invoiceNumber);
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

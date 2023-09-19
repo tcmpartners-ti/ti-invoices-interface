@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

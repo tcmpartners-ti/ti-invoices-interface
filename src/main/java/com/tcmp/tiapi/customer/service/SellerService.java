@@ -1,12 +1,14 @@
 package com.tcmp.tiapi.customer.service;
 
+import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.model.CounterPartyRole;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
-import com.tcmp.tiapi.invoice.InvoiceRepository;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.repository.InvoiceSpecifications;
 import com.tcmp.tiapi.program.ProgramRepository;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -33,7 +36,11 @@ public class SellerService {
 
   private final InvoiceMapper invoiceMapper;
 
-  public PaginatedResult<InvoiceDTO> getSellerInvoices(String sellerMnemonic, PageParams pageParams) {
+  public PaginatedResult<InvoiceDTO> getSellerInvoices(
+    String sellerMnemonic,
+    SearchSellerInvoicesParams searchParams,
+    PageParams pageParams
+  ) {
     List<Long> sellerCounterpartyIds = counterPartyRepository.findUniqueIdsByCustomerMnemonicAndRole(
       sellerMnemonic, CounterPartyRole.SELLER.getValue());
 
@@ -42,8 +49,14 @@ public class SellerService {
         String.format("Could not find invoices for seller with mnemonic %s.", sellerMnemonic));
     }
 
-    Page<InvoiceMaster> invoiceMasterPage = invoiceRepository.findBySellerIdIn(
-      sellerCounterpartyIds, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+    Specification<InvoiceMaster> searchSpec = InvoiceSpecifications.filterBySellerIdsAndStatus(
+      sellerCounterpartyIds,
+      searchParams.invoiceStatus()
+    );
+    Page<InvoiceMaster> invoiceMasterPage = invoiceRepository.findAll(
+      searchSpec,
+      PageRequest.of(pageParams.getPage(), pageParams.getSize())
+    );
 
     Map<Long, CounterParty> idsToCounterParties = getIdsToCounterpartiesFromInvoicesPageAndSellerIds(invoiceMasterPage, sellerCounterpartyIds);
     Map<Long, Program> idsToPrograms = getIdsToProgramsFromInvoicesPage(invoiceMasterPage);

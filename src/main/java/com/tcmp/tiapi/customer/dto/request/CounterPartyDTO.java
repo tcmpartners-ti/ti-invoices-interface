@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.customer.dto;
+package com.tcmp.tiapi.customer.dto.request;
 
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;

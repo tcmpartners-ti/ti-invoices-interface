@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.program;
 
-import com.tcmp.tiapi.customer.dto.CounterPartyDTO;
+import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;

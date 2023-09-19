@@ -1,11 +1,25 @@
 spring:
   profiles:
-    active: ${APPLICATION_ENV:dev}
+    active: ${APPLICATION_ENV:prod}
+
   jpa:
     open-in-view: true
+    database-platform: "org.hibernate.dialect.SQLServerDialect"
+    properties:
+      hibernate:
+        dialect: "org.hibernate.dialect.SQLServerDialect"
+
   output:
     ansi:
       enabled: ALWAYS
+
+ti:
+  queue:
+    pub:
+      name: "BP.DIGIBANK.TO.FTI"
+    reply:
+      name: "BP.DIGIBANK.TO.FTI.REPLY"
+      jndi: "queue/digibankInIncomingReply"
 
 springdoc:
   api-docs:
