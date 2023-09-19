@@ -6,7 +6,7 @@ WORKDIR /app
 COPY build.gradle.kts settings.gradle.kts ./
 COPY src/ src/
 
-RUN gradle build --no-daemon
+RUN gradle build --no-daemon -x test
 
 FROM amazoncorretto:17.0.8-alpine3.18
 

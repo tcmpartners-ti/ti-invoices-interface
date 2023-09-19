@@ -8,7 +8,7 @@ pipelines:
           - gradle
         script:
           - echo "Building invoices..."
-          - gradle build
+          - gradle build -x test
 
     - step:
         name: Test
