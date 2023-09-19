@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
+  Optional<InvoiceMaster> findFirstByProgrammeIdAndSellerIdAndReference(Long programmeId, Long sellerId, String reference);
+
   Optional<InvoiceMaster> findFirstByReference(String reference);
 
   Page<InvoiceMaster> findByBuyerIdIn(List<Long> buyerIds, Pageable pageable);
