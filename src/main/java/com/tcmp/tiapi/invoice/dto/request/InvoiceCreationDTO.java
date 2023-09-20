@@ -57,7 +57,4 @@ public class InvoiceCreationDTO {
   @JsonFormat(pattern = DATE_FORMAT)
   @Schema(description = "Invoice payment due date.", format = DATE_FORMAT)
   private LocalDate settlementDate;
-
-  @Schema(description = "For buyer centric invoices - indicates whether the invoice has been approved by the buyer for financing.")
-  private Boolean invoiceApproved;
 }

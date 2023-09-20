@@ -85,8 +85,8 @@ public abstract class InvoiceMapper {
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
-  @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
   @Mapping(source = "context.behalfOfBranch", target = "context.branch")
+  @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
   @Mapping(target = "batchId", expression = "java(null)")
   @Mapping(source = "anchorParty", target = "anchorParty")
   @Mapping(source = "programme", target = "programme")
@@ -99,7 +99,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "outstandingAmount.amount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "settlementDate", target = "settlementDate")
-  @Mapping(target = "invoiceApproved", expression = "java(invoiceCreationDTO.getInvoiceApproved() != null && invoiceCreationDTO.getInvoiceApproved() ? \"Y\" : \"N\")")
+  @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
   @Mapping(source = "invoiceRow.customerMnemonic", target = "context.customer")
