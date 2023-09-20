@@ -16,7 +16,6 @@ import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -67,35 +67,43 @@ class InvoiceServiceTest {
   }
 
   @Test
-  @Disabled("This feature will be reviewed.")
-  void getInvoiceByReference_itShouldGetInvoiceByReference() {
-    String invoiceReference = "INV123";
+  void getInvoiceById_itShouldThrowException() {
+    Long expectedInvoiceId = 1L;
+
+    when(invoiceRepository.findById(anyLong()))
+      .thenReturn(Optional.empty());
+
+    assertThrows(NotFoundHttpException.class,
+      () -> testedInvoiceService.getInvoiceById(expectedInvoiceId),
+      String.format("Could not find an invoice with id %s.", expectedInvoiceId));
+  }
+
+  @Test
+  void getInvoiceById_itShouldReturnInvoice() {
     Long expectedBuyerId = 1L;
     Long expectedSellerId = 2L;
     Long expectedProgramId = 1L;
-    InvoiceSearchParams expectedInvoiceSearchParams = InvoiceSearchParams.builder()
-      .program(1L)
-      .seller(2L)
-      .build();
+    Long expectedInvoiceId = 1L;
 
-    when(invoiceRepository.findFirstByProgrammeIdAndSellerIdAndReference(anyLong(), anyLong(), anyString()))
-      .thenReturn(Optional.of(InvoiceMaster.builder()
-        .id(1L)
-        .buyerId(1L)
-        .sellerId(1L)
-        .programmeId(1L)
-        .reference(invoiceReference)
-        .build()));
-    when(counterPartyRepository.findById(anyLong()))
-      .thenReturn(Optional.of(CounterParty.builder().id(expectedBuyerId).build()));
-    when(counterPartyRepository.findById(anyLong()))
-      .thenReturn(Optional.of(CounterParty.builder().id(expectedSellerId).build()));
+    when(invoiceRepository.findById(anyLong()))
+      .thenReturn(Optional.of(
+        InvoiceMaster.builder()
+          .id(expectedInvoiceId)
+          .buyerId(expectedBuyerId)
+          .sellerId(expectedSellerId)
+          .programmeId(expectedProgramId)
+          .build()
+      ));
+    when(counterPartyRepository.findByIdIn(anyList()))
+      .thenReturn(List.of(
+        CounterParty.builder().id(expectedBuyerId).build(),
+        CounterParty.builder().id(expectedSellerId).build()
+      ));
     when(programRepository.findByPk(anyLong()))
       .thenReturn(Optional.of(Program.builder().pk(expectedProgramId).build()));
 
-    testedInvoiceService.getInvoiceByReference(expectedInvoiceSearchParams, invoiceReference);
+    testedInvoiceService.getInvoiceById(expectedInvoiceId);
 
-    verify(invoiceRepository).findFirstByProgrammeIdAndSellerIdAndReference(expectedProgramId, expectedSellerId, invoiceReference);
     verify(invoiceMapper).mapEntityToDTO(
       any(InvoiceMaster.class),
       any(CounterParty.class),
@@ -105,19 +113,61 @@ class InvoiceServiceTest {
   }
 
   @Test
-  void getInvoiceByReference_itShouldThrowExceptionWhenInvoiceNotFoundByReference() {
-    String invoiceReference = "INV123";
-    InvoiceSearchParams expectedInvoiceSearchParams = InvoiceSearchParams.builder()
-      .program(1L)
-      .seller(1L)
+  void searchInvoice_itShouldThrowNotFoundExceptionForProgram() {
+    String expectedProgramId = "Program1";
+    InvoiceSearchParams searchParams = InvoiceSearchParams.builder()
+      .programme(expectedProgramId)
       .build();
 
-    when(invoiceRepository.findFirstByProgrammeIdAndSellerIdAndReference(anyLong(), anyLong(), anyString()))
+    when(programRepository.findById(anyString()))
       .thenReturn(Optional.empty());
 
     assertThrows(NotFoundHttpException.class,
-      () -> testedInvoiceService.getInvoiceByReference(expectedInvoiceSearchParams, invoiceReference),
-      String.format("Could not find an invoice with reference %s.", invoiceReference));
+      () -> testedInvoiceService.searchInvoice(searchParams));
+  }
+
+  @Test
+  void searchInvoice_itShouldThrowNotFoundExceptionForCounterParties() {
+    InvoiceSearchParams invoiceSearchParams = InvoiceSearchParams.builder()
+      .programme("Programme123")
+      .seller("Seller123")
+      .build();
+
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(Program.builder().pk(1L).build()));
+    when(counterPartyRepository.findByProgrammePkAndMnemonicAndRole(anyLong(), anyString(), anyChar()))
+      .thenReturn(Optional.empty());
+
+    assertThrows(NotFoundHttpException.class,
+      () -> testedInvoiceService.searchInvoice(invoiceSearchParams));
+  }
+
+  @Test
+  void searchInvoice_itShouldSearchInvoice() {
+    long programmePk = 1L;
+    InvoiceSearchParams searchParams = InvoiceSearchParams.builder()
+      .programme("Programme123")
+      .seller("Seller123")
+      .invoice("Invoice123")
+      .build();
+
+    when(programRepository.findById(anyString()))
+      .thenReturn(Optional.of(Program.builder().pk(programmePk).customerMnemonic("1722466421").build()));
+    when(counterPartyRepository.findByProgrammePkAndMnemonicAndRole(anyLong(), anyString(), anyChar()))
+      .thenReturn(Optional.of(CounterParty.builder().id(1L).build()));
+    when(counterPartyRepository.findByProgrammePkAndMnemonicAndRole(anyLong(), anyString(), anyChar()))
+      .thenReturn(Optional.of(CounterParty.builder().id(2L).build()));
+    when(invoiceRepository.findFirstByProgrammeIdAndSellerIdAndReference(anyLong(), anyLong(), anyString()))
+      .thenReturn(Optional.of(InvoiceMaster.builder().build()));
+
+    testedInvoiceService.searchInvoice(searchParams);
+
+    verify(invoiceMapper).mapEntityToDTO(
+      any(InvoiceMaster.class),
+      any(CounterParty.class),
+      any(CounterParty.class),
+      any(Program.class)
+    );
   }
 
   @Test
@@ -210,7 +260,7 @@ class InvoiceServiceTest {
 
   @Test
   void createMultipleInvoicesInTi_itShouldThrowExceptionWhenBatchIdTooLong() {
-    String lengthExceedingBatchId = "XXXXXXXXXXXXXXXXXXXXX";
+    String lengthExceedingBatchId = "Batch000000000000000000000000";
     MultipartFile mockMultipartFile = mock(MultipartFile.class);
 
     assertThrows(BadRequestHttpException.class, () ->

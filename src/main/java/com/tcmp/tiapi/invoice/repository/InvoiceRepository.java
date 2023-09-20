@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
-  Optional<InvoiceMaster> findFirstByProgrammeIdAndSellerIdAndReference(Long programmeId, Long sellerId, String reference);
+  Optional<InvoiceMaster> findFirstByProgrammeIdAndSellerIdAndReference(Long programmePk, Long sellerId, String reference);
 
   Optional<InvoiceMaster> findFirstByReference(String reference);
 

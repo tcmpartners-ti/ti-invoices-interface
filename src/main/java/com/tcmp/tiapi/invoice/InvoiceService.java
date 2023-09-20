@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.customer.model.CounterParty;
+import com.tcmp.tiapi.customer.model.CounterPartyRole;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
@@ -42,25 +43,21 @@ public class InvoiceService {
   private final ProgramRepository programRepository;
   private final InvoiceMapper invoiceMapper;
 
-  public InvoiceDTO getInvoiceByReference(InvoiceSearchParams searchParams, String reference) {
-    InvoiceMaster invoiceMaster = invoiceRepository.findFirstByProgrammeIdAndSellerIdAndReference(
-        searchParams.program(),
-        searchParams.seller(),
-        reference
-      )
+  public InvoiceDTO getInvoiceById(Long invoiceId) {
+    InvoiceMaster invoice = invoiceRepository.findById(invoiceId)
       .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find an invoice with reference %s for the given program and seller.", reference)));
+        String.format("Could not find invoice with id %s.", invoiceId)));
 
-    Long buyerId = invoiceMaster.getBuyerId();
-    Long sellerId = invoiceMaster.getSellerId();
+    Long buyerId = invoice.getBuyerId();
+    Long sellerId = invoice.getSellerId();
+    Map<Long, CounterParty> idToCounterparties = getCounterPartiesByIds(List.of(buyerId, sellerId));
 
-    Map<Long, CounterParty> idToCounterParty = getCounterPartiesByIds(List.of(buyerId, sellerId));
-    Program program = getProgramById(invoiceMaster.getProgrammeId());
+    Program program = getProgramByPk(invoice.getProgrammeId());
 
     return invoiceMapper.mapEntityToDTO(
-      invoiceMaster,
-      idToCounterParty.get(buyerId),
-      idToCounterParty.get(sellerId),
+      invoice,
+      idToCounterparties.get(buyerId),
+      idToCounterparties.get(sellerId),
       program
     );
   }
@@ -70,8 +67,35 @@ public class InvoiceService {
     return counterParties.stream().collect(Collectors.toMap(CounterParty::getId, c -> c));
   }
 
-  private Program getProgramById(Long programId) {
-    return programRepository.findByPk(programId)
+  public InvoiceDTO searchInvoice(InvoiceSearchParams searchParams) {
+    Program program = getProgramById(searchParams.programme());
+    CounterParty seller = getProgramCounterParty(program.getPk(), searchParams.seller(), CounterPartyRole.SELLER);
+    CounterParty buyer = getProgramCounterParty(program.getPk(), program.getCustomerMnemonic(), CounterPartyRole.BUYER);
+    InvoiceMaster invoice = getProgramAndSellerInvoice(program.getPk(), seller.getId(), searchParams.invoice());
+
+    return invoiceMapper.mapEntityToDTO(invoice, buyer, seller, program);
+  }
+
+  private CounterParty getProgramCounterParty(Long programPk, String counterPartyMnemonic, CounterPartyRole role) {
+    return counterPartyRepository.findByProgrammePkAndMnemonicAndRole(programPk, counterPartyMnemonic, role.getValue())
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find a counter party with mnemonic %s related to the given program.", counterPartyMnemonic)));
+  }
+
+  private InvoiceMaster getProgramAndSellerInvoice(Long programmePk, Long sellerId, String invoiceReference) {
+    return invoiceRepository.findFirstByProgrammeIdAndSellerIdAndReference(programmePk, sellerId, invoiceReference)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find the invoice %s for the given program and seller.", invoiceReference)));
+  }
+
+  private Program getProgramByPk(Long programPk) {
+    return programRepository.findByPk(programPk)
+      .orElseThrow(() -> new NotFoundHttpException(
+        String.format("Could not find a program with id %s.", programPk)));
+  }
+
+  private Program getProgramById(String programId) {
+    return programRepository.findById(programId)
       .orElseThrow(() -> new NotFoundHttpException(
         String.format("Could not find a program with id %s.", programId)));
   }

@@ -8,6 +8,8 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,16 +27,23 @@ import org.springframework.web.multipart.MultipartFile;
 public class InvoiceController {
   private final InvoiceService invoiceService;
 
-  @GetMapping(path = "{invoiceNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(description = "Get an invoice by its number.")
-  public InvoiceDTO getInvoiceByNumber(
+  @GetMapping(path = "{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get an invoice by its internal id.")
+  public InvoiceDTO getInvoiceById(@PathVariable Long invoiceId) {
+    return invoiceService.getInvoiceById(invoiceId);
+  }
+
+  @GetMapping(path = "search", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Search an invoice by its programme, seller and number.")
+  @Parameter(name = "programme", description = "Indicates the credit line to which the invoice relates.", in = ParameterIn.QUERY)
+  @Parameter(name = "seller", description = "Seller mnemonic (RUC).", in = ParameterIn.QUERY)
+  @Parameter(name = "invoice", description = "Invoice reference number.", in = ParameterIn.QUERY)
+  public InvoiceDTO searchInvoice(
     @Valid
-    InvoiceSearchParams searchParams,
-    @PathVariable
-    String invoiceNumber
+    @Parameter(hidden = true)
+    InvoiceSearchParams searchParams
   ) {
-    log.info("Endpoint: /invoices/{}", invoiceNumber);
-    return invoiceService.getInvoiceByReference(searchParams, invoiceNumber);
+    return invoiceService.searchInvoice(searchParams);
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
