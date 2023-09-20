@@ -24,7 +24,7 @@ dependencies {
   api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.3")
   api("org.springframework.boot:spring-boot-starter-data-jpa:3.1.2")
   api("org.projectlombok:lombok:1.18.28")
-  api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4")
+  api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
   annotationProcessor("org.projectlombok:lombok:1.18.28")
   annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
