@@ -51,7 +51,7 @@ public class SellerService {
 
     Specification<InvoiceMaster> searchSpec = InvoiceSpecifications.filterBySellerIdsAndStatus(
       sellerCounterpartyIds,
-      searchParams.invoiceStatus()
+      searchParams.status()
     );
     Page<InvoiceMaster> invoiceMasterPage = invoiceRepository.findAll(
       searchSpec,

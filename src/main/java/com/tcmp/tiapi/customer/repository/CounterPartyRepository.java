@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CounterPartyRepository extends JpaRepository<CounterParty, Long> {
+  Optional<CounterParty> findByProgrammePkAndMnemonicAndRole(Long programmePk, String mnemonic, Character role);
 
   List<CounterParty> findByIdIn(List<Long> counterPartiesIds);
 
