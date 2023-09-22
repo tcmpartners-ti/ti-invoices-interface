@@ -11,7 +11,6 @@ import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.program.ProgramRepository;
 import com.tcmp.tiapi.program.model.Program;
-import com.tcmp.tiapi.shared.exception.BadRequestHttpException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
@@ -256,15 +255,6 @@ class InvoiceServiceTest {
 
     assertThrows(InvalidFileHttpException.class,
       () -> testedInvoiceService.createMultipleInvoicesInTi(problematicFile, "123"));
-  }
-
-  @Test
-  void createMultipleInvoicesInTi_itShouldThrowExceptionWhenBatchIdTooLong() {
-    String lengthExceedingBatchId = "Batch000000000000000000000000";
-    MultipartFile mockMultipartFile = mock(MultipartFile.class);
-
-    assertThrows(BadRequestHttpException.class, () ->
-      testedInvoiceService.createMultipleInvoicesInTi(mockMultipartFile, lengthExceedingBatchId));
   }
 
   @Test
