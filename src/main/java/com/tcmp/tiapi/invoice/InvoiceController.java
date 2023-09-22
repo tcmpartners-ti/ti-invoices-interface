@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.invoice.dto.request.InvoiceBulkCreationForm;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
@@ -10,14 +11,12 @@ import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("invoices")
@@ -58,15 +57,8 @@ public class InvoiceController {
 
   @PostMapping(path = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices in Trade Innovation.")
-  public InvoicesCreatedDTO bulkCreateInvoices(
-    @RequestPart
-    @Schema(description = "Invoices file in CSV format.")
-    MultipartFile invoicesFile,
-    @RequestPart
-    @Schema(maxLength = 20, description = "Invoices batch identifier.")
-    String batchId
-  ) {
-    invoiceService.createMultipleInvoicesInTi(invoicesFile, batchId);
+  public InvoicesCreatedDTO bulkCreateInvoices(@Valid InvoiceBulkCreationForm form) {
+    invoiceService.createMultipleInvoicesInTi(form.invoicesFile(), form.batchId());
 
     return InvoicesCreatedDTO.builder()
       .message("Invoices sent to be created.")
