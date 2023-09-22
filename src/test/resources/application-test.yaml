@@ -1,4 +1,6 @@
 spring:
+  cloud.azure.compatibility-verifier.enabled: false
+
   datasource:
     url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
     username: sa
@@ -23,7 +25,7 @@ bp:
       device: "TradeInnovationInterface"
 
     app-id: ""
-    api-encryption-key: ""
+    api-key: ""
     api-secret: ""
 
     base-url: "http://localhost:5000"

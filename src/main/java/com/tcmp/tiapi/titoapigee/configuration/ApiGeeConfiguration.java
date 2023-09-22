@@ -7,20 +7,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 
 @Configuration
 public class ApiGeeConfiguration {
   @Value("${bp.api-gee.headers.device}") private String device;
   @Value("${bp.api-gee.app-id}") private String appId;
-  @Value("${bp.api-gee.api-encryption-key}") private String apiEncryptionKey;
+  @Value("${bp.api-gee.api-key}") private String apiEncryptionKey;
   @Value("${bp.api-gee.api-secret}") private String apiSecret;
 
   @Bean
-  public ApiGeeHeaderSigner headerSigner() throws UnknownHostException {
-    String deviceIp = InetAddress.getLocalHost().getHostAddress();
+  public ApiGeeHeaderSigner headerSigner() {
+    String deviceIp = "10.0.0.1";
     String session = UUID.randomUUID().toString();
 
     return new ApiGeeHeaderSigner(
