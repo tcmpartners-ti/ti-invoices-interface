@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
   api("org.springframework.boot:spring-boot-starter-web:3.1.3")
+  api("com.azure.spring:spring-cloud-azure-starter-keyvault-secrets:6.0.0-beta.4")
   api("org.springframework.boot:spring-boot-starter-validation:3.1.3")
   api("org.apache.camel.springboot:camel-spring-boot-starter:4.0.0")
   api("org.apache.camel:camel-activemq:4.0.0")
@@ -21,7 +22,7 @@ dependencies {
   api("org.apache.camel:camel-bindy:4.0.0")
   api("org.codehaus.woodstox:woodstox-core-asl:4.4.1")
   api("org.mapstruct:mapstruct:1.5.5.Final")
-  api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.3")
+  api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.4")
   api("org.springframework.boot:spring-boot-starter-data-jpa:3.1.2")
   api("org.projectlombok:lombok:1.18.28")
   api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
@@ -31,7 +32,7 @@ dependencies {
 
   compileOnly("org.springframework.boot:spring-boot-devtools:3.1.3")
   compileOnly("org.projectlombok:lombok:1.18.28")
-  runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:11.2.3.jre17")
+  runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11")
   testImplementation("org.springframework.boot:spring-boot-starter-test:3.1.2")
   testImplementation("com.h2database:h2:2.2.220")
   testImplementation("org.apache.camel:camel-test-junit5:4.0.0")
