@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.invoice.model;
 
+import com.tcmp.tiapi.customer.model.CounterParty;
+import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -196,4 +198,20 @@ public class InvoiceMaster {
 
   @Column(name = "IBPMASTER")
   private Long bulkPaymentMasterId;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "KEY97", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  private ProductMaster productMaster; // Parent table
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "BUYER", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  private CounterParty buyer;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "SELLER", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  private CounterParty seller;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "PROGRAMME", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  private Program program;
 }

@@ -65,6 +65,10 @@ public class InvoiceDTO {
   @Schema
   private LocalDate settlementDate;
 
+  @JsonFormat(pattern = DATE_FORMAT)
+  @Schema
+  private LocalDate issueDate;
+
   @Schema
   private Boolean isDisclosed;
 

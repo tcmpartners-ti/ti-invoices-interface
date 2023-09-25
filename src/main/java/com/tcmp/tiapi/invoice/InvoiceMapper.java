@@ -1,18 +1,16 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
-import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceNumberDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.InvoiceNumbers;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.ProgramMapper;
-import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.shared.utils.StringMappingUtils;
@@ -25,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Mapper(
   uses = {
@@ -46,30 +43,28 @@ public abstract class InvoiceMapper {
   @Autowired protected CounterPartyMapper counterPartyMapper;
   @Autowired protected ProgramMapper programMapper;
 
-  @Mapping(source = "invoice.id", target = "id")
+  @Mapping(source = "id", target = "id")
   @Mapping(target = "invoiceNumber", expression = "java(StringMappingUtils.trimNullable(invoice.getReference()))")
-  @Mapping(source = "invoice.buyerPartyId", target = "buyerPartyId")
-  @Mapping(source = "invoice.createFinanceEventId", target = "createFinanceEventId")
+  @Mapping(source = "buyerPartyId", target = "buyerPartyId")
+  @Mapping(source = "createFinanceEventId", target = "createFinanceEventId")
   @Mapping(target = "batchId", expression = "java(StringMappingUtils.trimNullable(invoice.getBatchId()))")
-
-  @Mapping(target = "buyer", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(buyer))")
-  @Mapping(target = "seller", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(seller))")
-  @Mapping(target = "programme", expression = "java(programMapper.mapEntityToInvoiceDTO(program))")
-
-  @Mapping(source = "invoice.bulkPaymentMasterId", target = "bulkPaymentMasterId")
-  @Mapping(source = "invoice.subTypeCategory", target = "subTypeCategory")
-  @Mapping(source = "invoice.programType", target = "programType")
-  @Mapping(source = "invoice.isApproved", target = "isApproved")
-  @Mapping(source = "invoice.status", target = "status")
-  @Mapping(source = "invoice.detailsReceivedOn", target = "detailsReceivedOn")
-  @Mapping(source = "invoice.settlementDate", target = "settlementDate")
-  @Mapping(source = "invoice.isDisclosed", target = "isDisclosed")
-  @Mapping(source = "invoice.isRecourse", target = "isRecourse")
-  @Mapping(source = "invoice.isDrawDownEligible", target = "isDrawDownEligible")
+  @Mapping(source = "bulkPaymentMasterId", target = "bulkPaymentMasterId")
+  @Mapping(source = "subTypeCategory", target = "subTypeCategory")
+  @Mapping(source = "programType", target = "programType")
+  @Mapping(source = "isApproved", target = "isApproved")
+  @Mapping(source = "status", target = "status")
+  @Mapping(source = "detailsReceivedOn", target = "detailsReceivedOn")
+  @Mapping(source = "settlementDate", target = "settlementDate")
+  @Mapping(source = "productMaster.contractDate", target = "issueDate")
+  @Mapping(source = "isDisclosed", target = "isDisclosed")
+  @Mapping(source = "isRecourse", target = "isRecourse")
+  @Mapping(source = "isDrawDownEligible", target = "isDrawDownEligible")
   @Mapping(target = "preferredCurrencyCode", expression = "java(StringMappingUtils.trimNullable(invoice.getPreferredCurrencyCode()))")
-  @Mapping(source = "invoice.isDeferCharged", target = "isDeferCharged")
-  @Mapping(source = "invoice.eligibilityReasonCode", target = "eligibilityReasonCode")
-
+  @Mapping(source = "isDeferCharged", target = "isDeferCharged")
+  @Mapping(source = "eligibilityReasonCode", target = "eligibilityReasonCode")
+  @Mapping(source = "detailsNotesForCustomer", target = "detailsNotesForCustomer")
+  @Mapping(source = "securityDetails", target = "securityDetails")
+  @Mapping(source = "taxDetails", target = "taxDetails")
   @Mapping(target = "faceValue", expression = "java(currencyMapper.mapToDto(invoice.getFaceValueAmount(), invoice.getFaceValueCurrencyCode()))")
   @Mapping(target = "totalPaid", expression = "java(currencyMapper.mapToDto(invoice.getTotalPaidAmount(), invoice.getTotalPaidCurrencyCode()))")
   @Mapping(target = "outstanding", expression = "java(currencyMapper.mapToDto(invoice.getOutstandingAmount(), invoice.getOutstandingAmountCurrencyCode()))")
@@ -77,11 +72,10 @@ public abstract class InvoiceMapper {
   @Mapping(target = "advanceAvailableEquivalent", expression = "java(currencyMapper.mapToDto(invoice.getAdvanceAvailableEquivalentAmount(), invoice.getAdvanceAvailableEquivalentCurrencyCode()))")
   @Mapping(target = "discountAdvance", expression = "java(currencyMapper.mapToDto(invoice.getDiscountAdvanceAmount(), invoice.getDiscountAdvanceAmountCurrencyCode()))")
   @Mapping(target = "discountDeal", expression = "java(currencyMapper.mapToDto(invoice.getDiscountDealAmount(), invoice.getDiscountDealAmountCurrencyCode()))")
-
-  @Mapping(source = "invoice.detailsNotesForCustomer", target = "detailsNotesForCustomer")
-  @Mapping(source = "invoice.securityDetails", target = "securityDetails")
-  @Mapping(source = "invoice.taxDetails", target = "taxDetails")
-  public abstract InvoiceDTO mapEntityToDTO(InvoiceMaster invoice, CounterParty buyer, CounterParty seller, Program program);
+  @Mapping(target = "buyer", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(invoice.getBuyer()))")
+  @Mapping(target = "seller", expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(invoice.getSeller()))")
+  @Mapping(target = "programme", expression = "java(programMapper.mapEntityToInvoiceDTO(invoice.getProgram()))")
+  public abstract InvoiceDTO mapEntityToDTO(InvoiceMaster invoice);
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
@@ -144,19 +138,10 @@ public abstract class InvoiceMapper {
 
   protected abstract List<InvoiceNumbers> mapDTOsToInvoiceNumbersList(List<InvoiceNumberDTO> invoiceNumberDTOs);
 
-  public List<InvoiceDTO> mapEntitiesToDTOs(
-    List<InvoiceMaster> invoiceMasters,
-    Map<Long, CounterParty> idToCounterparty,
-    Map<Long, Program> idToProgram
-  ) {
-    List<InvoiceDTO> invoicesDTOs = new ArrayList<>(invoiceMasters.size());
-    for (InvoiceMaster invoiceMaster : invoiceMasters) {
-      invoicesDTOs.add(mapEntityToDTO(
-        invoiceMaster,
-        idToCounterparty.get(invoiceMaster.getBuyerId()),
-        idToCounterparty.get(invoiceMaster.getSellerId()),
-        idToProgram.get(invoiceMaster.getProgrammeId())
-      ));
+  public List<InvoiceDTO> mapEntitiesToDTOs(List<InvoiceMaster> invoices) {
+    List<InvoiceDTO> invoicesDTOs = new ArrayList<>(invoices.size());
+    for (InvoiceMaster invoiceWithJoins : invoices) {
+      invoicesDTOs.add(mapEntityToDTO(invoiceWithJoins));
     }
 
     return invoicesDTOs;

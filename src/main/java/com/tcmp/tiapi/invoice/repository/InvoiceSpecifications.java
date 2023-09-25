@@ -13,14 +13,14 @@ import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InvoiceSpecifications {
-  public static Specification<InvoiceMaster> filterBySellerIdsAndStatus(
-    @Nonnull List<Long> sellerIds,
+  public static Specification<InvoiceMaster> filterBySellerMnemonicAndStatus(
+    @Nonnull String sellerMnemonic,
     @Nullable String status
   ) {
     return (root, query, criteriaBuilder) -> {
       List<Predicate> predicates = new ArrayList<>();
 
-      predicates.add(root.get("sellerId").in(sellerIds));
+      predicates.add(criteriaBuilder.equal(root.get("seller").get("mnemonic"), sellerMnemonic));
 
       if (status != null) {
         predicates.add(criteriaBuilder.equal(root.get("status"), status));
