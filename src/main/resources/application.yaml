@@ -1,17 +1,13 @@
+server.port: ${PORT:8080}
+
 spring:
-  profiles:
-    active: ${APPLICATION_ENV:prod}
+  profiles.active: ${APPLICATION_ENV:prod}
 
   jpa:
     open-in-view: true
     database-platform: "org.hibernate.dialect.SQLServerDialect"
-    properties:
-      hibernate:
-        dialect: "org.hibernate.dialect.SQLServerDialect"
-
-  output:
-    ansi:
-      enabled: ALWAYS
+    properties.hibernate:
+      dialect: "org.hibernate.dialect.SQLServerDialect"
 
 ti:
   queue:
