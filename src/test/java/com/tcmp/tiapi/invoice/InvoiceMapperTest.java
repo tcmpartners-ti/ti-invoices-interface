@@ -1,12 +1,9 @@
 package com.tcmp.tiapi.invoice;
 
-import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.program.model.Program;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,35 +20,8 @@ class InvoiceMapperTest {
   @Autowired InvoiceMapper testedInvoiceMapper;
 
   @Test
-  void mapEntityToDTO_itShouldMapEntityToDTO() {
-    InvoiceMaster source = InvoiceMaster.builder()
-      .id(1L)
-      .reference("Invoice123")
-      .build();
-    CounterParty buyer = CounterParty.builder()
-      .id(1L)
-      .mnemonic("1722466421001")
-      .build();
-    CounterParty seller = CounterParty.builder()
-      .id(2L)
-      .mnemonic("1722466422001")
-      .build();
-    Program program = Program.builder()
-      .pk(1L)
-      .id("IDEAL01")
-      .build();
-
-    InvoiceDTO invoiceDto = testedInvoiceMapper.mapEntityToDTO(source, buyer, seller, program);
-
-    assertEquals(source.getId(), invoiceDto.getId());
-    assertEquals(buyer.getId(), invoiceDto.getBuyer().getId());
-    assertEquals(seller.getId(), invoiceDto.getSeller().getId());
-    assertEquals(program.getId(), invoiceDto.getProgramme().getId());
-  }
-
-  @Test
   void mapEntityToDTO_itShouldReturnNullIfEverySourceIsNull() {
-    InvoiceDTO invoiceDTO = testedInvoiceMapper.mapEntityToDTO(null, null, null, null);
+    InvoiceDTO invoiceDTO = testedInvoiceMapper.mapEntityToDTO(null);
 
     assertNull(invoiceDTO);
   }

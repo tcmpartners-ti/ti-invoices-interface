@@ -49,7 +49,7 @@ class InvoiceControllerTest {
   @Test
   void getInvoiceById_itShouldReturnInvoice() throws Exception {
     long invoiceId = 1L;
-    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
+    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
 
     when(invoiceService.getInvoiceById(anyLong()))
       .thenReturn(InvoiceDTO.builder()
@@ -90,7 +90,7 @@ class InvoiceControllerTest {
   @Test
   void searchInvoice_itShouldReturnInvoice() throws Exception {
     long invoiceId = 1L;
-    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
+    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
     InvoiceSearchParams searchParams = InvoiceSearchParams.builder()
       .programme("Programme123")
       .seller("Seller123")
