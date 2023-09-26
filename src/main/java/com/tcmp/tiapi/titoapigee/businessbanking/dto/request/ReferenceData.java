@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.titoapigee.dto.request;
+package com.tcmp.tiapi.titoapigee.businessbanking.dto.request;
 
 import lombok.Builder;
 

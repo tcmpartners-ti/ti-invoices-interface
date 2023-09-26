@@ -1,8 +1,7 @@
-package com.tcmp.tiapi.titoapigee.client;
+package com.tcmp.tiapi.titoapigee.businessbanking;
 
-import com.tcmp.tiapi.titoapigee.configuration.ApiGeeConfiguration;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequest;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
-import com.tcmp.tiapi.titoapigee.dto.request.OperationalGatewayRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,11 +11,11 @@ import java.util.Map;
 
 @FeignClient(
   value = "operationalGatewayClient",
-  url = "${bp.api-gee.services.business-banking.operational-gateway.url}",
-  configuration = ApiGeeConfiguration.class
+  url = "${bp.api-gee.services.business-banking.url}",
+  configuration = BusinessBankingConfiguration.class
 )
-public interface OperationalGatewayClient {
-  @PostMapping
+public interface BusinessBankingClient {
+  @PostMapping("/operational-gateway")
   Void sendInvoiceCreationResult(
     @RequestHeader Map<String, String> headers,
     @RequestBody ApiGeeBaseRequest<OperationalGatewayRequest> body

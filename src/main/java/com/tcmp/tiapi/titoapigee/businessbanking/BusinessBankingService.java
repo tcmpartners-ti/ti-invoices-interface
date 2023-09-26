@@ -1,16 +1,18 @@
-package com.tcmp.tiapi.titoapigee.service;
+package com.tcmp.tiapi.titoapigee.businessbanking;
 
 import com.tcmp.tiapi.invoice.dto.request.InvoiceNotificationPayload;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
-import com.tcmp.tiapi.titoapigee.client.ApiGeeHeaderSigner;
-import com.tcmp.tiapi.titoapigee.client.OperationalGatewayClient;
-import com.tcmp.tiapi.titoapigee.dto.request.*;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequest;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ProcessCode;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ReferenceData;
+import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
-import com.tcmp.tiapi.titoapigee.mapper.OperationalGatewayMapper;
+import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -19,19 +21,29 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class OperationalGatewayService {
-  private final OperationalGatewayClient operationalGatewayClient;
-  private final OperationalGatewayMapper operationalGatewayMapper;
-  private final ApiGeeHeaderSigner apiGeeHeaderSigner;
+public class BusinessBankingService {
+  private final HeaderSigner apiGeeHeaderSigner;
+  private final BusinessBankingClient businessBankingClient;
+  private final BusinessBankingMapper businessBankingMapper;
+
+  public BusinessBankingService(
+    @Qualifier("businessBankingHeaderSigner")
+    HeaderSigner apiGeeHeaderSigner,
+    BusinessBankingClient businessBankingClient,
+    BusinessBankingMapper businessBankingMapper
+  ) {
+    this.apiGeeHeaderSigner = apiGeeHeaderSigner;
+    this.businessBankingClient = businessBankingClient;
+    this.businessBankingMapper = businessBankingMapper;
+  }
 
   public void sendInvoiceCreationResult(ServiceResponse serviceResponse, String invoiceNumber) {
     if (invoiceNumber == null) {
       throw new UnrecoverableApiGeeRequestException("No invoice number was provided.");
     }
 
-    OperationalGatewayRequestPayload requestPayload = operationalGatewayMapper.mapTiServiceResponseToOperationalGatewayPayload(
+    OperationalGatewayRequestPayload requestPayload = businessBankingMapper.mapTiServiceResponseToOperationalGatewayPayload(
       serviceResponse, InvoiceNotificationPayload.builder()
         .id("test")
         .buyer("")
@@ -55,7 +67,7 @@ public class OperationalGatewayService {
     Map<String, String> requestHeaders = apiGeeHeaderSigner.buildRequestHeaders(requestBody);
 
     try {
-      operationalGatewayClient.sendInvoiceCreationResult(requestHeaders, requestBody);
+      businessBankingClient.sendInvoiceCreationResult(requestHeaders, requestBody);
       log.info("Invoice creation notified successfully.");
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
