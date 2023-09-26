@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.titoapigee.client;
+package com.tcmp.tiapi.titoapigee.security;
 
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import feign.RequestInterceptor;
