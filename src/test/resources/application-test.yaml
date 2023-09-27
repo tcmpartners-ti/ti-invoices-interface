@@ -28,11 +28,12 @@ bp:
     api-key: ""
     api-secret: ""
 
-    base-url: "http://localhost:5000"
+    base-url: "http://127.0.0.1:80"
     services:
       business-banking:
-        operational-gateway:
-          url: "${bp.api-gee.base-url}/business-banking/v1/operational-gateway"
+        url: "${bp.api-gee.base-url}/business-banking/v1"
+      payment-execution:
+        url: "${bp.api-gee.base-url}/payment-execution/v1"
 
 invoice:
   route:
