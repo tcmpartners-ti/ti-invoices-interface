@@ -6,7 +6,7 @@ import com.tcmp.tiapi.invoice.route.FinanceInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
-import com.tcmp.tiapi.titoapigee.service.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -64,11 +64,11 @@ public class InvoiceConfiguration {
   public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder(
     @Qualifier("jaxbDataFormatServiceResponse")
     JaxbDataFormat jaxbDataFormatServiceResponse,
-    OperationalGatewayService operationalGatewayService
+    BusinessBankingService businessBankingService
   ) {
     return new InvoiceCreatedEventListenerRouteBuilder(
       jaxbDataFormatServiceResponse,
-      operationalGatewayService,
+      businessBankingService,
       uriCreatedEventFrom,
       uriCreatedEventTo
     );

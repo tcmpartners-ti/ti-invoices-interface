@@ -3,7 +3,7 @@ package com.tcmp.tiapi.invoice.route;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
-import com.tcmp.tiapi.titoapigee.service.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -16,7 +16,7 @@ public class InvoiceCreatedEventListenerRouteBuilder extends RouteBuilder {
   private static final int RETRIES_DELAY_IN_MS = 1_000;
 
   private final JaxbDataFormat jaxbDataFormat;
-  private final OperationalGatewayService operationalGatewayService;
+  private final BusinessBankingService businessBankingService;
 
   private final String uriFrom;
   private final String uriTo;
@@ -49,6 +49,6 @@ public class InvoiceCreatedEventListenerRouteBuilder extends RouteBuilder {
     log.info("ServiceResponse={}", serviceResponse);
 
     String invoiceNumber = serviceResponse.getResponseHeader().getCorrelationId();
-    operationalGatewayService.sendInvoiceCreationResult(serviceResponse, invoiceNumber);
+    businessBankingService.sendInvoiceCreationResult(serviceResponse, invoiceNumber);
   }
 }
