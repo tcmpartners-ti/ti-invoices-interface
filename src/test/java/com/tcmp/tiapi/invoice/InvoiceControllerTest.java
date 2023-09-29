@@ -4,6 +4,7 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceBulkCreationForm;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
+import com.tcmp.tiapi.invoice.service.InvoiceService;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

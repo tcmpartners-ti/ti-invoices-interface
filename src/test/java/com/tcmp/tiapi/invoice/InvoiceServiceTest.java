@@ -7,6 +7,7 @@ import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
+import com.tcmp.tiapi.invoice.service.InvoiceService;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;

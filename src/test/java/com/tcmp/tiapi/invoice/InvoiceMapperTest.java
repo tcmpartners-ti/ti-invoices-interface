@@ -4,9 +4,11 @@ import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.shared.configuration.MockRedisRepositoriesConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(MockRedisRepositoriesConfiguration.class)
 class InvoiceMapperTest {
   @Autowired InvoiceMapper testedInvoiceMapper;
 

@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice.route;
 
 import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
@@ -31,6 +32,7 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
 
   @EndpointInject(URI_FROM) ProducerTemplate from;
 
+  @Mock private InvoiceEventService invoiceEventService;
   @Mock private JaxbDataFormat jaxbDataFormat;
   @Mock private TIServiceRequestWrapper tiServiceRequestWrapper;
   @Mock private XmlNamespaceFixer xmlNamespaceFixer;
@@ -38,6 +40,7 @@ class CreateInvoiceRouteBuilderTest extends CamelTestSupport {
   @Override
   protected RoutesBuilder createRouteBuilder() {
     return new CreateInvoiceRouteBuilder(
+      invoiceEventService,
       jaxbDataFormat,
       tiServiceRequestWrapper,
       xmlNamespaceFixer,
