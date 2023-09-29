@@ -1,11 +1,9 @@
 package com.tcmp.tiapi.titoapigee.businessbanking;
 
-import com.tcmp.tiapi.invoice.dto.request.InvoiceNotificationPayload;
+import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequest;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ProcessCode;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ReferenceData;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.*;
+import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
@@ -23,6 +21,8 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class BusinessBankingService {
+  private static final String REQUEST_PROVIDER = "FTI";
+
   private final HeaderSigner apiGeeHeaderSigner;
   private final BusinessBankingClient businessBankingClient;
   private final BusinessBankingMapper businessBankingMapper;
@@ -38,27 +38,15 @@ public class BusinessBankingService {
     this.businessBankingMapper = businessBankingMapper;
   }
 
-  public void sendInvoiceCreationResult(ServiceResponse serviceResponse, String invoiceNumber) {
-    if (invoiceNumber == null) {
-      throw new UnrecoverableApiGeeRequestException("No invoice number was provided.");
-    }
-
-    OperationalGatewayRequestPayload requestPayload = businessBankingMapper.mapTiServiceResponseToOperationalGatewayPayload(
-      serviceResponse, InvoiceNotificationPayload.builder()
-        .id("test")
-        .buyer("")
-        .batchId("")
-        .invoiceNumber("")
-        .build());
+  public void sendInvoiceCreationResult(ServiceResponse serviceResponse, InvoiceCreationEventInfo invoice) {
+    OperationalGatewayRequestPayload requestPayload = businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
 
     ApiGeeBaseRequest<OperationalGatewayRequest> requestBody = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
       .data(OperationalGatewayRequest.builder()
         .referenceData(ReferenceData.builder()
-          .provider("Provider 123")
+          .provider(REQUEST_PROVIDER)
           .correlatedMessageId(UUID.randomUUID().toString())
-          .processCode(ProcessCode.builder()
-            .code("Process code 123")
-            .build())
+          .processCode(ProcessCode.of(OperationalGatewayProcessCode.INVOICE_CREATION))
           .build())
         .payload(requestPayload)
         .build())
@@ -68,7 +56,7 @@ public class BusinessBankingService {
 
     try {
       businessBankingClient.sendInvoiceCreationResult(requestHeaders, requestBody);
-      log.info("Invoice creation notified successfully.");
+      log.info("Invoice creation notified successfully. Headers={} Body={}", requestHeaders, requestBody);
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
         HttpStatus.BAD_REQUEST.value(),

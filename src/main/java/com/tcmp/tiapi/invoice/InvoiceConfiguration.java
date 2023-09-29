@@ -3,7 +3,8 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouteBuilder;
 import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.FinanceInvoiceRouteBuilder;
-import com.tcmp.tiapi.invoice.route.InvoiceCreatedEventListenerRouteBuilder;
+import com.tcmp.tiapi.invoice.route.InvoiceEventListenerRouteBuilder;
+import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
@@ -31,11 +32,13 @@ public class InvoiceConfiguration {
 
   @Bean
   public CreateInvoiceRouteBuilder createInvoiceRouter(
+    InvoiceEventService invoiceEventService,
     @Qualifier("jaxbDataFormatServiceRequest")
     JaxbDataFormat jaxbDataFormatServiceRequest,
     InvoiceMapper invoiceMapper
   ) {
     return new CreateInvoiceRouteBuilder(
+      invoiceEventService,
       jaxbDataFormatServiceRequest,
       new TIServiceRequestWrapper(),
       new XmlNamespaceFixer(),
@@ -45,28 +48,23 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(
-    @Qualifier("jaxbDataFormatServiceRequest")
-    JaxbDataFormat jaxbDataFormatServiceRequest,
-    InvoiceMapper invoiceMapper
-  ) {
+  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(InvoiceMapper invoiceMapper) {
     return new BulkCreateInvoicesRouteBuilder(
-      jaxbDataFormatServiceRequest,
       invoiceMapper,
-      new TIServiceRequestWrapper(),
-      new XmlNamespaceFixer(),
       uriBulkCreateFrom,
       uriBulkCreateTo
     );
   }
 
   @Bean
-  public InvoiceCreatedEventListenerRouteBuilder invoiceCreatedEventListenerRouteBuilder(
+  public InvoiceEventListenerRouteBuilder invoiceEventListenerRouteBuilder(
+    InvoiceEventService invoiceEventService,
     @Qualifier("jaxbDataFormatServiceResponse")
     JaxbDataFormat jaxbDataFormatServiceResponse,
     BusinessBankingService businessBankingService
   ) {
-    return new InvoiceCreatedEventListenerRouteBuilder(
+    return new InvoiceEventListenerRouteBuilder(
+      invoiceEventService,
       jaxbDataFormatServiceResponse,
       businessBankingService,
       uriCreatedEventFrom,
