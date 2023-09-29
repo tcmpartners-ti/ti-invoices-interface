@@ -1,7 +1,7 @@
 plugins {
   `java-library`
   `maven-publish`
-  id("org.springframework.boot") version "3.1.3"
+  id("org.springframework.boot") version "3.1.4"
 }
 
 repositories {
@@ -13,7 +13,6 @@ repositories {
 
 dependencies {
   api("org.springframework.boot:spring-boot-starter-web:3.1.3")
-  api("com.azure.spring:spring-cloud-azure-starter-keyvault-secrets:6.0.0-beta.4")
   api("org.springframework.boot:spring-boot-starter-validation:3.1.3")
   api("org.apache.camel.springboot:camel-spring-boot-starter:4.0.0")
   api("org.apache.camel:camel-activemq:4.0.0")
@@ -26,6 +25,7 @@ dependencies {
   api("org.springframework.boot:spring-boot-starter-data-jpa:3.1.2")
   api("org.projectlombok:lombok:1.18.28")
   api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+  api("org.springframework.boot:spring-boot-starter-data-redis:3.0.4")
 
   annotationProcessor("org.projectlombok:lombok:1.18.28")
   annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
@@ -52,9 +52,12 @@ publishing {
 
 tasks.test {
   useJUnitPlatform()
+
   testLogging {
     events("passed", "skipped", "failed")
   }
+
+  systemProperty("spring.profiles.active", "test")
 }
 
 tasks.withType<JavaCompile> {
