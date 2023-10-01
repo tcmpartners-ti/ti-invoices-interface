@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Builder
@@ -57,5 +56,5 @@ public class InvoiceFinancingDTO {
   private LocalDate financeDate;
 
   @Valid
-  List<InvoiceNumberDTO> invoiceNumbers;
+  InvoiceNumberDTO invoice;
 }

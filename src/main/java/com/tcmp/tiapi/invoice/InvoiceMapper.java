@@ -34,6 +34,7 @@ import java.util.List;
   injectionStrategy = InjectionStrategy.CONSTRUCTOR,
   imports = {
     BigDecimal.class,
+    List.class,
     MonetaryAmountUtils.class,
     StringMappingUtils.class
   }
@@ -127,16 +128,14 @@ public abstract class InvoiceMapper {
   @Mapping(source = "financeCurrency", target = "financeCurrency")
   @Mapping(source = "financePercent", target = "financePercent")
   @Mapping(source = "financeDate", target = "financeDate")
-  @Mapping(source = "invoiceNumbers", target = "invoiceNumbersContainer.invoiceNumbers")
+  @Mapping(target = "invoiceNumbersContainer.invoiceNumbers", expression = "java(List.of(mapDTOToInvoiceNumbers(invoiceFinancingDTO.getInvoice())))")
   public abstract FinanceBuyerCentricInvoiceEventMessage mapFinancingDTOToFTIMessage(InvoiceFinancingDTO invoiceFinancingDTO);
 
-  @Mapping(source = "invoiceNumber", target = "invoiceNumber")
+  @Mapping(source = "number", target = "invoiceNumber")
   @Mapping(source = "issueDate", target = "issueDate")
   @Mapping(source = "outstanding.amount", target = "outstandingAmount")
   @Mapping(source = "outstanding.currency", target = "outstandingAmountCurrency")
   protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);
-
-  protected abstract List<InvoiceNumbers> mapDTOsToInvoiceNumbersList(List<InvoiceNumberDTO> invoiceNumberDTOs);
 
   public List<InvoiceDTO> mapEntitiesToDTOs(List<InvoiceMaster> invoices) {
     List<InvoiceDTO> invoicesDTOs = new ArrayList<>(invoices.size());

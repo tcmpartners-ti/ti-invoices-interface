@@ -21,7 +21,7 @@ public class InvoiceNumberDTO {
 
   @Size(min = 1, max = 34, message = "Invoice number should be between 1 and 34 characters.")
   @Schema(minLength = 1, maxLength = 34, description = "The invoice number of the invoice to be financed.")
-  private String invoiceNumber;
+  private String number;
 
   @JsonFormat(pattern = DATE_FORMAT)
   @Schema(description = "The issue date of the invoice to be financed.", format = DATE_FORMAT)
