@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.shared.configuration;
+package com.tcmp.tiapi.shared;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
