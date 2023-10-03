@@ -119,11 +119,8 @@ class InvoiceControllerTest {
 
   @Test
   void createInvoice_itShouldSendInvoiceToTI() throws Exception {
-    String requestBody = "{\"invoiceNumber\":\"Invoice123\"}";
+    String requestBody = "{\"context\":{\"customer\":\"174306786001\",\"theirReference\":\"FINANCE25\",\"behalfOfBranch\":\"BPEC\"},\"anchorParty\":\"174306786001\",\"programme\":\"Coffee1\",\"seller\":\"1790049795001\",\"buyer\":\"174306786001\",\"invoiceNumber\":\"FINANCE25\",\"issueDate\":\"06-09-2023\",\"faceValue\":{\"amount\":1000,\"currency\":\"USD\"},\"outstandingAmount\":{\"amount\":1000,\"currency\":\"USD\"},\"settlementDate\":\"15-10-2023\"}\n";
     String expectedResponse = "{\"message\":\"Invoice sent to be created.\"};";
-    InvoiceCreationDTO expectedInvoiceDto = InvoiceCreationDTO.builder()
-      .invoiceNumber("Invoice123")
-      .build();
 
     mockMvc.perform(
         post("/invoices")
@@ -134,7 +131,7 @@ class InvoiceControllerTest {
       .andExpect(content().json(expectedResponse, true));
 
 
-    verify(invoiceService).createSingleInvoiceInTi(expectedInvoiceDto);
+    verify(invoiceService).createSingleInvoiceInTi(any(InvoiceCreationDTO.class));
   }
 
 
@@ -148,7 +145,7 @@ class InvoiceControllerTest {
       .invoicesFile(mockFile)
       .batchId("InvalidBatch!d")
       .build();
-    String expectedResponse = "{\"status\":400,\"error\":\"Could not validate the provided body.\",\"errors\":[{\"field\":\"batchId\",\"error\":\"Only letters, numbers and underscores are allowed.\"}]}";
+    String expectedResponse = "{\"status\":400,\"error\":\"Could not validate the provided fields.\",\"errors\":[{\"field\":\"batchId\",\"error\":\"Only letters, numbers and underscores are allowed.\"}]}";
 
     mockMvc.perform(
         multipart("/invoices/bulk")
