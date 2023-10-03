@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.format.DateTimeParseException;
+
 @ControllerAdvice
 public class GlobalHttpExceptionHandler {
 
@@ -20,7 +22,7 @@ public class GlobalHttpExceptionHandler {
     return ResponseEntity.status(badRequest)
       .body(new ValidationHttpErrorMessage(
         badRequest.value(),
-        "Could not validate the provided body.",
+        "Could not validate the provided fields.",
         exception.getFieldErrors().stream().map(e -> new ErrorDetails(
           e.getField(),
           e.getDefaultMessage()
@@ -41,6 +43,17 @@ public class GlobalHttpExceptionHandler {
 
   @ExceptionHandler(BadRequestHttpException.class)
   public ResponseEntity<SimpleHttpErrorMessage> handleBadRequestException(BadRequestHttpException e) {
+    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity.status(badRequest)
+      .body(new SimpleHttpErrorMessage(
+        badRequest.value(),
+        e.getMessage()
+      ));
+  }
+
+  @ExceptionHandler(DateTimeParseException.class)
+  public ResponseEntity<SimpleHttpErrorMessage> handleDateTimeParseException(DateTimeParseException e) {
     HttpStatus badRequest = HttpStatus.BAD_REQUEST;
 
     return ResponseEntity.status(badRequest)
