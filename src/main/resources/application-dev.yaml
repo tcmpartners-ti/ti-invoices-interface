@@ -24,7 +24,7 @@ spring:
 bp:
   api-gee:
     headers:
-      device: "TradeInnovationInterface"
+      device: "TradeInnovationInterfaceDEV"
 
     app-id: ${API_GEE_APP_ID}
     api-key: ${API_GEE_KEY}
