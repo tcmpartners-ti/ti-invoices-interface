@@ -58,14 +58,14 @@ public class InvoiceConfiguration {
 
   @Bean
   public InvoiceEventListenerRouteBuilder invoiceEventListenerRouteBuilder(
-    InvoiceEventService invoiceEventService,
     @Qualifier("jaxbDataFormatServiceResponse")
     JaxbDataFormat jaxbDataFormatServiceResponse,
+    InvoiceEventService invoiceEventService,
     BusinessBankingService businessBankingService
   ) {
     return new InvoiceEventListenerRouteBuilder(
-      invoiceEventService,
       jaxbDataFormatServiceResponse,
+      invoiceEventService,
       businessBankingService,
       uriCreatedEventFrom,
       uriCreatedEventTo

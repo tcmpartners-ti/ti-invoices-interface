@@ -4,22 +4,23 @@ import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
+import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
-import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import lombok.RequiredArgsConstructor;
-import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.ValueBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
+import org.apache.camel.support.builder.Namespaces;
 
 @RequiredArgsConstructor
 public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
   private static final int MAX_RETRY_ATTEMPTS = 3;
   private static final int RETRIES_DELAY_IN_MS = 1_000;
 
-  private final InvoiceEventService invoiceEventService;
   private final JaxbDataFormat jaxbDataFormat;
+  private final InvoiceEventService invoiceEventService;
   private final BusinessBankingService businessBankingService;
 
   private final String uriFrom;
@@ -27,6 +28,9 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
 
   @Override
   public void configure() {
+    Namespaces ns = new Namespaces("ns2", "urn:control.services.tiplus2.misys.com");
+    ValueBuilder operation = xpath("//ns2:ServiceResponse/ns2:ResponseHeader/ns2:Operation", String.class, ns);
+
     onException(UnrecoverableApiGeeRequestException.class)
       .log(LoggingLevel.ERROR, "Could not notify invoice creation.")
       .end();
@@ -43,22 +47,26 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
       .end();
 
     from(uriTo).routeId("apiGeeInvoiceCreationNotifier")
-      .process(this::handleServiceResponseOperation)
+      .choice()
+        .when(operation.isEqualTo(TIOperation.CREATE_INVOICE_VALUE))
+          .process().body(ServiceResponse.class, this::sendInvoiceCreationResult)
+          .log("Invoice creation event notified.")
+        .when(operation.isEqualTo(TIOperation.FINANCE_INVOICE_VALUE))
+          .process().body(ServiceResponse.class, this::sendInvoiceFinancingResult)
+          .log("Invoice financing event notified.")
+        .otherwise()
+          .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
+      .endChoice()
       .end();
   }
 
-  private void handleServiceResponseOperation(Exchange exchange) {
-    ServiceResponse serviceResponse = exchange.getIn().getBody(ServiceResponse.class);
-    String operation = serviceResponse.getResponseHeader().getOperation();
-
-    switch (operation) {
-      case TIOperation.CREATE_INVOICE_VALUE -> sendInvoiceCreationResult(serviceResponse);
-      case TIOperation.FINANCE_INVOICE_VALUE -> sendInvoiceFinancingResult(serviceResponse);
-      default -> log.error("Could not handle TI operation: {}", operation);
-    }
-  }
-
   private void sendInvoiceCreationResult(ServiceResponse serviceResponse) {
+    if (serviceResponse == null) {
+      String errorMessage = "Message with no body received.";
+      log.error(errorMessage);
+      throw new UnrecoverableApiGeeRequestException(errorMessage);
+    }
+
     log.info("InvoiceCreationResponse={}", serviceResponse);
     String invoiceUuidFromCorrelationId = serviceResponse.getResponseHeader().getCorrelationId();
     InvoiceCreationEventInfo invoice = invoiceEventService.findInvoiceByUuid(invoiceUuidFromCorrelationId);
@@ -68,6 +76,12 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
   }
 
   private void sendInvoiceFinancingResult(ServiceResponse serviceResponse) {
+    if (serviceResponse == null) {
+      String errorMessage = "Message with no body received.";
+      log.error(errorMessage);
+      throw new UnrecoverableApiGeeRequestException(errorMessage);
+    }
+
     log.info("InvoiceFinancingResponse={}", serviceResponse);
   }
 }
