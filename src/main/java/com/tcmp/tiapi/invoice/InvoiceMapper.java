@@ -21,6 +21,8 @@ import org.mapstruct.MappingConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,11 +37,15 @@ import java.util.List;
   imports = {
     BigDecimal.class,
     List.class,
+    LocalDate.class,
+    DateTimeFormatter.class,
     MonetaryAmountUtils.class,
     StringMappingUtils.class
   }
 )
 public abstract class InvoiceMapper {
+  protected static final String DTO_DATE_FORMAT = "dd-MM-yyyy";
+
   @Autowired protected CurrencyAmountMapper currencyMapper;
   @Autowired protected CounterPartyMapper counterPartyMapper;
   @Autowired protected ProgramMapper programMapper;
@@ -124,15 +130,15 @@ public abstract class InvoiceMapper {
   @Mapping(source = "seller", target = "seller")
   @Mapping(source = "buyer", target = "buyer")
   @Mapping(source = "anchorParty", target = "anchorParty")
-  @Mapping(source = "maturityDate", target = "maturityDate")
   @Mapping(source = "financeCurrency", target = "financeCurrency")
   @Mapping(source = "financePercent", target = "financePercent")
-  @Mapping(source = "financeDate", target = "financeDate")
+  @Mapping(target = "maturityDate", expression = "java(LocalDate.parse(invoiceFinancingDTO.getMaturityDate(), DateTimeFormatter.ofPattern(DTO_DATE_FORMAT)))")
+  @Mapping(target = "financeDate", expression = "java(LocalDate.parse(invoiceFinancingDTO.getFinanceDate(), DateTimeFormatter.ofPattern(DTO_DATE_FORMAT)))")
   @Mapping(target = "invoiceNumbersContainer.invoiceNumbers", expression = "java(List.of(mapDTOToInvoiceNumbers(invoiceFinancingDTO.getInvoice())))")
   public abstract FinanceBuyerCentricInvoiceEventMessage mapFinancingDTOToFTIMessage(InvoiceFinancingDTO invoiceFinancingDTO);
 
   @Mapping(source = "number", target = "invoiceNumber")
-  @Mapping(source = "issueDate", target = "issueDate")
+  @Mapping(target = "issueDate", expression = "java(LocalDate.parse(invoiceNumberDTO.getIssueDate(), DateTimeFormatter.ofPattern(DTO_DATE_FORMAT)))")
   @Mapping(source = "outstanding.amount", target = "outstandingAmount")
   @Mapping(source = "outstanding.currency", target = "outstandingAmountCurrency")
   protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);

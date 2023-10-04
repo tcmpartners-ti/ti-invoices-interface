@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tcmp.tiapi.shared.annotation.ValidDateFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -45,9 +44,10 @@ public class InvoiceFinancingDTO {
   private String anchorParty;
 
   @NotNull(message = "This field is required.")
-  @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT)
-  private LocalDate maturityDate;
+  @Pattern(regexp = "^(0[1-9]|[1-2][0-9])-(0[1-9]|1[0-2])-\\d{4}$", message = "Date must be in the format " + DATE_FORMAT)
+  @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
+  @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT, type = "date")
+  private String maturityDate;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Finance currency code must be between 1 and 3 characters.")
@@ -62,9 +62,10 @@ public class InvoiceFinancingDTO {
   private BigDecimal financePercent;
 
   @NotNull(message = "This field is required.")
-  @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(description = "The start date of the advance - required for interest calculation.", format = DATE_FORMAT)
-  private LocalDate financeDate;
+  @Pattern(regexp = "^(0[1-9]|[1-2][0-9])-(0[1-9]|1[0-2])-\\d{4}$", message = "Date must be in the format " + DATE_FORMAT)
+  @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
+  @Schema(description = "The start date of the advance - required for interest calculation.", format = DATE_FORMAT, type = "date")
+  private String financeDate;
 
   @Valid
   @NotNull(message = "This field is required.")
