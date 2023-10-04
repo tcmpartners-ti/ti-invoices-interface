@@ -6,6 +6,6 @@ import lombok.Builder;
 public record PayloadInvoice(
   String batchId,
   String reference,
-  String buyerMnemonic
+  String sellerMnemonic
 ) {
 }

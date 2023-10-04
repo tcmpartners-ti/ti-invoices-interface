@@ -21,7 +21,7 @@ public class InvoiceEventService {
       .id(invoiceUuid)
       .batchId(invoiceEventMessage.getBatchId())
       .reference(invoiceEventMessage.getInvoiceNumber())
-      .buyerMnemonic(invoiceEventMessage.getBuyer())
+      .sellerMnemonic(invoiceEventMessage.getSeller())
       .build();
 
     invoiceCreationEventRepository.save(invoiceInfo);
