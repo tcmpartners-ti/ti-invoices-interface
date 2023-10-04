@@ -36,6 +36,8 @@ class InvoiceMapperTest {
       .buyer("Supermaxi")
       .seller("CocaCola")
       .programme("SUP123")
+      .issueDate("01-01-2023")
+      .settlementDate("02-02-2023")
       .build();
 
     CreateInvoiceEventMessage createInvoiceMessage = testedInvoiceMapper.mapDTOToFTIMessage(invoiceCreationDTO);
