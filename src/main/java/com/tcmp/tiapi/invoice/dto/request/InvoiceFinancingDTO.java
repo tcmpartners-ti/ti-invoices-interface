@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class InvoiceFinancingDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
+  private static final String DATE_REGEX = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
 
   @Valid
   @NotNull(message = "This field is required.")
@@ -44,7 +45,7 @@ public class InvoiceFinancingDTO {
   private String anchorParty;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = "^(0[1-9]|[1-2][0-9])-(0[1-9]|1[0-2])-\\d{4}$", message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT, type = "date")
   private String maturityDate;
@@ -62,7 +63,7 @@ public class InvoiceFinancingDTO {
   private BigDecimal financePercent;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = "^(0[1-9]|[1-2][0-9])-(0[1-9]|1[0-2])-\\d{4}$", message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The start date of the advance - required for interest calculation.", format = DATE_FORMAT, type = "date")
   private String financeDate;

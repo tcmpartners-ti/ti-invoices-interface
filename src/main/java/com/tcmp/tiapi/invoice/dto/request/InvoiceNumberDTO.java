@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InvoiceNumberDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
+  private static final String DATE_REGEX = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 34, message = "Invoice number should be between 1 and 34 characters.")
@@ -25,7 +26,7 @@ public class InvoiceNumberDTO {
   private String number;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = "^(0[1-9]|[1-2][0-9])-(0[1-9]|1[0-2])-\\d{4}$", message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The issue date of the invoice to be financed.", format = DATE_FORMAT)
   private String issueDate;
