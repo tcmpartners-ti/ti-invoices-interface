@@ -1,17 +1,16 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tcmp.tiapi.shared.annotation.ValidDateFormat;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Data
 @Builder
@@ -19,6 +18,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class InvoiceCreationDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
+  private static final String DATE_REGEX = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
 
   @Valid
   @NotNull(message = "This field is required.")
@@ -51,9 +51,10 @@ public class InvoiceCreationDTO {
   private String invoiceNumber;
 
   @NotNull(message = "This field is required.")
-  @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(description = "The date the invoice(s) were issued.", format = DATE_FORMAT)
-  private LocalDate issueDate;
+  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
+  @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
+  @Schema(description = "The date the invoice(s) were issued.", format = DATE_FORMAT, type = "date")
+  private String issueDate;
 
   @Valid
   @NotNull(message = "This field is required.")
@@ -66,7 +67,8 @@ public class InvoiceCreationDTO {
   private CurrencyAmountDTO outstandingAmount;
 
   @NotNull(message = "This field is required.")
-  @JsonFormat(pattern = DATE_FORMAT)
-  @Schema(description = "Invoice payment due date.", format = DATE_FORMAT)
-  private LocalDate settlementDate;
+  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
+  @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
+  @Schema(description = "Invoice payment due date.", format = DATE_FORMAT, type = "string")
+  private String settlementDate;
 }

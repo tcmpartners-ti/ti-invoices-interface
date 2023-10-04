@@ -94,12 +94,12 @@ public abstract class InvoiceMapper {
   @Mapping(source = "seller", target = "seller")
   @Mapping(source = "buyer", target = "buyer")
   @Mapping(source = "invoiceNumber", target = "invoiceNumber")
-  @Mapping(source = "issueDate", target = "issueDate")
   @Mapping(source = "faceValue.amount", target = "faceValue.amount", numberFormat = "#,###.00")
   @Mapping(source = "faceValue.currency", target = "faceValue.currency")
   @Mapping(source = "outstandingAmount.amount", target = "outstandingAmount.amount", numberFormat = "#,###.00")
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
-  @Mapping(source = "settlementDate", target = "settlementDate")
+  @Mapping(target = "issueDate", expression = "java(LocalDate.parse(invoiceCreationDTO.getIssueDate(), DateTimeFormatter.ofPattern(DTO_DATE_FORMAT)))")
+  @Mapping(target = "settlementDate", expression = "java(LocalDate.parse(invoiceCreationDTO.getSettlementDate(), DateTimeFormatter.ofPattern(DTO_DATE_FORMAT)))")
   @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
   public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(InvoiceCreationDTO invoiceCreationDTO);
 
