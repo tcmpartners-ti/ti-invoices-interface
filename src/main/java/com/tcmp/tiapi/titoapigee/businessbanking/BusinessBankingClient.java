@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.Map;
 
 @FeignClient(
-  value = "operationalGatewayClient",
+  value = "businessBankingClient",
   url = "${bp.api-gee.services.business-banking.url}",
   configuration = BusinessBankingConfiguration.class
 )
