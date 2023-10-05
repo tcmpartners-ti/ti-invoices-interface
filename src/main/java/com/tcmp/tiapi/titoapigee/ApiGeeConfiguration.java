@@ -1,9 +1,10 @@
 package com.tcmp.tiapi.titoapigee;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingHeaderSigner;
-import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionHeaderSigner;
+import com.tcmp.tiapi.titoapigee.security.EncryptedBodyRequestHeaderSigner;
+import com.tcmp.tiapi.titoapigee.security.PlainBodyRequestHeaderSigner;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,29 +13,52 @@ import org.springframework.context.annotation.Configuration;
 public class ApiGeeConfiguration {
   private static final String DEVICE_IP = "10.0.0.1";
   @Value("${bp.api-gee.headers.device}") private String device;
-  @Value("${bp.api-gee.app-id}") private String appId;
-  @Value("${bp.api-gee.api-key}") private String apiEncryptionKey;
-  @Value("${bp.api-gee.api-secret}") private String apiSecret;
+  @Value("${bp.api-gee.services.business-banking.app-id}") private String businessBankingAppId;
+  @Value("${bp.api-gee.services.business-banking.api-key}") private String businessBankingApiKey;
+  @Value("${bp.api-gee.services.business-banking.api-secret}") private String businessBankingApiSecret;
+
+  @Value("${bp.api-gee.services.payment-execution.app-id}") private String paymentExecutionAppId;
+  @Value("${bp.api-gee.services.payment-execution.api-key}") private String paymentExecutionApiKey;
+  @Value("${bp.api-gee.services.payment-execution.api-secret}") private String paymentExecutionApiSecret;
+
+  @Value("${bp.api-gee.services.operational-gateway.app-id}") private String operationalGatewayAppId;
+  @Value("${bp.api-gee.services.operational-gateway.api-key}") private String operationalGatewayApiKey;
+  @Value("${bp.api-gee.services.operational-gateway.api-secret}") private String operationalGatewayApiSecret;
 
   @Bean
-  public HeaderSigner paymentExecutionHeaderSigner() {
-    return new PaymentExecutionHeaderSigner(
+  @Qualifier("businessBankingHeaderSigner")
+  public HeaderSigner businessBankingHeaderSigner() {
+    return new EncryptedBodyRequestHeaderSigner(
       new ObjectMapper(),
-      appId,
-      apiEncryptionKey,
-      apiSecret,
+      businessBankingAppId,
+      businessBankingApiKey,
+      businessBankingApiSecret,
       device,
       DEVICE_IP
     );
   }
 
   @Bean
-  public HeaderSigner businessBankingHeaderSigner() {
-    return new BusinessBankingHeaderSigner(
+  @Qualifier("paymentExecutionHeaderSigner")
+  public HeaderSigner paymentExecutionHeaderSigner() {
+    return new PlainBodyRequestHeaderSigner(
       new ObjectMapper(),
-      appId,
-      apiEncryptionKey,
-      apiSecret,
+      paymentExecutionAppId,
+      paymentExecutionApiKey,
+      paymentExecutionApiSecret,
+      device,
+      DEVICE_IP
+    );
+  }
+
+  @Bean
+  @Qualifier("operationalGatewayHeaderSigner")
+  public HeaderSigner operationalGatewayHeaderSigner() {
+    return new PlainBodyRequestHeaderSigner(
+      new ObjectMapper(),
+      operationalGatewayAppId,
+      operationalGatewayApiKey,
+      operationalGatewayApiSecret,
       device,
       DEVICE_IP
     );
