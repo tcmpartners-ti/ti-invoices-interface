@@ -5,7 +5,6 @@ import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
-import com.tcmp.tiapi.program.messaging.SCFProgrammeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

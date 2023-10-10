@@ -33,9 +33,20 @@ bp:
     base-url: "http://127.0.0.1:80"
     services:
       business-banking:
+        app-id: ""
+        api-key: ""
+        api-secret: ""
         url: "${bp.api-gee.base-url}/business-banking/v1"
       payment-execution:
+        app-id: ""
+        api-key: ""
+        api-secret: ""
         url: "${bp.api-gee.base-url}/payment-execution/v1"
+      operational-gateway:
+        app-id: ""
+        api-key: ""
+        api-secret: ""
+        url: "https://api-test.pichincha.com/operational-gateway/v2"
 
 invoice:
   route:
