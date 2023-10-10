@@ -4,7 +4,6 @@ import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.program.messaging.SCFProgrammeMessage;
 import jakarta.xml.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +19,7 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({
   CreateInvoiceEventMessage.class,
-  FinanceBuyerCentricInvoiceEventMessage.class,
-  SCFProgrammeMessage.class
+  FinanceBuyerCentricInvoiceEventMessage.class
 })
 public class ServiceRequest<T> {
   // Missing namespaces
@@ -42,11 +40,6 @@ public class ServiceRequest<T> {
     @XmlElement(
       name = TIOperation.FINANCE_INVOICE_VALUE,
       type = FinanceBuyerCentricInvoiceEventMessage.class,
-      namespace = TINamespace.MESSAGES
-    ),
-    @XmlElement(
-      name = TIOperation.SCF_PROGRAMME_VALUE,
-      type = SCFProgrammeMessage.class,
       namespace = TINamespace.MESSAGES
     )
   })
