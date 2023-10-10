@@ -9,12 +9,12 @@ import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
 
-@RedisHash("InvoiceCreation")
+@RedisHash("InvoiceEvent")
 @Builder
 @Getter
 @Setter
 @ToString
-public class InvoiceCreationEventInfo implements Serializable {
+public class InvoiceEventInfo implements Serializable {
   @Id private String id;
 
   private String batchId;

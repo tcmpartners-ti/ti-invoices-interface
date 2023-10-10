@@ -10,7 +10,6 @@ import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +32,6 @@ public class InvoiceConfiguration {
   @Bean
   public CreateInvoiceRouteBuilder createInvoiceRouter(
     InvoiceEventService invoiceEventService,
-    @Qualifier("jaxbDataFormatServiceRequest")
     JaxbDataFormat jaxbDataFormatServiceRequest,
     InvoiceMapper invoiceMapper
   ) {
@@ -58,7 +56,6 @@ public class InvoiceConfiguration {
 
   @Bean
   public InvoiceEventListenerRouteBuilder invoiceEventListenerRouteBuilder(
-    @Qualifier("jaxbDataFormatServiceResponse")
     JaxbDataFormat jaxbDataFormatServiceResponse,
     InvoiceEventService invoiceEventService,
     BusinessBankingService businessBankingService
@@ -74,10 +71,11 @@ public class InvoiceConfiguration {
 
   @Bean
   public FinanceInvoiceRouteBuilder financeInvoiceRouteBuilder(
-    @Qualifier("jaxbDataFormatServiceRequest")
+    InvoiceEventService invoiceEventService,
     JaxbDataFormat jaxbDataFormatServiceRequest
   ) {
     return new FinanceInvoiceRouteBuilder(
+      invoiceEventService,
       new TIServiceRequestWrapper(),
       jaxbDataFormatServiceRequest,
       new XmlNamespaceFixer(),
