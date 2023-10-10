@@ -1,10 +1,11 @@
 package com.tcmp.tiapi.invoice.route;
 
-import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
+import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +50,16 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
     from(uriTo).routeId("apiGeeInvoiceCreationNotifier")
       .choice()
         .when(operation.isEqualTo(TIOperation.CREATE_INVOICE_VALUE))
-          .process().body(ServiceResponse.class, this::sendInvoiceCreationResult)
+          .process().body(
+            ServiceResponse.class,
+            body -> sendInvoiceEventResult(body, OperationalGatewayProcessCode.INVOICE_CREATION)
+          )
           .log("Invoice creation event notified.")
         .when(operation.isEqualTo(TIOperation.FINANCE_INVOICE_VALUE))
-          .process().body(ServiceResponse.class, this::sendInvoiceFinancingResult)
+          .process().body(
+            ServiceResponse.class,
+            body -> sendInvoiceEventResult(body, OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT)
+          )
           .log("Invoice financing event notified.")
         .otherwise()
           .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
@@ -60,28 +67,15 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
       .end();
   }
 
-  private void sendInvoiceCreationResult(ServiceResponse serviceResponse) {
+  private void sendInvoiceEventResult(ServiceResponse serviceResponse, OperationalGatewayProcessCode processCode) {
     if (serviceResponse == null) {
-      String errorMessage = "Message with no body received.";
-      log.error(errorMessage);
-      throw new UnrecoverableApiGeeRequestException(errorMessage);
+      throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     }
 
-    log.info("InvoiceCreationResponse={}", serviceResponse);
     String invoiceUuidFromCorrelationId = serviceResponse.getResponseHeader().getCorrelationId();
-    InvoiceCreationEventInfo invoice = invoiceEventService.findInvoiceByUuid(invoiceUuidFromCorrelationId);
+    InvoiceEventInfo invoice = invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
 
-    businessBankingService.sendInvoiceCreationResult(serviceResponse, invoice);
+    businessBankingService.sendInvoiceEventResult(processCode, serviceResponse, invoice);
     invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
-  }
-
-  private void sendInvoiceFinancingResult(ServiceResponse serviceResponse) {
-    if (serviceResponse == null) {
-      String errorMessage = "Message with no body received.";
-      log.error(errorMessage);
-      throw new UnrecoverableApiGeeRequestException(errorMessage);
-    }
-
-    log.info("InvoiceFinancingResponse={}", serviceResponse);
   }
 }
