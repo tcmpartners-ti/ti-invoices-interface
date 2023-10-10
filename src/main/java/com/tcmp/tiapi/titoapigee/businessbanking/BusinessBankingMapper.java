@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.titoapigee.businessbanking;
 
-import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
 import org.mapstruct.InjectionStrategy;
@@ -18,6 +18,6 @@ public interface BusinessBankingMapper {
   @Mapping(source = "invoice", target = "invoice")
   OperationalGatewayRequestPayload mapToRequestPayload(
     ServiceResponse serviceResponse,
-    InvoiceCreationEventInfo invoice
+    InvoiceEventInfo invoice
   );
 }

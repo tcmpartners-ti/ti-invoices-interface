@@ -16,7 +16,7 @@ import java.util.Map;
 )
 public interface BusinessBankingClient {
   @PostMapping("/operational-gateway")
-  Void sendInvoiceCreationResult(
+  Void sendInvoiceEventResult(
     @RequestHeader Map<String, String> headers,
     @RequestBody ApiGeeBaseRequest<OperationalGatewayRequest> body
   );

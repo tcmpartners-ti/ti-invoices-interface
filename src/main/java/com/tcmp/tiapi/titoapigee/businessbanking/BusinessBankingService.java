@@ -1,16 +1,19 @@
 package com.tcmp.tiapi.titoapigee.businessbanking;
 
-import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.*;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequest;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ProcessCode;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ReferenceData;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -19,44 +22,38 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class BusinessBankingService {
   private static final String REQUEST_PROVIDER = "FTI";
 
-  private final HeaderSigner apiGeeHeaderSigner;
+  private final HeaderSigner businessBankingHeaderSigner;
   private final BusinessBankingClient businessBankingClient;
   private final BusinessBankingMapper businessBankingMapper;
 
-  public BusinessBankingService(
-    @Qualifier("businessBankingHeaderSigner")
-    HeaderSigner apiGeeHeaderSigner,
-    BusinessBankingClient businessBankingClient,
-    BusinessBankingMapper businessBankingMapper
+  public void sendInvoiceEventResult(
+    OperationalGatewayProcessCode processCode,
+    ServiceResponse serviceResponse,
+    InvoiceEventInfo invoice
   ) {
-    this.apiGeeHeaderSigner = apiGeeHeaderSigner;
-    this.businessBankingClient = businessBankingClient;
-    this.businessBankingMapper = businessBankingMapper;
-  }
+    OperationalGatewayRequestPayload payload = businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
 
-  public void sendInvoiceCreationResult(ServiceResponse serviceResponse, InvoiceCreationEventInfo invoice) {
-    OperationalGatewayRequestPayload requestPayload = businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
-
-    ApiGeeBaseRequest<OperationalGatewayRequest> requestBody = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
+    ApiGeeBaseRequest<OperationalGatewayRequest> body = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
       .data(OperationalGatewayRequest.builder()
         .referenceData(ReferenceData.builder()
           .provider(REQUEST_PROVIDER)
           .correlatedMessageId(UUID.randomUUID().toString())
-          .processCode(ProcessCode.of(OperationalGatewayProcessCode.INVOICE_CREATION))
+          .processCode(ProcessCode.of(processCode))
           .build())
-        .payload(requestPayload)
+        .payload(payload)
         .build())
       .build();
 
-    Map<String, String> requestHeaders = apiGeeHeaderSigner.buildRequestHeaders(requestBody);
+    Map<String, String> headers = businessBankingHeaderSigner.buildRequestHeaders(body);
 
     try {
-      businessBankingClient.sendInvoiceCreationResult(requestHeaders, requestBody);
-      log.info("Invoice creation notified successfully. Headers={} Body={}", requestHeaders, requestBody);
+      businessBankingClient.sendInvoiceEventResult(headers, body);
+      log.info("Invoice creation notified successfully. Headers={} Body={}", headers, body);
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
         HttpStatus.BAD_REQUEST.value(),
