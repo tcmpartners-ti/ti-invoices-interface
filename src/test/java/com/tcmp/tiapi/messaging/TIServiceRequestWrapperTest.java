@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.messaging;
 
+import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
@@ -22,22 +23,22 @@ class TIServiceRequestWrapperTest {
 
   @Test
   void wrapRequest_itShouldWrapMessage() {
-    String expectedProgrammeId = "PROG123";
+    String expectedInvoiceNumber = "Invoice123";
 
-    SCFProgrammeMessage programmeMessage = SCFProgrammeMessage.builder()
-      .id(expectedProgrammeId)
+    CreateInvoiceEventMessage programmeMessage = CreateInvoiceEventMessage.builder()
+      .invoiceNumber(expectedInvoiceNumber)
       .build();
 
-    ServiceRequest<SCFProgrammeMessage> serviceRequest =
+    ServiceRequest<CreateInvoiceEventMessage> serviceRequest =
       testedServiceRequestWrapper.wrapRequest(
         TIService.TRADE_INNOVATION,
-        TIOperation.SCF_PROGRAMME,
+        TIOperation.CREATE_INVOICE,
         ReplyFormat.STATUS,
         UUID.randomUUID().toString(),
         programmeMessage
       );
 
-    String actualProgrammeId = serviceRequest.getBody().getId();
-    assertEquals(expectedProgrammeId, actualProgrammeId);
+    String actualInvoiceNumber = serviceRequest.getBody().getInvoiceNumber();
+    assertEquals(expectedInvoiceNumber, actualInvoiceNumber);
   }
 }
