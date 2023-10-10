@@ -1,18 +1,24 @@
 package com.tcmp.tiapi.invoice.route;
 
-import com.tcmp.tiapi.invoice.model.InvoiceCreationEventInfo;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
+import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
+import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -41,16 +47,65 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
 
   @Test
   void itShouldSendInvoiceCreationResult() throws IOException {
-    String body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><ns2:ServiceResponse xmlns:ns2=\"urn:control.services.tiplus2.misys.com\"><ns2:ResponseHeader><ns2:Service>TI</ns2:Service><ns2:Operation>TFINVNEW</ns2:Operation><ns2:Status>FAILED</ns2:Status><ns2:Details><ns2:Error>Duplicate invoice number - FAC-DDE-0018</ns2:Error></ns2:Details><ns2:CorrelationId>LOT_DDE_0005</ns2:CorrelationId></ns2:ResponseHeader></ns2:ServiceResponse>";
+    String body = buildMockFailedServiceResponse(TIOperation.CREATE_INVOICE);
 
-    when(invoiceEventService.findInvoiceByUuid(anyString()))
-      .thenReturn(InvoiceCreationEventInfo.builder().build());
+    when(invoiceEventService.findInvoiceEventInfoByUuid(anyString()))
+      .thenReturn(InvoiceEventInfo.builder().build());
 
-    template.sendBody(URI_FROM, body);
-    template.sendBody(URI_TO, body);
+    sendBodyToRoute(body);
 
     verify(jaxbDataFormat).unmarshal(any(), any());
-    verify(invoiceEventService).findInvoiceByUuid(anyString());
-    verify(businessBankingService).sendInvoiceCreationResult(any(ServiceResponse.class), any(InvoiceCreationEventInfo.class));
+    verify(invoiceEventService).findInvoiceEventInfoByUuid(anyString());
+    verify(businessBankingService).sendInvoiceEventResult(
+      any(),
+      any(ServiceResponse.class),
+      any(InvoiceEventInfo.class)
+    );
+  }
+
+
+  @ParameterizedTest
+  @MethodSource("provideItShouldHandleInvoiceEventsTestCases")
+  void itShouldHandleInvoiceEvents(TIOperation operation, OperationalGatewayProcessCode expectedProcessCode) {
+    when(invoiceEventService.findInvoiceEventInfoByUuid(anyString()))
+      .thenReturn(InvoiceEventInfo.builder().build());
+
+    String body = buildMockFailedServiceResponse(operation);
+    sendBodyToRoute(body);
+
+    verify(businessBankingService).sendInvoiceEventResult(
+      eq(expectedProcessCode),
+      any(ServiceResponse.class),
+      any(InvoiceEventInfo.class)
+    );
+  }
+
+  static Stream<Arguments> provideItShouldHandleInvoiceEventsTestCases() {
+    return Stream.of(
+      Arguments.of(TIOperation.CREATE_INVOICE, OperationalGatewayProcessCode.INVOICE_CREATION),
+      Arguments.of(TIOperation.FINANCE_INVOICE, OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT)
+    );
+  }
+
+  private void sendBodyToRoute(String mockXmlBody) {
+    template.sendBody(URI_FROM, mockXmlBody);
+    template.sendBody(URI_TO, mockXmlBody);
+  }
+
+  private String buildMockFailedServiceResponse(TIOperation operation) {
+    return """
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <ns2:ServiceResponse xmlns:ns2="urn:control.services.tiplus2.misys.com">
+        <ns2:ResponseHeader>
+          <ns2:Service>TI</ns2:Service>
+          <ns2:Operation>%s</ns2:Operation>
+          <ns2:Status>FAILED</ns2:Status>
+          <ns2:Details>
+            <ns2:Error>Error 1</ns2:Error>
+          </ns2:Details>
+          <ns2:CorrelationId>Corr123</ns2:CorrelationId>
+        </ns2:ResponseHeader>
+      </ns2:ServiceResponse>
+        """.formatted(operation.getValue());
   }
 }
