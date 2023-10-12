@@ -6,6 +6,7 @@ import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
+import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
+  private static final int MAX_RETRIES = 2;
+  private static final int RETRY_DELAY_IN_MS = 1;
   private static final String URI_FROM = "direct:mockActiveMqQueue";
   private static final String URI_TO = "direct:sendToApiGee";
 
@@ -41,7 +44,10 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
       businessBankingService,
 
       URI_FROM,
-      URI_TO
+      URI_TO,
+
+      MAX_RETRIES,
+      RETRY_DELAY_IN_MS
     );
   }
 
@@ -63,6 +69,12 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
     );
   }
 
+  static Stream<Arguments> provideItShouldHandleInvoiceEventsTestCases() {
+    return Stream.of(
+      Arguments.of(TIOperation.CREATE_INVOICE, OperationalGatewayProcessCode.INVOICE_CREATION),
+      Arguments.of(TIOperation.FINANCE_INVOICE, OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT)
+    );
+  }
 
   @ParameterizedTest
   @MethodSource("provideItShouldHandleInvoiceEventsTestCases")
@@ -80,11 +92,20 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
     );
   }
 
-  static Stream<Arguments> provideItShouldHandleInvoiceEventsTestCases() {
-    return Stream.of(
-      Arguments.of(TIOperation.CREATE_INVOICE, OperationalGatewayProcessCode.INVOICE_CREATION),
-      Arguments.of(TIOperation.FINANCE_INVOICE, OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT)
-    );
+  @Test
+  void itShouldRetryIfRecoverable() {
+    int expectedNumberOfAttempts = MAX_RETRIES + 1;
+    String body = buildMockFailedServiceResponse(TIOperation.CREATE_INVOICE);
+
+    doThrow(new RecoverableApiGeeRequestException("Error in first attempt.")) // Attempt 1 Retry 0
+      .doThrow(new RecoverableApiGeeRequestException("Error in second attempt")) // Attempt 2 Retry 1
+      .doNothing() // Attempt 3 Retry 2
+      .when(businessBankingService).sendInvoiceEventResult(any(), any(), any());
+
+    sendBodyToRoute(body);
+
+    verify(businessBankingService, times(expectedNumberOfAttempts))
+      .sendInvoiceEventResult(any(), any(), any());
   }
 
   private void sendBodyToRoute(String mockXmlBody) {

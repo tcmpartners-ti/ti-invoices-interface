@@ -93,7 +93,12 @@ class InvoiceServiceTest {
       .invoice("Invoice123")
       .build();
 
-    when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(anyString(), anyString(), anyString()))
+    when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
+      anyString(),
+      anyString(),
+      anyString(),
+      anyBoolean())
+    )
       .thenReturn(Optional.of(InvoiceMaster.builder().build()));
 
     testedInvoiceService.searchInvoice(searchParams);
