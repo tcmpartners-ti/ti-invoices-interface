@@ -56,6 +56,7 @@ public class BusinessBankingService {
       log.info("Invoice creation notified successfully. Headers={} Body={}", headers, body);
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
+        HttpStatus.GATEWAY_TIMEOUT.value(),
         HttpStatus.BAD_REQUEST.value(),
         HttpStatus.UNAUTHORIZED.value(),
         HttpStatus.FORBIDDEN.value(),
