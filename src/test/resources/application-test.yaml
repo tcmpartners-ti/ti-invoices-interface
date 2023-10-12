@@ -58,7 +58,10 @@ invoice:
       from: "direct:bulkCreateInvoicesInTi"
       to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
 
-    creation-listener:
+    event-listener:
+      max-retries: 2
+      retry-delay: 1 # ms
+
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
 

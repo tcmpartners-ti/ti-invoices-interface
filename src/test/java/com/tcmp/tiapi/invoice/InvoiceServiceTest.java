@@ -123,14 +123,12 @@ class InvoiceServiceTest {
 
     testedInvoiceService.createSingleInvoiceInTi(invoiceCreationDTO);
 
-    verify(producerTemplate).sendBodyAndHeaders(
+    verify(producerTemplate).sendBody(
       routeCaptor.capture(),
-      messageCaptor.capture(),
-      headersCaptor.capture()
+      messageCaptor.capture()
     );
     assertThat(routeCaptor.getValue()).isEqualTo(expectedRoute);
     assertThat(messageCaptor.getValue().getInvoiceNumber()).isEqualTo(invoiceCreationDTO.getInvoiceNumber());
-    assertThat(headersCaptor.getValue().get("JMSCorrelationID")).isNotNull();
   }
 
 
