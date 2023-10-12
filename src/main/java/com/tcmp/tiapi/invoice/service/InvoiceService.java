@@ -42,13 +42,14 @@ public class InvoiceService {
   }
 
   public InvoiceDTO searchInvoice(InvoiceSearchParams searchParams) {
-    InvoiceMaster invoice = invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(
+    InvoiceMaster invoice = invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
         searchParams.programme(),
         searchParams.seller(),
-        searchParams.invoice()
+        searchParams.invoice(),
+        true
       )
       .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find the invoice %s for the given program and seller.", searchParams.invoice())));
+        String.format("Could not find an active invoice %s for the given program and seller.", searchParams.invoice())));
 
     return invoiceMapper.mapEntityToDTO(invoice);
   }
@@ -58,12 +59,9 @@ public class InvoiceService {
 
     log.info("[Invoice: Create] {}", createInvoiceEventMessage);
 
-    producerTemplate.sendBodyAndHeaders(
+    producerTemplate.sendBody(
       invoiceConfiguration.getUriCreateFrom(),
-      createInvoiceEventMessage,
-      Map.ofEntries(
-        Map.entry("JMSCorrelationID", createInvoiceEventMessage.getInvoiceNumber())
-      )
+      createInvoiceEventMessage
     );
   }
 

@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.model;
 
+import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,4 +22,8 @@ public class ProductMaster {
 
   @Column(name = "CTRCT_DATE")
   private LocalDate contractDate; // issueDate in invoice
+
+  @Column(name = "ACTIVE")
+  @Convert(converter = DatabaseBooleanConverter.class)
+  private Boolean isActive;
 }
