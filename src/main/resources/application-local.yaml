@@ -31,6 +31,7 @@ bp:
 
     headers.device: "TradeInnovationInterfaceDEV"
 
+    # Credentials might change per service.
     services:
       business-banking:
         app-id: ${API_GEE_APP_ID}
@@ -43,9 +44,9 @@ bp:
         api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/payment-execution/v1"
       operational-gateway:
-        app-id: ${OG_API_GEE_APP_ID}
-        api-key: ${OG_API_GEE_KEY}
-        api-secret: ${OG_API_GEE_SECRET}
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/operational-gateway/v2"
 
 invoice:
@@ -58,7 +59,10 @@ invoice:
       from: "direct:bulkCreateInvoicesInTi"
       to: "${invoice.route.create.from}"
 
-    creation-listener:
+    event-listener:
+      max-retries: 3
+      retry-delay: 1000 # ms
+
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
 

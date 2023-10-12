@@ -23,19 +23,28 @@ spring:
 
 bp:
   api-gee:
-    headers:
-      device: "TradeInnovationInterfaceDEV"
+    url:
+      dev: "https://api-dev.pichincha.com"
+      test: "https://api-test.pichincha.com"
 
-    app-id: ${API_GEE_APP_ID}
-    api-key: ${API_GEE_KEY}
-    api-secret: ${API_GEE_SECRET}
+    headers.device: "TradeInnovationInterfaceDEV"
 
-    base-url: "https://api-dev.pichincha.com"
     services:
       business-banking:
-        url: "${bp.api-gee.base-url}/business-banking/v1"
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.dev}/business-banking/v1"
       payment-execution:
-        url: "${bp.api-gee.base-url}/payment-execution/v1"
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.test}/payment-execution/v1"
+      operational-gateway:
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.test}/operational-gateway/v2"
 
 invoice:
   route:
@@ -47,7 +56,10 @@ invoice:
       from: "direct:bulkCreateInvoicesInTi"
       to: "${invoice.route.create.from}"
 
-    creation-listener:
+    event-listener:
+      max-retries: 3
+      retry-delay: 1000 # ms
+
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
 

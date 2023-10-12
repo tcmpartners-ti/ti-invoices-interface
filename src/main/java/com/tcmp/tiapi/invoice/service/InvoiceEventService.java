@@ -4,6 +4,7 @@ import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class InvoiceEventService {
 
   public InvoiceEventInfo findInvoiceEventInfoByUuid(String invoiceUuid) {
     return invoiceCreationEventRepository.findById(invoiceUuid)
-      .orElseThrow(() -> new RuntimeException(String.format("Could not find invoice with id %s.", invoiceUuid)));
+      .orElseThrow(() -> new EntityNotFoundException(String.format("Could not find invoice with id %s.", invoiceUuid)));
   }
 
   public void saveInvoiceInfoFromCreationMessage(String invoiceUuid, CreateInvoiceEventMessage invoiceEventMessage) {

@@ -23,8 +23,10 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.create-bulk.from}") private String uriBulkCreateFrom;
   @Value("${invoice.route.create-bulk.to}") private String uriBulkCreateTo;
 
-  @Value("${invoice.route.creation-listener.from}") private String uriCreatedEventFrom;
-  @Value("${invoice.route.creation-listener.to}") private String uriCreatedEventTo;
+  @Value("${invoice.route.event-listener.max-retries}") private Integer maxRetries;
+  @Value("${invoice.route.event-listener.retry-delay}") private Integer retryDelayInMs;
+  @Value("${invoice.route.event-listener.from}") private String uriCreatedEventFrom;
+  @Value("${invoice.route.event-listener.to}") private String uriCreatedEventTo;
 
   @Value("${invoice.route.finance.from}") private String uriFinanceFrom;
   @Value("${invoice.route.finance.to}") private String uriFinanceTo;
@@ -64,8 +66,12 @@ public class InvoiceConfiguration {
       jaxbDataFormatServiceResponse,
       invoiceEventService,
       businessBankingService,
+
       uriCreatedEventFrom,
-      uriCreatedEventTo
+      uriCreatedEventTo,
+
+      maxRetries,
+      retryDelayInMs
     );
   }
 
