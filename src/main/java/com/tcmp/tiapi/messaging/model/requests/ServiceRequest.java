@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 })
 public class ServiceRequest<T> {
   // Missing namespaces
-  @XmlAttribute(namespace = TINamespace.SCHEMA_NAMESPACE)
+  @XmlAttribute(namespace = TINamespace.SCHEMA)
   private String schemaNamespace;
   @XmlAttribute(name = "xmlns", namespace = TINamespace.CONTROL)
   private String controlNamespace;

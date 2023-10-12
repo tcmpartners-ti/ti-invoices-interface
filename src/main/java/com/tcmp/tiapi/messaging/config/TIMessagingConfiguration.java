@@ -23,7 +23,7 @@ public class TIMessagingConfiguration {
 
   public static final Map<String, String> namespacesPrefixes = Map.of(
     TINamespace.CONTROL, CONTROL_PREFIX,
-    TINamespace.SCHEMA_NAMESPACE, SCHEMA_PREFIX,
+    TINamespace.SCHEMA, SCHEMA_PREFIX,
     TINamespace.MESSAGES, MESSAGES_PREFIX,
     TINamespace.COMMON, COMMON_PREFIX
   );
