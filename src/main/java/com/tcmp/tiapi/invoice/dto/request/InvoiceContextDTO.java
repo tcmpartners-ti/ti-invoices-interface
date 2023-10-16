@@ -3,6 +3,7 @@ package com.tcmp.tiapi.invoice.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public class InvoiceContextDTO {
   @NotNull(message = "This field is required.")
   @NotBlank(message = "Customer's mnemonic is required")
   @Size(min = 1, max = 20, message = "Customer's mnemonic must be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(description = "Sender's customer mnemonic.", minLength = 1, maxLength = 20)
   private String customer;
 

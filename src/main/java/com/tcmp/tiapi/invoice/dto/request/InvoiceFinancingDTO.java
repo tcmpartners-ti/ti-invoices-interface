@@ -31,16 +31,19 @@ public class InvoiceFinancingDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "Credited party id must be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(minLength = 1, maxLength = 20, description = "The customer who is the credit party on the invoice(s).")
   private String seller;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "Debited party id must be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(minLength = 1, maxLength = 20, description = "The customer who is the debit party on the invoice(s).")
   private String buyer;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "The anchor party's mnemonic should be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
   private String anchorParty;
 
