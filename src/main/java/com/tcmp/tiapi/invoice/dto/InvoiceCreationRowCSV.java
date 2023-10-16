@@ -76,4 +76,7 @@ public class InvoiceCreationRowCSV implements Serializable {
   @Pattern(regexp = DATE_FORMAT_REGEX, message = "Settlement date must be in format dd-MM-yyyy.")
   @DataField(pos = 14, name = "SettlementDate", pattern = DATE_FORMAT)
   private LocalDate settlementDate;
+
+  @DataField(pos = 15, name = "AnchorCurrentAccount")
+  private String anchorCurrentAccount;
 }

@@ -73,4 +73,8 @@ public class CreateInvoiceEventMessage implements Serializable {
 
   @XmlElement(name = "InvoiceApproved", namespace = TINamespace.MESSAGES)
   private String invoiceApproved;
+
+  // For invoice creation: finance account = anchor finance account
+  @XmlElement(name = "ExtraData", namespace = TINamespace.MESSAGES)
+  private ExtraData extraData;
 }

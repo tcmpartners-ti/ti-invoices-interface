@@ -28,7 +28,14 @@ public class InvoiceCreationDTO {
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "The anchor party's mnemonic should be between 1 and 20 characters long")
   @Schema(description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   private String anchorParty;
+
+  @NotNull(message = "This field is required.")
+  @Size(min = 1, max = 10, message = "This field must be between 1 and 10 character(s).")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
+  @Schema(description = "Anchor account to debit the invoice payment.")
+  private String anchorCurrentAccount;
 
   @NotNull(message = "This field is required.")
   @Size(max = 35, message = "The program id should be up to 35 characters long")
@@ -37,11 +44,13 @@ public class InvoiceCreationDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "Credited party id must be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(description = "The customer who is the credit party on the invoice(s).", minLength = 1, maxLength = 20)
   private String seller;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "Debited party id must be between 1 and 20 characters long")
+  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
   @Schema(description = "The customer who is the debit party on the invoice(s).", minLength = 1, maxLength = 20)
   private String buyer;
 
