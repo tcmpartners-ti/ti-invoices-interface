@@ -8,6 +8,7 @@ import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,11 @@ import java.util.Map;
 public class OperationalGatewayService {
   private final HeaderSigner operationalGatewayHeaderSigner;
   private final OperationalGatewayClient operationalGatewayClient;
+
+  @Value("${bp.service.operational-gateway.template-id}") private String templateId;
+  @Value("${bp.service.operational-gateway.url}") private String emailUrl;
+  @Value("${bp.service.operational-gateway.img-background}") private String emailImageBackground;
+  @Value("${bp.service.operational-gateway.img-notification}") private String emailImageNotification;
 
   public void sendEmailNotification(
     String requesterDocumentNumber,
@@ -35,7 +41,7 @@ public class OperationalGatewayService {
           new Cellphone(" ", " ")
         )))
       .template(Template.builder()
-        .templateId("202300701")
+        .templateId(templateId)
         .sequentialId("0")
         .fields(buildEmailTemplate(recipientName, invoiceReference))
         .build())
@@ -63,7 +69,7 @@ public class OperationalGatewayService {
       new TemplateField(
         "motivo",
         """
-          <p style="text-align: justify;"> Estimado/a <strong>%s</strong>, </p>
+          <p style="text-align: justify;">Estimado/a <strong>%s</strong>,</p>
           <p style="text-align: justify;">Se ha emitido un evento de descuento de factura.</p>
           """.formatted(recipientName)),
       new TemplateField(
@@ -72,9 +78,9 @@ public class OperationalGatewayService {
           <p style="text-align: justify;">La factura <strong># %s</strong> ha sido descontada.</p>
            """.formatted(invoiceReference)
       ),
-      new TemplateField("url", "https://desarrollo-portalpagos.pichincha.com/#/home/electronic/file/https://desarrollo-portalpagos.pichincha.com"),
-      new TemplateField("img-background", "https://desarrollo-portalpagos.pichincha.com/assets/email/background.png"),
-      new TemplateField("img-notification", "https://desarrollo-portalpagos.pichincha.com/assets/email/notification.jpg")
+      new TemplateField("url", emailUrl),
+      new TemplateField("img-background", emailImageBackground),
+      new TemplateField("img-notification", emailImageNotification)
     );
   }
 }
