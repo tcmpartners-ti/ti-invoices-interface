@@ -11,14 +11,16 @@ repositories {
   }
 }
 
+val camelVersion = "4.0.0"
+
 dependencies {
   api("org.springframework.boot:spring-boot-starter-web:3.1.3")
   api("org.springframework.boot:spring-boot-starter-validation:3.1.3")
-  api("org.apache.camel.springboot:camel-spring-boot-starter:4.0.0")
-  api("org.apache.camel:camel-activemq:4.0.0")
-  api("org.apache.camel:camel-jackson:4.0.0")
-  api("org.apache.camel:camel-jaxb:4.0.0")
-  api("org.apache.camel:camel-bindy:4.0.0")
+  api("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
+  api("org.apache.camel:camel-activemq:$camelVersion")
+  api("org.apache.camel:camel-jackson:$camelVersion")
+  api("org.apache.camel:camel-jaxb:$camelVersion")
+  api("org.apache.camel:camel-bindy:$camelVersion")
   api("org.codehaus.woodstox:woodstox-core-asl:4.4.1")
   api("org.mapstruct:mapstruct:1.5.5.Final")
   api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.4")
