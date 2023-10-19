@@ -21,13 +21,13 @@ import java.util.List;
   injectionStrategy = InjectionStrategy.CONSTRUCTOR
 )
 public interface CounterPartyMapper {
-  @Mapping(source = "customerMnemonic", target = "mnemonic")
-  @Mapping(source = "name", target = "name")
-  @Mapping(source = "nameAndAddressLine1", target = "address")
-  @Mapping(source = "branchCode", target = "branch")
+  @Mapping(target = "mnemonic", expression = "java(StringMappingUtils.trimNullable(counterParty.getMnemonic()))")
+  @Mapping(target = "name", expression = "java(StringMappingUtils.trimNullable(counterParty.getName()))")
+  @Mapping(target = "address", expression = "java(StringMappingUtils.trimNullable(counterParty.getNameAndAddressLine1()))")
+  @Mapping(target = "branch", expression = "java(StringMappingUtils.trimNullable(counterParty.getBranchCode()))")
   @Mapping(source = "status", target = "status")
   @Mapping(target = "invoiceLimit.amount", expression = "java(MonetaryAmountUtils.convertCentsToDollars(counterParty.getLimitAmt()))")
-  @Mapping(source = "limitCcy", target = "invoiceLimit.currency")
+  @Mapping(target = "invoiceLimit.currency", expression = "java(StringMappingUtils.trimNullable(counterParty.getLimitCcy()))")
   CounterPartyDTO mapEntityToDTO(CounterParty counterParty);
 
   List<CounterPartyDTO> mapEntitiesToDTOs(List<CounterParty> counterParties);
