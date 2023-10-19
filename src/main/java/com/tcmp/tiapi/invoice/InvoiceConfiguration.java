@@ -5,6 +5,7 @@ import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.FinanceInvoiceRouteBuilder;
 import com.tcmp.tiapi.invoice.route.InvoiceEventListenerRouteBuilder;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
+import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
@@ -89,5 +90,10 @@ public class InvoiceConfiguration {
       uriFinanceFrom,
       uriFinanceTo
     );
+  }
+
+  @Bean
+  public InvoiceRowValidator invoiceRowValidator() {
+    return new InvoiceRowValidator();
   }
 }
