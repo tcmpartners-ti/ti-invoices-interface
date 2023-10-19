@@ -1,10 +1,8 @@
 package com.tcmp.tiapi.shared.dto.response;
 
+import com.tcmp.tiapi.shared.FieldValidationRegex;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +23,7 @@ public class CurrencyAmountDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Currency code must be between 1 and 3 characters")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
   @Schema(description = "Currency code.")
   private String currency;
 }
