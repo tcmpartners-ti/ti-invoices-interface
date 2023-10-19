@@ -25,6 +25,9 @@ public class FinanceBuyerCentricInvoiceEventMessage {
   @XmlElement(name = "Context", namespace = TINamespace.MESSAGES)
   private InvoiceContext context;
 
+  @XmlElement(name = "TheirRef", namespace = TINamespace.MESSAGES)
+  private String theirReference;
+
   @XmlElement(name = "Programme", namespace = TINamespace.MESSAGES)
   private String programme;
 
