@@ -11,8 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.math.BigDecimal;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -52,18 +50,16 @@ class InvoiceMapperTest {
   void mapCSVRowToFTIMessage_itShouldMapCSVRowToFTIMessage() {
     InvoiceCreationRowCSV invoiceRow = InvoiceCreationRowCSV.builder()
       .behalfOfBranch("BPEC")
-      .buyerId("Supermaxi")
-      .sellerId("CocaCola")
-      .programmeId("SUP123")
-      .faceValueAmount(BigDecimal.TEN)
-      .outstandingAmount(BigDecimal.TEN)
+      .buyer("Supermaxi")
+      .seller("CocaCola")
+      .programme("SUP123")
       .build();
 
     CreateInvoiceEventMessage createInvoiceMessage = testedInvoiceMapper.mapCSVRowToFTIMessage(invoiceRow, null);
 
     assertEquals(invoiceRow.getInvoiceNumber(), createInvoiceMessage.getInvoiceNumber());
-    assertEquals(invoiceRow.getBuyerId(), createInvoiceMessage.getBuyer());
-    assertEquals(invoiceRow.getSellerId(), createInvoiceMessage.getSeller());
-    assertEquals(invoiceRow.getProgrammeId(), createInvoiceMessage.getProgramme());
+    assertEquals(invoiceRow.getBuyer(), createInvoiceMessage.getBuyer());
+    assertEquals(invoiceRow.getSeller(), createInvoiceMessage.getSeller());
+    assertEquals(invoiceRow.getProgramme(), createInvoiceMessage.getProgramme());
   }
 }
