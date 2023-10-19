@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum OperationalGatewayProcessCode {
-  INVOICE_CREATION("CRPR01"),
-  ADVANCE_INVOICE_DISCOUNT("CRPR02");
+  INVOICE_CREATION("FTI001"),
+  INVOICE_SETTLEMENT("FTI003"),
+  ADVANCE_INVOICE_DISCOUNT("FTI002");
 
   private final String value;
 }
