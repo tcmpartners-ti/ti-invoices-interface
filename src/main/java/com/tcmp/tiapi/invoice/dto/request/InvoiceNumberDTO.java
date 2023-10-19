@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
+import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.annotation.ValidDateFormat;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,15 +19,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InvoiceNumberDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
-  private static final String DATE_REGEX = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 34, message = "Invoice number should be between 1 and 34 characters.")
-  @Schema(minLength = 1, maxLength = 34, description = "The invoice number of the invoice to be financed.")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Schema(description = "The invoice number of the invoice to be financed.")
   private String number;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The issue date of the invoice to be financed.", format = DATE_FORMAT)
   private String issueDate;

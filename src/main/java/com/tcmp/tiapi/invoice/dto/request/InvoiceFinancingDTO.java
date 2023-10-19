@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.annotation.ValidDateFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -15,9 +17,9 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InvoiceFinancingDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
-  private static final String DATE_REGEX = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
 
   @Valid
   @NotNull(message = "This field is required.")
@@ -25,36 +27,41 @@ public class InvoiceFinancingDTO {
   private InvoiceContextDTO context;
 
   @NotNull(message = "This field is required.")
-  @Size(max = 35, message = "The program id should be up to 35 characters long")
-  @Schema(maxLength = 35, description = "Indicates the credit line to which the invoice relates.")
-  private String programme;
-
-  @NotNull(message = "This field is required.")
-  @Size(min = 1, max = 20, message = "Credited party id must be between 1 and 20 characters long")
-  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
-  @Schema(minLength = 1, maxLength = 20, description = "The customer who is the credit party on the invoice(s).")
-  private String seller;
-
-  @NotNull(message = "This field is required.")
-  @Size(min = 1, max = 20, message = "Debited party id must be between 1 and 20 characters long")
-  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
-  @Schema(minLength = 1, maxLength = 20, description = "The customer who is the debit party on the invoice(s).")
-  private String buyer;
-
-  @NotNull(message = "This field is required.")
-  @Size(min = 1, max = 20, message = "The anchor party's mnemonic should be between 1 and 20 characters long")
-  @Pattern(regexp = "^\\d+$", message = "Only numeric values are allowed")
-  @Schema(description = "The anchor party's mnemonic.", minLength = 1, maxLength = 20)
+  @Size(min = 13, max = 13, message = "This field must have 13 characters")
+  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Schema(description = "The anchor party's mnemonic.")
   private String anchorParty;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
+  @Size(min = 1, max = 35, message = "This field must be between 1 and 35 characters")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Schema(description = "Indicates the credit line to which the invoice relates.")
+  private String programme;
+
+  @NotNull(message = "This field is required.")
+  @Size(min = 13, max = 13, message = "This field must have 13 characters")
+  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Schema(description = "The customer who is the credit party on the invoice(s).")
+  private String seller;
+
+  @NotNull(message = "This field is required.")
+  @Size(min = 13, max = 13, message = "This field must have 13 characters")
+  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Schema(description = "The customer who is the debit party on the invoice(s).")
+  private String buyer;
+
+  @NotNull(message = "This field is required.")
+  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT, type = "date")
   private String maturityDate;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Finance currency code must be between 1 and 3 characters.")
+  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
   @Schema(minLength = 1, maxLength = 3, description = "The currency of the advance - the invoice(s) currency is used as the default.")
   private String financeCurrency;
 
@@ -66,7 +73,7 @@ public class InvoiceFinancingDTO {
   private BigDecimal financePercent;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = DATE_REGEX, message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "The start date of the advance - required for interest calculation.", format = DATE_FORMAT, type = "date")
   private String financeDate;
