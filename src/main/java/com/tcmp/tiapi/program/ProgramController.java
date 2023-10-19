@@ -5,6 +5,8 @@ import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +32,11 @@ public class ProgramController {
 
   @GetMapping(path = "{programId}/sellers", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get a program's sellers by its identifier")
+  @Parameter(name = "page", description = "Page (0 based).", in = ParameterIn.QUERY, example = "0")
+  @Parameter(name = "size", description = "Page size (items per page).", in = ParameterIn.QUERY, example = "10")
   public PaginatedResult<CounterPartyDTO> getProgramSellersById(
     @PathVariable String programId,
-    PageParams pageParams
+    @Parameter(hidden = true) PageParams pageParams
   ) {
     return programService.getProgramSellersById(
       programId,
