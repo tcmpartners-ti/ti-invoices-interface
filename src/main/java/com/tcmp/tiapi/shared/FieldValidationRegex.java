@@ -9,4 +9,5 @@ public class FieldValidationRegex {
   public static final String FORMATTED_DATE = "^(0[1-9]|[1-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\\d{4}$";
   public static final String AVOID_SPECIAL_CHARACTERS = "^[^'\"*;|?&=<>()%\\{\\}\\[\\]\\\\/:-]+$";
   public static final String ONLY_NUMERIC_VALUES = "^\\d+$";
+  public static final String NUMBER_WITH_DECIMALS = "^\\d+|\\d+\\.\\d{2}$";
 }
