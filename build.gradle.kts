@@ -21,6 +21,7 @@ dependencies {
   api("org.apache.camel:camel-jackson:$camelVersion")
   api("org.apache.camel:camel-jaxb:$camelVersion")
   api("org.apache.camel:camel-bindy:$camelVersion")
+  api("com.opencsv:opencsv:5.8")
   api("org.codehaus.woodstox:woodstox-core-asl:4.4.1")
   api("org.mapstruct:mapstruct:1.5.5.Final")
   api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.4")
