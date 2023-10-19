@@ -22,20 +22,36 @@ spring:
       trust-all: true
 
 bp:
+  service:
+    operational-gateway:
+      template-id: "202300701"
+      url: "https://desarrollo-portalpagos.pichincha.com/#/home/electronic/file/https://desarrollo-portalpagos.pichincha.com"
+      img-background: "https://desarrollo-portalpagos.pichincha.com/assets/email/background.png"
+      img-notification: "https://desarrollo-portalpagos.pichincha.com/assets/email/notification.jpg"
+
   api-gee:
-    headers:
-      device: "TradeInnovationInterfaceQA"
+    url:
+      dev: "https://api-dev.pichincha.com"
+      test: "https://api-test.pichincha.com"
 
-    app-id: ${API_GEE_APP_ID}
-    api-key: ${API_GEE_KEY}
-    api-secret: ${API_GEE_SECRET}
+    headers.device: "TradeInnovationInterfaceQA"
 
-    base-url: "https://api-test.pichincha.com"
     services:
       business-banking:
-        url: "${bp.api-gee.base-url}/business-banking/v1"
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.test}/business-banking/v1"
       payment-execution:
-        url: "${bp.api-gee.base-url}/payment-execution/v1"
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.test}/payment-execution/v1"
+      operational-gateway:
+        app-id: ${API_GEE_APP_ID}
+        api-key: ${API_GEE_KEY}
+        api-secret: ${API_GEE_SECRET}
+        url: "${bp.api-gee.url.test}/operational-gateway/v2"
 
 invoice:
   route:
@@ -47,7 +63,10 @@ invoice:
       from: "direct:bulkCreateInvoicesInTi"
       to: "${invoice.route.create.from}"
 
-    creation-listener:
+    event-listener:
+      max-retries: 3
+      retry-delay: 1000 # ms
+
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
 
