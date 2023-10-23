@@ -27,9 +27,9 @@ public class ApiGeeConfiguration {
 
   @Bean
   @Qualifier("businessBankingHeaderSigner")
-  public HeaderSigner businessBankingHeaderSigner() {
+  public HeaderSigner businessBankingHeaderSigner(ObjectMapper objectMapper) {
     return new EncryptedBodyRequestHeaderSigner(
-      new ObjectMapper(),
+      objectMapper,
       businessBankingAppId,
       businessBankingApiKey,
       businessBankingApiSecret,
@@ -40,9 +40,9 @@ public class ApiGeeConfiguration {
 
   @Bean
   @Qualifier("paymentExecutionHeaderSigner")
-  public HeaderSigner paymentExecutionHeaderSigner() {
+  public HeaderSigner paymentExecutionHeaderSigner(ObjectMapper objectMapper) {
     return new PlainBodyRequestHeaderSigner(
-      new ObjectMapper(),
+      objectMapper,
       paymentExecutionAppId,
       paymentExecutionApiKey,
       paymentExecutionApiSecret,
@@ -53,9 +53,9 @@ public class ApiGeeConfiguration {
 
   @Bean
   @Qualifier("operationalGatewayHeaderSigner")
-  public HeaderSigner operationalGatewayHeaderSigner() {
+  public HeaderSigner operationalGatewayHeaderSigner(ObjectMapper objectMapper) {
     return new PlainBodyRequestHeaderSigner(
-      new ObjectMapper(),
+      objectMapper,
       operationalGatewayAppId,
       operationalGatewayApiKey,
       operationalGatewayApiSecret,
