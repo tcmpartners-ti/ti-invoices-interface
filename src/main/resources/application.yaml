@@ -1,5 +1,7 @@
 server.port: ${APPLICATION_PORT:8080}
 
+logging.level.org.springframework.web.filter.RequestTraceLogLoggingFilter: DEBUG
+
 spring:
   profiles.active: ${APPLICATION_ENV:prod}
 
