@@ -113,9 +113,9 @@ public class InvoiceCreationRowCSV implements Serializable {
   private String settlementDate;
 
   @NotNull(message = "This field is required.")
-  @Size(min = 1, max = 10, message = "This field must be between 1 and 10 character(s).")
+  @Size(min = 12, max = 12, message = "This field must be 12 characters long")
   @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
-  @DataField(pos = 15, name = "AnchorCurrentAccount")
+  @DataField(pos = 15, name = "AnchorAccount")
   @CsvBindByPosition(position = 14)
-  private String anchorCurrentAccount;
+  private String anchorAccount;
 }

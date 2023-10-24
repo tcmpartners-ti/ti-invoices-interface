@@ -35,11 +35,14 @@ public class InvoiceCreationDTO {
   private String anchorParty;
 
   @NotNull(message = "This field is required")
-  @Size(min = 10, max = 10, message = "This field must have 10 characters")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
+  @Size(min = 12, max = 12, message = "This field must have 12 characters")
   @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
-  @Schema(description = "Anchor account to debit the invoice payment.")
-  private String anchorCurrentAccount;
+  @Pattern(regexp = FieldValidationRegex.BP_BANK_ACCOUNT, message = "This field must begin with AH or CC followed by 10 digits")
+  @Schema(
+    description = "Anchor account to debit the invoice payment.",
+    examples = {"AH1234567890", "CC0987654321"}
+  )
+  private String anchorAccount;
 
   @NotNull(message = "This field is required")
   @Size(min = 1, max = 35, message = "This field must be between 1 and 35 characters")
