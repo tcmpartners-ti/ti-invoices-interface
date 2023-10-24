@@ -57,8 +57,6 @@ public class InvoiceService {
   public void createSingleInvoiceInTi(InvoiceCreationDTO invoiceDTO) {
     CreateInvoiceEventMessage createInvoiceEventMessage = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
 
-    log.info("[Invoice: Create] {}", createInvoiceEventMessage);
-
     producerTemplate.sendBody(
       invoiceConfiguration.getUriCreateFrom(),
       createInvoiceEventMessage
@@ -69,7 +67,7 @@ public class InvoiceService {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
-      log.info("[Invoice: bulk create] Sending invoices to TI.");
+      log.info("Sending invoices to TI.");
 
       producerTemplate.sendBodyAndHeaders(
         invoiceConfiguration.getUriBulkCreateFrom(),
@@ -79,7 +77,7 @@ public class InvoiceService {
         )
       );
     } catch (IOException e) {
-      log.error("[Invoice: bulk create] Invalid file uploaded");
+      log.error("Invalid file uploaded");
       throw new InvalidFileHttpException("Could not read the uploaded file");
     }
   }
