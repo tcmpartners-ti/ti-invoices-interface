@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.tcmp.tiapi.shared.dto.response.error.ErrorDetails;
 import com.tcmp.tiapi.shared.dto.response.error.SimpleHttpErrorMessage;
 import com.tcmp.tiapi.shared.dto.response.error.ValidationHttpErrorMessage;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,11 +28,18 @@ public class GlobalHttpExceptionHandler {
       .body(new ValidationHttpErrorMessage(
         badRequest.value(),
         "Could not validate the provided fields.",
-        exception.getFieldErrors().stream().map(e -> new ErrorDetails(
-          e.getField(),
-          e.getDefaultMessage()
-        )).toList()
+        exception.getFieldErrors().stream().map(this::buildFieldError).toList()
       ));
+  }
+
+  private ErrorDetails buildFieldError(FieldError error) {
+    // This exception reveals language information.
+    if (error.contains(TypeMismatchException.class)) {
+      String message = "Field has an invalid data type for value '%s'".formatted(error.getRejectedValue());
+      return new ErrorDetails(error.getField(), message);
+    }
+
+    return new ErrorDetails(error.getField(), error.getDefaultMessage());
   }
 
   @ExceptionHandler(CsvValidationException.class)
@@ -47,7 +56,6 @@ public class GlobalHttpExceptionHandler {
         )).toList()
       ));
   }
-
 
   @ExceptionHandler(NotFoundHttpException.class)
   public ResponseEntity<SimpleHttpErrorMessage> handleNotFoundException(NotFoundHttpException e) {
