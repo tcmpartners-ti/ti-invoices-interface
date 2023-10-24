@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -36,7 +37,7 @@ public class ProgramController {
   @Parameter(name = "size", description = "Page size (items per page).", in = ParameterIn.QUERY, example = "10")
   public PaginatedResult<CounterPartyDTO> getProgramSellersById(
     @PathVariable String programId,
-    @Parameter(hidden = true) PageParams pageParams
+    @Parameter(hidden = true) @Valid PageParams pageParams
   ) {
     return programService.getProgramSellersById(
       programId,
