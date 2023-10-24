@@ -38,10 +38,10 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
     throws ServletException, IOException {
 
     boolean isFirstRequest = !isAsyncDispatch(request);
-    HttpServletRequest cachedRequest = request;
+    HttpServletRequest requestWrapper = request;
 
     if (isFirstRequest && (!(request instanceof ContentCachingRequestWrapper))) {
-        cachedRequest = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_LENGTH);
+        requestWrapper = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_LENGTH);
     }
 
     if (isFirstRequest) {
@@ -49,10 +49,10 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
     }
 
     try {
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(requestWrapper, response);
     } finally {
-      if (!isAsyncStarted(cachedRequest)) {
-        afterRequest(cachedRequest, response);
+      if (!isAsyncStarted(requestWrapper)) {
+        afterRequest(requestWrapper, response);
       }
     }
   }
@@ -74,7 +74,7 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
   public RequestTraceLog buildRequestTraceLog(HttpServletRequest request, HttpServletResponse response) {
     long responseTime = System.currentTimeMillis() - startTime.get();
     String messagePayload = getMessagePayload(request);
-    String requestBody = messagePayload != null ? messagePayload.replaceAll("[\r\n ]", "") : "";
+    String requestBody = messagePayload.replaceAll("[\r\n ]", "");
 
     return RequestTraceLog.builder()
       .time(Instant.now().toString())
