@@ -11,4 +11,5 @@ public class FieldValidationRegex {
   public static final String ONLY_NUMERIC_VALUES = "^\\d+$";
   public static final String NUMBER_WITH_DECIMALS = "^\\d+|\\d+\\.\\d{2}$";
   public static final String BP_BANK_ACCOUNT = "^(AH|CC)\\d{10}$";
+  public static final String INVOICE_NUMBER = "^[0-9-]+$";
 }

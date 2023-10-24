@@ -27,14 +27,14 @@ public class InvoiceContextDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 34, message = "Their reference must be between 1 and 34 characters long")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
-  @Schema(description = "Sender's reference for this transaction (if known).", minLength = 1, maxLength = 34)
+  @Pattern(regexp = FieldValidationRegex.INVOICE_NUMBER, message = "This field allows numbers and hyphens (-) only")
+  @Schema(description = "Sender's reference for this transaction (if known).")
   private String theirReference;
 
   @NotNull(message = "This field is required.")
   @NotBlank(message = "Behalf of branch is required")
   @Size(min = 1, max = 8, message = "Behalf of branch must be between 1 and 8 characters long")
   @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
-  @Schema(description = "The behalf of branch for the transaction.", minLength = 1, maxLength = 8)
+  @Schema(description = "The behalf of branch for the transaction.")
   private String behalfOfBranch;
 }

@@ -22,7 +22,7 @@ public class InvoiceNumberDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 34, message = "Invoice number should be between 1 and 34 characters.")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(regexp = FieldValidationRegex.INVOICE_NUMBER, message = "This field allows numbers and hyphens (-) only")
   @Schema(description = "The invoice number of the invoice to be financed.")
   private String number;
 
