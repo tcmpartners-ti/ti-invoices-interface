@@ -119,7 +119,7 @@ class InvoiceControllerTest {
 
   @Test
   void createInvoice_itShouldSendInvoiceToTI() throws Exception {
-    String requestBody = "{\"context\":{\"customer\":\"1743067860001\",\"theirReference\":\"FINANCE25\",\"behalfOfBranch\":\"BPEC\"},\"anchorParty\":\"1743067860001\",\"anchorCurrentAccount\":\"2209677941\",\"programme\":\"Coffee1\",\"seller\":\"1790049795001\",\"buyer\":\"1743067860001\",\"invoiceNumber\":\"FINANCE25\",\"issueDate\":\"06-09-2023\",\"faceValue\":{\"amount\":1000,\"currency\":\"USD\"},\"outstandingAmount\":{\"amount\":1000,\"currency\":\"USD\"},\"settlementDate\":\"15-10-2023\"}\n";
+    String requestBody = "{\"context\":{\"customer\":\"1743067860001\",\"theirReference\":\"FINANCE25\",\"behalfOfBranch\":\"BPEC\"},\"anchorParty\":\"1743067860001\",\"anchorAccount\":\"AH2209677941\",\"programme\":\"Coffee1\",\"seller\":\"1790049795001\",\"buyer\":\"1743067860001\",\"invoiceNumber\":\"FINANCE25\",\"issueDate\":\"06-09-2023\",\"faceValue\":{\"amount\":1000,\"currency\":\"USD\"},\"outstandingAmount\":{\"amount\":1000,\"currency\":\"USD\"},\"settlementDate\":\"15-10-2023\"}\n";
     String expectedResponse = "{\"message\":\"Invoice sent to be created.\"};";
 
     mockMvc.perform(
