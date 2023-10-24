@@ -32,8 +32,8 @@ public class SellerController {
     example = "O",
     in = ParameterIn.QUERY
   )
-  @Parameter(name = "page", description = "Page (0 based).", in = ParameterIn.QUERY, example = "0")
-  @Parameter(name = "size", description = "Page size (items per page).", in = ParameterIn.QUERY, example = "10")
+  @Parameter(name = "page", description = "Page (0 based). Default: 0.", in = ParameterIn.QUERY, example = "0")
+  @Parameter(name = "size", description = "Page size (items per page). Default: 10.", in = ParameterIn.QUERY, example = "10")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(
     @PathVariable String sellerMnemonic,
     @Parameter(hidden = true) @Valid SearchSellerInvoicesParams searchParams,
