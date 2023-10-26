@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SellerServiceTest {
+  @Mock private CustomerRepository customerRepository;
   @Mock private InvoiceRepository invoiceRepository;
   @Mock private InvoiceMapper invoiceMapper;
 
@@ -28,6 +30,7 @@ class SellerServiceTest {
   @BeforeEach
   public void setup() {
     sellerService = new SellerService(
+      customerRepository,
       invoiceRepository,
       invoiceMapper
     );
@@ -41,8 +44,8 @@ class SellerServiceTest {
       .build();
     PageParams pageParams = new PageParams();
 
-    when(invoiceRepository.findAll(any(Specification.class), any(Pageable.class)))
-      .thenReturn(Page.empty());
+    when(customerRepository.existsByIdMnemonic(sellerMnemonic))
+      .thenReturn(false);
 
     assertThrows(NotFoundHttpException.class, () ->
       sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams));

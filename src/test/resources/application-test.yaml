@@ -13,47 +13,32 @@ spring:
     hibernate:
       ddl-auto: create-drop
 
-ti:
-  queue:
-    pub:
-      name: "BP.DIGIBANK.TO.FTI"
-    reply:
-      name: "BP.DIGIBANK.TO.FTI.REPLY"
-      jndi: "queue/digibankInIncomingReply"
-
 bp:
   service:
     operational-gateway:
-      template-id: "202300701"
-      url: "https://desarrollo-portalpagos.pichincha.com/#/home/electronic/file/https://desarrollo-portalpagos.pichincha.com"
-      img-background: "https://desarrollo-portalpagos.pichincha.com/assets/email/background.png"
-      img-notification: "https://desarrollo-portalpagos.pichincha.com/assets/email/notification.jpg"
+      template-id: ""
+      business-banking-url: "https://bancaempresas.pichincha.com"
 
   api-gee:
-    headers:
-      device: "TradeInnovationInterface"
+    headers.device: "TradeInnovationInterface"
 
-    app-id: ""
-    api-key: ""
-    api-secret: ""
+    credentials:
+      app-id: ""
+      api-key: ""
+      api-secret: ""
 
     base-url: "http://127.0.0.1:80"
     services:
       business-banking:
-        app-id: ""
-        api-key: ""
-        api-secret: ""
         url: "${bp.api-gee.base-url}/business-banking/v1"
       payment-execution:
-        app-id: ""
-        api-key: ""
-        api-secret: ""
         url: "${bp.api-gee.base-url}/payment-execution/v1"
       operational-gateway:
-        app-id: ""
-        api-key: ""
-        api-secret: ""
-        url: "https://api-test.pichincha.com/operational-gateway/v2"
+        url: "${bp.api-gee.base-url}/operational-gateway/v2"
+      corporate-loan:
+        user: ""
+        operation-token: ""
+        url: "${bp.api-gee.base-url}/domain/corporate-loan/v1"
 
 invoice:
   route:

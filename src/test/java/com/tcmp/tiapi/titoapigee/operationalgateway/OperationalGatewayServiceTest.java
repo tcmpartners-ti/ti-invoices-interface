@@ -33,11 +33,6 @@ class OperationalGatewayServiceTest {
 
   @Test
   void sendEmailNotification_itShouldSendEmail() {
-    String requesterDocumentNumber = "";
-    String recipientEmail = "";
-    String recipientName = "";
-    String invoiceReference = "";
-
     when(operationalGatewayClient.sendEmailNotification(anyMap(), any()))
       .thenReturn(new NotificationsResponse(List.of(
         new NotificationInfo(
@@ -48,11 +43,7 @@ class OperationalGatewayServiceTest {
       )));
 
     testedOperationalGatewayService.sendEmailNotification(
-      requesterDocumentNumber,
-      recipientEmail,
-      recipientName,
-      invoiceReference
-    );
+      "", "david@mail.com", "", List.of());
 
     verify(operationalGatewayHeaderSigner).buildRequestHeaders(any(ApiGeeBaseRequest.class));
     //noinspection unchecked
