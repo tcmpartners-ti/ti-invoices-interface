@@ -4,11 +4,11 @@ import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.request.*;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationsResponse;
+import com.tcmp.tiapi.titoapigee.operationalgateway.exception.EmailNotFoundException;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,29 +21,28 @@ public class OperationalGatewayService {
   private final HeaderSigner operationalGatewayHeaderSigner;
   private final OperationalGatewayClient operationalGatewayClient;
 
-  @Value("${bp.service.operational-gateway.template-id}") private String templateId;
-  @Value("${bp.service.operational-gateway.url}") private String emailUrl;
-  @Value("${bp.service.operational-gateway.img-background}") private String emailImageBackground;
-  @Value("${bp.service.operational-gateway.img-notification}") private String emailImageNotification;
-
   public void sendEmailNotification(
-    String requesterDocumentNumber,
-    String recipientEmail,
-    String recipientName,
-    String invoiceReference
+    String customerMnemonic,
+    String customerEmail,
+    String templateId,
+    List<TemplateField> fields
   ) {
+    if (customerEmail == null || customerEmail.isBlank()) {
+      throw new EmailNotFoundException("Email was not provided, could not send notification.");
+    }
+
     NotificationsRequest requestData = NotificationsRequest.builder()
       .flow(new Flow("notificacionesAdicionales"))
-      .requester(new Requester(requesterDocumentNumber, "001"))
+      .requester(new Requester(customerMnemonic, "001"))
       .additionalRecipient(List.of(
         new Recipient(
-          new Email(recipientEmail),
+          new Email(customerEmail),
           new Cellphone(" ", " ")
         )))
       .template(Template.builder()
         .templateId(templateId)
         .sequentialId("0")
-        .fields(buildEmailTemplate(recipientName, invoiceReference))
+        .fields(fields)
         .build())
       .build();
     ApiGeeBaseRequest<NotificationsRequest> request = ApiGeeBaseRequest.<NotificationsRequest>builder()
@@ -59,28 +58,5 @@ public class OperationalGatewayService {
     } catch (FeignException e) {
       log.error("Could not send email.");
     }
-  }
-
-  private List<TemplateField> buildEmailTemplate(
-    String recipientName,
-    String invoiceReference
-  ) {
-    return List.of(
-      new TemplateField(
-        "motivo",
-        """
-          <p style="text-align: justify;">Estimado/a <strong>%s</strong>,</p>
-          <p style="text-align: justify;">Se ha emitido un evento de descuento de factura.</p>
-          """.formatted(recipientName)),
-      new TemplateField(
-        "informacion",
-        """
-          <p style="text-align: justify;">La factura <strong># %s</strong> ha sido descontada.</p>
-           """.formatted(invoiceReference)
-      ),
-      new TemplateField("url", emailUrl),
-      new TemplateField("img-background", emailImageBackground),
-      new TemplateField("img-notification", emailImageNotification)
-    );
   }
 }
