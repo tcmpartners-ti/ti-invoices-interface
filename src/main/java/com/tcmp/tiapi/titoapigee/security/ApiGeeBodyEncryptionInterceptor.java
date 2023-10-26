@@ -3,7 +3,6 @@ package com.tcmp.tiapi.titoapigee.security;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
@@ -17,7 +16,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 
-@RequiredArgsConstructor
 @Slf4j
 public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
   private static final String AES_ALGORITHM = "AES";
@@ -25,6 +23,13 @@ public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
 
   private final String apiEncryptionKey;
   private final String apiSecret;
+
+  public ApiGeeBodyEncryptionInterceptor(String apiEncryptionKey, String apiSecret) {
+    this.apiEncryptionKey = apiEncryptionKey;
+    this.apiSecret = apiSecret;
+
+    Security.addProvider(new BouncyCastleProvider());
+  }
 
   @Override
   public void apply(RequestTemplate requestTemplate) {
@@ -36,8 +41,6 @@ public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
 
   private String encryptBodyWithAES(byte[] requestBody) {
     try {
-      Security.addProvider(new BouncyCastleProvider());
-
       String jsonRequestBody = new String(requestBody, StandardCharsets.UTF_8);
 
       SecretKeySpec secretKeySpec = new SecretKeySpec(apiEncryptionKey.getBytes(StandardCharsets.UTF_8), AES_ALGORITHM);
