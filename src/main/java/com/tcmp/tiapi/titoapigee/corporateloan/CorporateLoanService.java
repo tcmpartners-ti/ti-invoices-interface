@@ -21,7 +21,6 @@ public class CorporateLoanService {
 
   @Value("${bp.api-gee.services.corporate-loan.user}") private String userHeader;
   @Value("${bp.api-gee.services.corporate-loan.operation-token}") private String operationTokenHeader;
-  @Value("${bp.api-gee.services.corporate-loan.operation-id}") private String operationIdHeader;
 
   public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest) {
     ApiGeeBaseRequest<DistributorCreditRequest> body = ApiGeeBaseRequest.<DistributorCreditRequest>builder()
@@ -32,7 +31,7 @@ public class CorporateLoanService {
     // Add missing headers for this service
     headers.put("X-User", userHeader);
     headers.put("X-Operation-Token", operationTokenHeader);
-    headers.put("X-Operation-Id", operationIdHeader);
+    headers.put("X-Operation-Id", "C/D");
 
     try {
       return corporateLoanClient.createCredit(headers, body);
