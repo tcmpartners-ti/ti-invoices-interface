@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class SellerService {
+  private final CustomerRepository customerRepository;
   private final InvoiceRepository invoiceRepository;
   private final InvoiceMapper invoiceMapper;
 
@@ -30,29 +32,33 @@ public class SellerService {
     SearchSellerInvoicesParams searchParams,
     PageParams pageParams
   ) {
+    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
+      throw new NotFoundHttpException(
+        String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
+    }
+
     Page<InvoiceMaster> sellerInvoicesPage = invoiceRepository.findAll(
       InvoiceSpecifications.filterBySellerMnemonicAndStatus(sellerMnemonic, searchParams.status()),
       PageRequest.of(pageParams.getPage(), pageParams.getSize())
     );
 
-    if (sellerInvoicesPage.isEmpty()) {
-      throw new NotFoundHttpException(
-        String.format(
-          "Could not find invoices for seller with mnemonic %s and status %s.",
-          sellerMnemonic,
-          searchParams.status()
-        ));
+    if (sellerInvoicesPage.getTotalElements() == 0) {
+      StringBuilder errorMessage = new StringBuilder("Could not find invoices ");
+
+      if (searchParams.status() != null) {
+        errorMessage.append("with status '%s' ".formatted(searchParams.status()));
+      }
+
+      errorMessage.append("for seller %s.".formatted(sellerMnemonic));
+
+      throw new NotFoundHttpException(errorMessage.toString());
     }
 
     List<InvoiceDTO> invoicesDTOs = invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent());
 
     return PaginatedResult.<InvoiceDTO>builder()
       .data(invoicesDTOs)
-      .meta(PaginatedResultMeta.builder()
-        .isLastPage(sellerInvoicesPage.isLast())
-        .totalPages(sellerInvoicesPage.getTotalPages())
-        .totalItems(sellerInvoicesPage.getTotalElements())
-        .build())
+      .meta(PaginatedResultMeta.from(sellerInvoicesPage))
       .build();
   }
 }

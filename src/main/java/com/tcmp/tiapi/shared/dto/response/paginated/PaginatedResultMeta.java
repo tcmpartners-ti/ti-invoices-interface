@@ -2,14 +2,22 @@ package com.tcmp.tiapi.shared.dto.response.paginated;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import org.springframework.data.domain.Page;
 
 @Builder
 public record PaginatedResultMeta(
-  @Schema(name = "isLastPage", description = "True if current page is last page.")
+  @Schema(description = "True if current page is last page.")
   boolean isLastPage,
-  @Schema(name = "totalPages", description = "Amount of total pages.")
+  @Schema(description = "Amount of total pages.")
   int totalPages,
-  @Schema(name = "totalItems", description = "Amount of total items.")
+  @Schema(description = "Amount of total items.")
   long totalItems
 ) {
+  public static PaginatedResultMeta from(Page<?> page) {
+    return PaginatedResultMeta.builder()
+      .isLastPage(page.isLast())
+      .totalPages(page.getTotalPages())
+      .totalItems(page.getTotalElements())
+      .build();
+  }
 }
