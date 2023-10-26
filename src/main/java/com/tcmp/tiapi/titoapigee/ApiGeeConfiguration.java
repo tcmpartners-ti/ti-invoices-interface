@@ -13,54 +13,32 @@ import org.springframework.context.annotation.Configuration;
 public class ApiGeeConfiguration {
   private static final String DEVICE_IP = "10.0.0.1";
   @Value("${bp.api-gee.headers.device}") private String device;
-  @Value("${bp.api-gee.services.business-banking.app-id}") private String businessBankingAppId;
-  @Value("${bp.api-gee.services.business-banking.api-key}") private String businessBankingApiKey;
-  @Value("${bp.api-gee.services.business-banking.api-secret}") private String businessBankingApiSecret;
 
-  @Value("${bp.api-gee.services.payment-execution.app-id}") private String paymentExecutionAppId;
-  @Value("${bp.api-gee.services.payment-execution.api-key}") private String paymentExecutionApiKey;
-  @Value("${bp.api-gee.services.payment-execution.api-secret}") private String paymentExecutionApiSecret;
-
-  @Value("${bp.api-gee.services.operational-gateway.app-id}") private String operationalGatewayAppId;
-  @Value("${bp.api-gee.services.operational-gateway.api-key}") private String operationalGatewayApiKey;
-  @Value("${bp.api-gee.services.operational-gateway.api-secret}") private String operationalGatewayApiSecret;
+  @Value("${bp.api-gee.credentials.app-id}") private String appId;
+  @Value("${bp.api-gee.credentials.api-key}") private String apiKey;
+  @Value("${bp.api-gee.credentials.api-secret}") private String apiSecret;
 
   @Bean
   @Qualifier("businessBankingHeaderSigner")
   public HeaderSigner businessBankingHeaderSigner(ObjectMapper objectMapper) {
-    return new EncryptedBodyRequestHeaderSigner(
-      objectMapper,
-      businessBankingAppId,
-      businessBankingApiKey,
-      businessBankingApiSecret,
-      device,
-      DEVICE_IP
-    );
+    return new EncryptedBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
   }
 
   @Bean
   @Qualifier("paymentExecutionHeaderSigner")
   public HeaderSigner paymentExecutionHeaderSigner(ObjectMapper objectMapper) {
-    return new PlainBodyRequestHeaderSigner(
-      objectMapper,
-      paymentExecutionAppId,
-      paymentExecutionApiKey,
-      paymentExecutionApiSecret,
-      device,
-      DEVICE_IP
-    );
+    return new PlainBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
   }
 
   @Bean
   @Qualifier("operationalGatewayHeaderSigner")
   public HeaderSigner operationalGatewayHeaderSigner(ObjectMapper objectMapper) {
-    return new PlainBodyRequestHeaderSigner(
-      objectMapper,
-      operationalGatewayAppId,
-      operationalGatewayApiKey,
-      operationalGatewayApiSecret,
-      device,
-      DEVICE_IP
-    );
+    return new PlainBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
+  }
+
+  @Bean
+  @Qualifier("corporateLoanHeaderSigner")
+  public HeaderSigner corporateLoanHeaderSigner(ObjectMapper objectMapper) {
+    return new EncryptedBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
   }
 }
