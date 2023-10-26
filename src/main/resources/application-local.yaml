@@ -26,35 +26,28 @@ spring:
 bp:
   service:
     operational-gateway:
-      template-id: "202300701"
-      url: "https://desarrollo-portalpagos.pichincha.com/#/home/electronic/file/https://desarrollo-portalpagos.pichincha.com"
-      img-background: "https://desarrollo-portalpagos.pichincha.com/assets/email/background.png"
-      img-notification: "https://desarrollo-portalpagos.pichincha.com/assets/email/notification.jpg"
+      template-id: "305003729"
+      business-banking-url: "https://bancaempresas.pichincha.com"
 
   api-gee:
-    url:
-      dev: "https://api-dev.pichincha.com"
-      test: "https://api-test.pichincha.com"
-
     headers.device: "TradeInnovationInterfaceDEV"
 
-    # Credentials might change per service.
+    credentials:
+      app-id: ${API_GEE_APP_ID}
+      api-key: ${API_GEE_KEY}
+      api-secret: ${API_GEE_SECRET}
+
     services:
       business-banking:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.dev}/business-banking/v1"
       payment-execution:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/payment-execution/v1"
       operational-gateway:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/operational-gateway/v2"
+      corporate-loan:
+        user: ${CL_USER}
+        operation-token: ${CL_OP_TOKEN}
+        url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
 
 invoice:
   route:

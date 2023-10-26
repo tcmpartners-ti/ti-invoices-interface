@@ -19,6 +19,11 @@ ti:
       name: "BP.DIGIBANK.TO.FTI.REPLY"
       jndi: "queue/digibankInIncomingReply"
 
+bp.api-gee.url:
+  dev: "https://api-dev.pichincha.com"
+  test: "https://api-test.pichincha.com"
+  prod: ""
+
 springdoc:
   api-docs:
     enabled: true
