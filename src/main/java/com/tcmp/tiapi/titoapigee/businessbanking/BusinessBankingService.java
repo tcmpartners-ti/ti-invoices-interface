@@ -53,7 +53,7 @@ public class BusinessBankingService {
 
     try {
       businessBankingClient.sendInvoiceEventResult(headers, body);
-      log.info("Invoice creation notified successfully. Headers={} Body={}", headers, body);
+      log.info("Invoice creation notified successfully");
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
         HttpStatus.GATEWAY_TIMEOUT.value(),
@@ -71,6 +71,8 @@ public class BusinessBankingService {
 
       log.error("Server error. {}.", e.getMessage());
       throw new RecoverableApiGeeRequestException(e.getMessage());
+    } finally {
+      log.info("Headers={} Body={}", headers, body);
     }
   }
 }
