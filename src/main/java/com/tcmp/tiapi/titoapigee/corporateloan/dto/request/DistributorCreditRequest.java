@@ -1,8 +1,11 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.request;
 
+import lombok.Builder;
+
 import java.math.BigDecimal;
 import java.util.List;
 
+@Builder
 public record DistributorCreditRequest(
   CommercialTrade commercialTrade,
   Customer customer,
