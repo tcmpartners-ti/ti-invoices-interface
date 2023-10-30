@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.Map;
 
 @FeignClient(
+  contextId = "paymentExecutionContextId",
   value = "paymentExecutionClient",
   url = "${bp.api-gee.services.payment-execution.url}"
 )

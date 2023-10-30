@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class OperationalGatewayService {
-  private final HeaderSigner operationalGatewayHeaderSigner;
+  private final HeaderSigner plainBodyRequestHeaderSigner;
   private final OperationalGatewayClient operationalGatewayClient;
 
   public void sendEmailNotification(
@@ -49,14 +49,14 @@ public class OperationalGatewayService {
       .data(requestData)
       .build();
 
-    Map<String, String> headers = operationalGatewayHeaderSigner.buildRequestHeaders(request);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     try {
       NotificationsResponse result = operationalGatewayClient.sendEmailNotification(headers, request);
       Channel channel = result.data().get(0).recipient().channel();
       log.info("Successfully sent notification via {} to: {}", channel.description(), channel.value());
     } catch (FeignException e) {
-      log.error("Could not send email.");
+      log.error("Could not send email. {}", e.getMessage());
     }
   }
 }

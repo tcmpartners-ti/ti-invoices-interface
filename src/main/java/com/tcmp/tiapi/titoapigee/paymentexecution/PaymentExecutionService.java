@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentExecutionService {
-  private final HeaderSigner paymentExecutionHeaderSigner;
+  private final HeaderSigner plainBodyRequestHeaderSigner;
   private final PaymentExecutionClient paymentExecutionClient;
 
   public void processInvoiceWithPrePayment(
@@ -67,7 +67,7 @@ public class PaymentExecutionService {
     );
 
     ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(requestData);
-    Map<String, String> headers = paymentExecutionHeaderSigner.buildRequestHeaders(request);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     return paymentExecutionClient.postPayment(headers, request);
   }
@@ -87,7 +87,7 @@ public class PaymentExecutionService {
     );
 
     ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(requestData);
-    Map<String, String> headers = paymentExecutionHeaderSigner.buildRequestHeaders(request);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     return paymentExecutionClient.postPayment(headers, request);
   }
@@ -107,7 +107,7 @@ public class PaymentExecutionService {
     );
 
     ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(requestData);
-    Map<String, String> headers = paymentExecutionHeaderSigner.buildRequestHeaders(request);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     return paymentExecutionClient.postPayment(headers, request);
   }

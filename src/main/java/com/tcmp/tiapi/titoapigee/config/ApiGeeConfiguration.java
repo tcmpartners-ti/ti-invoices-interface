@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.titoapigee;
+package com.tcmp.tiapi.titoapigee.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.titoapigee.security.EncryptedBodyRequestHeaderSigner;
@@ -19,26 +19,14 @@ public class ApiGeeConfiguration {
   @Value("${bp.api-gee.credentials.api-secret}") private String apiSecret;
 
   @Bean
-  @Qualifier("businessBankingHeaderSigner")
-  public HeaderSigner businessBankingHeaderSigner(ObjectMapper objectMapper) {
+  @Qualifier("encryptedBodyRequestHeaderSigner")
+  public HeaderSigner encryptedBodyRequestHeaderSigner(ObjectMapper objectMapper) {
     return new EncryptedBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
   }
 
   @Bean
-  @Qualifier("paymentExecutionHeaderSigner")
-  public HeaderSigner paymentExecutionHeaderSigner(ObjectMapper objectMapper) {
+  @Qualifier("plainBodyRequestHeaderSigner")
+  public HeaderSigner plainBodyRequestHeaderSigner(ObjectMapper objectMapper) {
     return new PlainBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
-  }
-
-  @Bean
-  @Qualifier("operationalGatewayHeaderSigner")
-  public HeaderSigner operationalGatewayHeaderSigner(ObjectMapper objectMapper) {
-    return new PlainBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
-  }
-
-  @Bean
-  @Qualifier("corporateLoanHeaderSigner")
-  public HeaderSigner corporateLoanHeaderSigner(ObjectMapper objectMapper) {
-    return new EncryptedBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, DEVICE_IP);
   }
 }

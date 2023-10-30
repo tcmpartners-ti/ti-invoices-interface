@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.Map;
 
 @FeignClient(
+  contextId = "operationalGatewayContextId",
   value = "operationalGatewayClient",
   url = "${bp.api-gee.services.operational-gateway.url}"
 )

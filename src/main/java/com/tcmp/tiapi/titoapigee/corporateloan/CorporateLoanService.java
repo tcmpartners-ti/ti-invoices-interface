@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 public class CorporateLoanService {
   private final CorporateLoanClient corporateLoanClient;
-  private final HeaderSigner corporateLoanHeaderSigner;
+  private final HeaderSigner encryptedBodyRequestHeaderSigner;
 
   @Value("${bp.api-gee.services.corporate-loan.user}") private String userHeader;
   @Value("${bp.api-gee.services.corporate-loan.operation-token}") private String operationTokenHeader;
@@ -27,7 +27,7 @@ public class CorporateLoanService {
       .data(distributorCreditRequest)
       .build();
 
-    Map<String, String> headers = corporateLoanHeaderSigner.buildRequestHeaders(body);
+    Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
     // Add missing headers for this service
     headers.put("X-User", userHeader);
     headers.put("X-Operation-Token", operationTokenHeader);

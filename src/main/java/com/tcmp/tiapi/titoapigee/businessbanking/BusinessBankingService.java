@@ -27,7 +27,7 @@ import java.util.UUID;
 public class BusinessBankingService {
   private static final String REQUEST_PROVIDER = "FTI";
 
-  private final HeaderSigner businessBankingHeaderSigner;
+  private final HeaderSigner encryptedBodyRequestHeaderSigner;
   private final BusinessBankingClient businessBankingClient;
   private final BusinessBankingMapper businessBankingMapper;
 
@@ -49,7 +49,7 @@ public class BusinessBankingService {
         .build())
       .build();
 
-    Map<String, String> headers = businessBankingHeaderSigner.buildRequestHeaders(body);
+    Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
     try {
       businessBankingClient.sendInvoiceEventResult(headers, body);
