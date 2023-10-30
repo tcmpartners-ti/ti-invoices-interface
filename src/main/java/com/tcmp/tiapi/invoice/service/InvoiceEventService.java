@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.invoice.service;
 
-import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
 import jakarta.persistence.EntityNotFoundException;

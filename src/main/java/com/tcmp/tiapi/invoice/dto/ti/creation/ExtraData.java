@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.dto.ti;
+package com.tcmp.tiapi.invoice.dto.ti.creation;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -10,15 +10,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.io.Serializable;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "InvoiceNumbers", namespace = TINamespace.MESSAGES)
+@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class InvoiceNumbersContainer {
-  @XmlElement(name = "InvoiceNumbers", namespace = TINamespace.MESSAGES)
-  private List<InvoiceNumbers> invoiceNumbers;
+public class ExtraData implements Serializable {
+  @XmlElement(name = "FinanceAccount", namespace = TINamespace.CUSTOM)
+  private String financeAccount;
 }

@@ -5,7 +5,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.tcmp.tiapi.invoice.InvoiceConfiguration;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
-import com.tcmp.tiapi.invoice.dto.ti.CreateInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.shared.exception.CsvValidationException;
 import jakarta.validation.Validator;

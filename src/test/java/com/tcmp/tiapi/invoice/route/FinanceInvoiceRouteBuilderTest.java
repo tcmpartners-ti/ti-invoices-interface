@@ -1,8 +1,8 @@
 package com.tcmp.tiapi.invoice.route;
 
-import com.tcmp.tiapi.invoice.dto.ti.FinanceBuyerCentricInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.InvoiceNumbers;
-import com.tcmp.tiapi.invoice.dto.ti.InvoiceNumbersContainer;
+import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
+import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbersContainer;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.model.TIOperation;

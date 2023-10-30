@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.dto.ti;
+package com.tcmp.tiapi.invoice.dto.ti.finance;
 
 import com.tcmp.tiapi.messaging.LocalDateAdapter;
 import com.tcmp.tiapi.messaging.model.TINamespace;

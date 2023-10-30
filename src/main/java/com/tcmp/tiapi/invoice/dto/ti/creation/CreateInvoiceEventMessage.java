@@ -1,5 +1,6 @@
-package com.tcmp.tiapi.invoice.dto.ti;
+package com.tcmp.tiapi.invoice.dto.ti.creation;
 
+import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
 import com.tcmp.tiapi.messaging.LocalDateAdapter;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.shared.messaging.CurrencyAmount;
