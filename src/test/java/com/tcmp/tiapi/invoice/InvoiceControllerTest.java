@@ -80,8 +80,8 @@ class InvoiceControllerTest {
     mockMvc.perform(
         get("/invoices/search")
           .param("programme", programId)
-          .param("seller", "Seller123")
-          .param("invoice", "Invoice123")
+          .param("seller", "1722466420001")
+          .param("invoice", "001-001-01")
           .contentType(MediaType.APPLICATION_JSON)
       )
       .andExpect(status().isNotFound())
@@ -91,17 +91,17 @@ class InvoiceControllerTest {
   @Test
   void searchInvoice_itShouldReturnInvoice() throws Exception {
     long invoiceId = 1L;
-    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
+    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"001-001-01\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
     InvoiceSearchParams searchParams = InvoiceSearchParams.builder()
       .programme("Programme123")
-      .seller("Seller123")
-      .invoice("Invoice123")
+      .seller("1722466420001")
+      .invoice("001-001-01")
       .build();
 
     when(invoiceService.searchInvoice(searchParams))
       .thenReturn(InvoiceDTO.builder()
         .id(invoiceId)
-        .invoiceNumber("Invoice123")
+        .invoiceNumber("001-001-01")
         .build());
 
     mockMvc.perform(
