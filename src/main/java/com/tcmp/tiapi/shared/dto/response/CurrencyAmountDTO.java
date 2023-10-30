@@ -23,7 +23,7 @@ public class CurrencyAmountDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Currency code must be between 1 and 3 characters")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(regexp = FieldValidationRegex.ONLY_LETTERS, message = "Only letters are allowed")
   @Schema(description = "Currency code.")
   private String currency;
 }
