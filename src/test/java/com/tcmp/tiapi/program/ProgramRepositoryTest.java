@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.program;
 
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.program.repository.ProgramRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

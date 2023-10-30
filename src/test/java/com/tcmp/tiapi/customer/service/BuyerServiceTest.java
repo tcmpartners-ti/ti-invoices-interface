@@ -2,7 +2,7 @@ package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.program.ProgramMapper;
-import com.tcmp.tiapi.program.ProgramRepository;
+import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
