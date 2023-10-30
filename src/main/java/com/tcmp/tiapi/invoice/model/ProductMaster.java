@@ -23,6 +23,9 @@ public class ProductMaster {
   @Column(name = "CTRCT_DATE")
   private LocalDate contractDate; // issueDate in invoice
 
+  @Column(name = "MASTER_REF")
+  private String masterReference;
+
   @Column(name = "ACTIVE")
   @Convert(converter = DatabaseBooleanConverter.class)
   private Boolean isActive;

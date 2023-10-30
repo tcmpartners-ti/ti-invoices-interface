@@ -204,6 +204,10 @@ public class InvoiceMaster {
   private ProductMaster productMaster; // Parent table
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "KEY97", referencedColumnName = "MASTER", insertable = false, updatable = false)
+  private ProductMasterExtension productMasterExtension;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = "BUYER", referencedColumnName = "KEY97", insertable = false, updatable = false)
   private CounterParty buyer;
 
