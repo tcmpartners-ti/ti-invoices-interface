@@ -115,4 +115,8 @@ public class Program {
 
   @Column(name = "TSTAMP")
   private Integer timeStamp;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "ID", referencedColumnName = "PID", insertable = false, updatable = false)
+  private ProgramExtension programExtension;
 }
