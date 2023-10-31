@@ -9,8 +9,11 @@ import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +23,8 @@ import java.util.Map;
 public class OperationalGatewayService {
   private final HeaderSigner plainBodyRequestHeaderSigner;
   private final OperationalGatewayClient operationalGatewayClient;
+
+  @Value("${bp.service.operational-gateway.business-banking-url}") private String businessBankingUrl;
 
   public void sendEmailNotification(
     String customerMnemonic,
@@ -58,5 +63,30 @@ public class OperationalGatewayService {
     } catch (FeignException e) {
       log.error("Could not send email. {}", e.getMessage());
     }
+  }
+
+  public List<TemplateField> buildInvoiceEventEmailTemplate(
+    String customerMnemonic,
+    String customerName,
+    String date,
+    String action,
+    String invoiceReference,
+    String currency,
+    BigDecimal amount
+  ) {
+    DecimalFormat decimalFormat = new DecimalFormat("#,###.00");
+
+    int unmaskedDigitsIndex = customerMnemonic.length() - 7;
+    String maskedMnemonic = "x".repeat(unmaskedDigitsIndex) + customerMnemonic.substring(unmaskedDigitsIndex);
+    String message = String.format("%s de la factura No. %s por %s %s", action, invoiceReference, currency, decimalFormat.format(amount));
+
+    return List.of(
+      new TemplateField("RucEnmascarado", maskedMnemonic),
+      new TemplateField("NombreEmpresa", customerName),
+      new TemplateField("FechaIngreso", date),
+      new TemplateField("HoraIngreso", "12:00"),
+      new TemplateField("action", message),
+      new TemplateField("urlBanca", businessBankingUrl)
+    );
   }
 }
