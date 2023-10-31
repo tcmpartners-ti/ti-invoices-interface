@@ -2,6 +2,8 @@ package com.tcmp.tiapi.titoapigee.paymentexecution.dto.request;
 
 import lombok.Builder;
 
+import java.math.BigDecimal;
+
 @Builder
 public record TransactionRequest(
   String transactionType,
@@ -14,7 +16,7 @@ public record TransactionRequest(
     String debtorAccount,
     String creditorAccount,
     String concept,
-    String amount
+    BigDecimal amount
   ) {
     return TransactionRequest.builder()
       .transactionType(type.getValue())
@@ -22,7 +24,7 @@ public record TransactionRequest(
       .creditor(Customer.of(creditorAccount))
       .transaction(Transaction.builder()
         .concept(concept)
-        .amount(amount)
+        .amount(amount.toString())
         .currency(new Currency("usd"))
         .build())
       .build();
