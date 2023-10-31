@@ -134,4 +134,8 @@ public class Customer {
 
   @Column(name = "GFCTP", length = 2)
   private String gfctp;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "GFCUS1", referencedColumnName = "SXCUS1", insertable = false, updatable = false)
+  private Address address;
 }
