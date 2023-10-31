@@ -2,6 +2,7 @@ package com.tcmp.tiapi.messaging.model.requests;
 
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import jakarta.xml.bind.annotation.*;
@@ -15,11 +16,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "ServiceRequest")
+@XmlRootElement(name = "ServiceRequest", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({
   CreateInvoiceEventMessage.class,
-  FinanceBuyerCentricInvoiceEventMessage.class
+  FinanceBuyerCentricInvoiceEventMessage.class,
+  FinanceAckMessage.class
 })
 public class ServiceRequest<T> {
   // Missing namespaces
@@ -41,6 +43,11 @@ public class ServiceRequest<T> {
       name = TIOperation.FINANCE_INVOICE_VALUE,
       type = FinanceBuyerCentricInvoiceEventMessage.class,
       namespace = TINamespace.MESSAGES
+    ),
+    @XmlElement(
+      name = TIOperation.FINANCE_ACK_INVOICE_VALUE,
+      type = FinanceAckMessage.class,
+      namespace = TINamespace.CONTROL
     )
   })
   private T body;
