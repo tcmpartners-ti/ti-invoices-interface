@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.ti.financeack;
 
+import com.tcmp.tiapi.messaging.model.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -11,24 +12,24 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "FinancePaymentDetails")
+@XmlRootElement(name = "FinancePaymentDetails", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FinancePaymentDetails {
-  @XmlElement(name = "FinancePaymentDetails")
+  @XmlElement(name = "FinancePaymentDetails", namespace = TINamespace.CONTROL)
   private String details;
 
-  @XmlElement(name = "Amount")
+  @XmlElement(name = "Amount", namespace = TINamespace.CONTROL)
   private String amount;
 
-  @XmlElement(name = "Currency")
+  @XmlElement(name = "Currency", namespace = TINamespace.CONTROL)
   private String currency;
 
-  @XmlElement(name = "ValueDate")
+  @XmlElement(name = "ValueDate", namespace = TINamespace.CONTROL)
   private String valueDate;
 
-  @XmlElement(name = "AccountDetails")
+  @XmlElement(name = "AccountDetails", namespace = TINamespace.CONTROL)
   private String accountDetails;
 
-  @XmlElement(name = "SettlementParty")
+  @XmlElement(name = "SettlementParty", namespace = TINamespace.CONTROL)
   private String settlementParty;
 }

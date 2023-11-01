@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.ti.financeack;
 
+import com.tcmp.tiapi.messaging.model.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -11,30 +12,30 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "InvoiceArray")
+@XmlRootElement(name = "InvoiceArray", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Invoice {
-  @XmlElement(name = "InvoiceReference")
+  @XmlElement(name = "InvoiceReference", namespace = TINamespace.CONTROL)
   private String invoiceReference;
 
-  @XmlElement(name = "InvoiceNumber")
+  @XmlElement(name = "InvoiceNumber", namespace = TINamespace.CONTROL)
   private String invoiceNumber;
 
-  @XmlElement(name = "InvoiceIssueDate")
+  @XmlElement(name = "InvoiceIssueDate", namespace = TINamespace.CONTROL)
   private String invoiceIssueDate;
 
-  @XmlElement(name = "InvoiceSettlementDate")
+  @XmlElement(name = "InvoiceSettlementDate", namespace = TINamespace.CONTROL)
   private String invoiceSettlementDate;
 
-  @XmlElement(name = "InvoiceOutstandingAmount")
+  @XmlElement(name = "InvoiceOutstandingAmount", namespace = TINamespace.CONTROL)
   private String invoiceOutstandingAmount;
 
-  @XmlElement(name = "InvoiceOutstandingAmountCurrency")
+  @XmlElement(name = "InvoiceOutstandingAmountCurrency", namespace = TINamespace.CONTROL)
   private String invoiceOutstandingAmountCurrency;
 
-  @XmlElement(name = "InvoiceAdvanceAmount")
+  @XmlElement(name = "InvoiceAdvanceAmount", namespace = TINamespace.CONTROL)
   private String invoiceAdvanceAmount;
 
-  @XmlElement(name = "InvoiceAdvanceAmountCurrency")
+  @XmlElement(name = "InvoiceAdvanceAmountCurrency", namespace = TINamespace.CONTROL)
   private String invoiceAdvanceAmountCurrency;
 }
