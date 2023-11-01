@@ -12,11 +12,13 @@ import lombok.RequiredArgsConstructor;
 public enum TIOperation {
   CREATE_INVOICE(TIOperation.CREATE_INVOICE_VALUE),
   FINANCE_INVOICE(TIOperation.FINANCE_INVOICE_VALUE),
-  FINANCE_ACK_INVOICE(TIOperation.FINANCE_ACK_INVOICE_VALUE);
+  FINANCE_ACK_INVOICE(TIOperation.FINANCE_ACK_INVOICE_VALUE),
+  FINANCE_ACK_INVOICE_DETAILS(TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE );
 
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
   public static final String FINANCE_INVOICE_VALUE = "TFBUYFIN";
   public static final String FINANCE_ACK_INVOICE_VALUE = "TFBCFCRE";
+  public static final String FINANCE_ACK_INVOICE_DETAILS_VALUE = "tfinvfindet";
 
   private final String value;
 }

@@ -45,7 +45,7 @@ public class ServiceRequest<T> {
       namespace = TINamespace.MESSAGES
     ),
     @XmlElement(
-      name = TIOperation.FINANCE_ACK_INVOICE_VALUE,
+      name = TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE,
       type = FinanceAckMessage.class,
       namespace = TINamespace.CONTROL
     )
