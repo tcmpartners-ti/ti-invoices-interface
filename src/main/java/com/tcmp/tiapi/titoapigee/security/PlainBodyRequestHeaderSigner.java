@@ -28,7 +28,6 @@ public class PlainBodyRequestHeaderSigner extends ApiGeeHeaderSigner implements 
     String session = UUID.randomUUID().toString();
     guid = UUID.randomUUID().toString();
 
-    String credentialsHeader = buildCredentialsHeader();
     String signatureHeader;
 
     try {
