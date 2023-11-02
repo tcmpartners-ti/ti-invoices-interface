@@ -51,7 +51,7 @@ public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
 
       byte[] encryptedBytes = cipher.doFinal(jsonRequestBody.getBytes(StandardCharsets.UTF_8));
 
-      return new String(Base64.encode(encryptedBytes), StandardCharsets.UTF_8);
+      return Base64.toBase64String(encryptedBytes);
     } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException |
              InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
       log.error("Could not encrypt body request. {}.", e.getMessage());

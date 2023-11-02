@@ -49,7 +49,7 @@ bp:
       corporate-loan:
         user: ${CL_USER}
         operation-token: ${CL_OP_TOKEN}
-        url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
+        url: "${bp.api-gee.url.dev}/domain/corporate-loan/v1"
 
 invoice:
   route:

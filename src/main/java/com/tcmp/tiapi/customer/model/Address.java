@@ -8,6 +8,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "SX20LF")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

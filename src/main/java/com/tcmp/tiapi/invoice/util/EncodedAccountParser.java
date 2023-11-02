@@ -25,7 +25,7 @@ public class EncodedAccountParser {
   }
 
   private void parseAccount() {
-    type = encodedAccount.substring(0, 1);
+    type = encodedAccount.substring(0, 2);
     account = encodedAccount.substring(2);
   }
 }
