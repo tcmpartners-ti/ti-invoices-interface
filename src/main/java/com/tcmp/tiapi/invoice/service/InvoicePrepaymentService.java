@@ -4,6 +4,9 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
@@ -21,6 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -28,6 +33,7 @@ import java.util.List;
 @Slf4j
 public class InvoicePrepaymentService {
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
+  private final InvoiceRepository invoiceRepository;
   private final CustomerRepository customerRepository;
   private final AccountRepository accountRepository;
 
@@ -44,7 +50,7 @@ public class InvoicePrepaymentService {
 
     notifyInvoiceEventToSeller(financeAckMessage, seller.getAddress().getCustomerEmail(), "Anticipo");
 
-    String encodedBuyerAccount = findFinanceAccountByMasterRef(financeAckMessage.getMasterRef());
+    String encodedBuyerAccount = findFinanceAccountFromInvoiceData(financeAckMessage);
     EncodedAccountParser buyerAccount = new EncodedAccountParser(encodedBuyerAccount);
 
     DistributorCreditRequest distributorCreditRequest = buildRequestFromTiMessage(
@@ -72,9 +78,20 @@ public class InvoicePrepaymentService {
       .orElseThrow(() -> new RuntimeException("Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  private String findFinanceAccountByMasterRef(String invoiceMasterReference) {
-    return productMasterExtensionRepository.findFinanceAccountByMasterReference(invoiceMasterReference)
+  private String findFinanceAccountFromInvoiceData(FinanceAckMessage financeAckMessage) {
+    InvoiceMaster invoice = invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
+        financeAckMessage.getProgramme(),
+        financeAckMessage.getSellerIdentifier(),
+        financeAckMessage.getTheirRef(),
+        true
+      )
       .orElseThrow(() -> new RuntimeException("Could not find account for the given invoice master."));
+
+    // Todo: this query shouldn't be needed
+    ProductMasterExtension productMasterExtension = productMasterExtensionRepository.findByMasterId(invoice.getId())
+      .orElseThrow(() -> new RuntimeException("Could not find account for the given invoice master."));
+
+    return productMasterExtension.getFinanceAccount();
   }
 
   private Account findCustomerAccount(String customerMnemonic) {
@@ -92,12 +109,12 @@ public class InvoicePrepaymentService {
     String buyerAccountType
   ) {
     return DistributorCreditRequest.builder()
-      .commercialTrade(new CommercialTrade(buyer.getType()))
+      .commercialTrade(new CommercialTrade(buyer.getType().trim()))
       .customer(Customer.builder()
-        .customerId(buyer.getNumber())
-        .documentNumber(buyer.getId().getMnemonic())
-        .fullName(buyer.getFullName())
-        .documentType("0003")
+        .customerId(buyer.getNumber().trim())
+        .documentNumber(buyer.getId().getMnemonic().trim())
+        .fullName(buyer.getFullName().trim())
+        .documentType(buyer.getBankCode1().trim())
         .build())
       .disbursement(Disbursement.builder()
         .accountNumber(buyerAccountNumber)
@@ -134,7 +151,6 @@ public class InvoicePrepaymentService {
     String invoiceReference,
     double disbursementAmount
   ) {
-    String transactionConcept = buildTransactionConcept(invoiceReference, sellerName);
     BigDecimal amount = BigDecimal.valueOf(disbursementAmount);
 
     BusinessAccountTransfersResponse buyerToBglResponse;
@@ -144,7 +160,7 @@ public class InvoicePrepaymentService {
         TransactionType.CLIENT_TO_BGL,
         anchorAccount,
         bglAccount,
-        transactionConcept,
+        String.format("Descuento factura %s %s", invoiceReference, sellerName),
         amount
       );
     } catch (PaymentExecutionException e) {
@@ -158,7 +174,7 @@ public class InvoicePrepaymentService {
         TransactionType.BGL_TO_CLIENT,
         bglAccount,
         sellerAccount,
-        transactionConcept,
+        String.format("Pago factura %s %s", invoiceReference, sellerName),
         amount
       );
     } catch (PaymentExecutionException e) {
@@ -177,10 +193,6 @@ public class InvoicePrepaymentService {
     return "OK".equals(buyerToBglStatus) && "OK".equals(bglToSellerStatus);
   }
 
-  private String buildTransactionConcept(String invoiceReference, String sellerName) {
-    return String.format("Pago Factura %s %s", invoiceReference, sellerName);
-  }
-
   /**
    * Operative Gateway
    */
@@ -189,6 +201,9 @@ public class InvoicePrepaymentService {
     String sellerEmail,
     String invoiceAction
   ) {
+    LocalDate date = LocalDate.parse(financeAckMessage.getReceivedOn());
+    DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-dd-MM");
+
     operationalGatewayService.sendEmailNotification(
       financeAckMessage.getSellerIdentifier(),
       sellerEmail,
@@ -196,7 +211,7 @@ public class InvoicePrepaymentService {
       operationalGatewayService.buildInvoiceEventEmailTemplate(
         financeAckMessage.getSellerIdentifier(),
         financeAckMessage.getSellerName(),
-        financeAckMessage.getReceivedOn(),
+        pattern.format(date),
         invoiceAction,
         financeAckMessage.getTheirRef(),
         financeAckMessage.getFinanceDealCurrency(),
