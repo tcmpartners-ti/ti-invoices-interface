@@ -13,12 +13,14 @@ public enum TIOperation {
   CREATE_INVOICE(TIOperation.CREATE_INVOICE_VALUE),
   FINANCE_INVOICE(TIOperation.FINANCE_INVOICE_VALUE),
   FINANCE_ACK_INVOICE(TIOperation.FINANCE_ACK_INVOICE_VALUE),
-  FINANCE_ACK_INVOICE_DETAILS(TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE );
+  FINANCE_ACK_INVOICE_DETAILS(TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE ),
+  DUE_INVOICE(TIOperation.DUE_INVOICE_VALUE);
 
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
   public static final String FINANCE_INVOICE_VALUE = "TFBUYFIN";
   public static final String FINANCE_ACK_INVOICE_VALUE = "TFBCFCRE";
   public static final String FINANCE_ACK_INVOICE_DETAILS_VALUE = "tfinvfindet";
+  public static final String DUE_INVOICE_VALUE = "tfinvset";
 
   private final String value;
 }

@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum OperationalGatewayProcessCode {
   INVOICE_CREATION("FTI001"),
   INVOICE_SETTLEMENT("FTI003"),
-  ADVANCE_INVOICE_DISCOUNT("FTI002");
+  ADVANCE_INVOICE_DISCOUNT("FTI002"),
+  INVOICE_DUE_DATE_REACHED("CRPR03");
 
   private final String value;
 }

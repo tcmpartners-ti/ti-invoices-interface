@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.messaging.config;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
+import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import jakarta.xml.bind.JAXBContext;
@@ -46,5 +47,12 @@ public class TIMessagingConfiguration {
   JaxbDataFormat jaxbDataFormatServiceResponse() throws JAXBException {
     JAXBContext jaxbServiceResponseContext = JAXBContext.newInstance(ServiceResponse.class);
     return new JaxbDataFormat(jaxbServiceResponseContext);
+  }
+
+  @Bean
+  @Qualifier("jaxbDataFormatAckEventRequest")
+  JaxbDataFormat jaxbDataFormatAckEventRequest() throws JAXBException {
+    JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
+    return  new JaxbDataFormat(jaxbContext);
   }
 }

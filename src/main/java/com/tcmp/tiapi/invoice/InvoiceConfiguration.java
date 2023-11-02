@@ -1,9 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
-import com.tcmp.tiapi.invoice.route.BulkCreateInvoicesRouteBuilder;
-import com.tcmp.tiapi.invoice.route.CreateInvoiceRouteBuilder;
-import com.tcmp.tiapi.invoice.route.FinanceInvoiceRouteBuilder;
-import com.tcmp.tiapi.invoice.route.InvoiceEventListenerRouteBuilder;
+import com.tcmp.tiapi.invoice.route.*;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
@@ -31,6 +28,11 @@ public class InvoiceConfiguration {
 
   @Value("${invoice.route.finance.from}") private String uriFinanceFrom;
   @Value("${invoice.route.finance.to}") private String uriFinanceTo;
+
+  @Value("${invoice.route.ack-event-listener.max-retries}") private Integer maxRetriesAck;
+  @Value("${invoice.route.ack-event-listener.retry-delay}") private Integer retryDelayInMsAck;
+  @Value("${invoice.route.ack-event-listener.from}") private String uriCreatedAckEventFrom;
+  @Value("${invoice.route.ack-event-listener.to}") private String uriCreatedAckEventTo;
 
   @Bean
   public CreateInvoiceRouteBuilder createInvoiceRouter(
@@ -73,6 +75,23 @@ public class InvoiceConfiguration {
 
       maxRetries,
       retryDelayInMs
+    );
+  }
+
+  @Bean
+  public InvoiceAckEventListenerRouteBuilder invoiceAckEventListenerRouteBuilder(
+    JaxbDataFormat jaxbDataFormatAckEventRequest,
+    BusinessBankingService businessBankingService
+  ) {
+    return new InvoiceAckEventListenerRouteBuilder(
+      jaxbDataFormatAckEventRequest,
+      businessBankingService,
+
+      uriCreatedAckEventFrom,
+      uriCreatedAckEventTo,
+
+      maxRetriesAck,
+      retryDelayInMsAck
     );
   }
 
