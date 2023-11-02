@@ -18,6 +18,8 @@ bp:
     operational-gateway:
       template-id: ""
       business-banking-url: "https://bancaempresas.pichincha.com"
+    payment-execution:
+      bgl-account: ""
 
   api-gee:
     headers.device: "TradeInnovationInterface"
