@@ -8,16 +8,11 @@ import com.tcmp.tiapi.messaging.config.TIMessagingConfiguration;
  */
 public class XmlNamespaceFixer {
   public String fixNamespaces(String xmlBody) {
-    var removedPrefixes = removePrefixFromDefaultNamespace(xmlBody);
-    return removePrefixFromServiceRequest(removedPrefixes);
+    return removePrefixFromDefaultNamespace(xmlBody);
   }
 
   private String removePrefixFromDefaultNamespace(String originalXml) {
     String incorrectPrefix = ":" + TIMessagingConfiguration.CONTROL_PREFIX;
     return originalXml.replaceFirst(incorrectPrefix, "");
-  }
-
-  private String removePrefixFromServiceRequest(String modifiedXml) {
-    return modifiedXml.replaceAll("_:\\S", "S");
   }
 }
