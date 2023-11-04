@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.request;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.tcmp.tiapi.shared.serializer.JsonMoneySerializer;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -10,6 +12,7 @@ public record DistributorCreditRequest(
   CommercialTrade commercialTrade,
   Customer customer,
   Disbursement disbursement,
+  @JsonSerialize(using = JsonMoneySerializer.class)
   BigDecimal amount,
   String effectiveDate,
   String firstDueDate,
