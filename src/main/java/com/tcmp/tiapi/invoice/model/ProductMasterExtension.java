@@ -19,6 +19,6 @@ public class ProductMasterExtension {
   @Column(name = "FINACC")
   private String financeAccount;
 
-  @Column(name = "MASTER")
+  @Column(name = "MASTER", nullable = false)
   private Long masterId;
 }
