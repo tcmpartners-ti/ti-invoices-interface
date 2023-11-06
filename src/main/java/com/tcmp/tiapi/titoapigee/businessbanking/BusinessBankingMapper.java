@@ -20,8 +20,5 @@ public interface BusinessBankingMapper {
     ServiceResponse serviceResponse,
     InvoiceEventInfo invoice
   );
-  OperationalGatewayRequestPayload mapToRequestPayload(
-    ServiceResponse serviceResponse
-  );
 }
 

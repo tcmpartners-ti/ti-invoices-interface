@@ -71,48 +71,6 @@ public class BusinessBankingService {
 
       log.error("Server error. {}.", e.getMessage());
       throw new RecoverableApiGeeRequestException(e.getMessage());
-    }
-  }
-
-  public void sendInvoiceAckEventResult(
-    OperationalGatewayProcessCode processCode,
-    ServiceResponse serviceResponse
-  ) {
-    OperationalGatewayRequestPayload payload = businessBankingMapper.mapToRequestPayload(serviceResponse);
-
-    ApiGeeBaseRequest<OperationalGatewayRequest> body = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
-      .data(OperationalGatewayRequest.builder()
-        .referenceData(ReferenceData.builder()
-          .provider(REQUEST_PROVIDER)
-          .correlatedMessageId(UUID.randomUUID().toString())
-          .processCode(ProcessCode.of(processCode))
-          .build())
-        .payload(payload)
-        .build())
-      .build();
-
-    Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
-
-    try {
-      businessBankingClient.sendInvoiceEventResult(headers, body);
-      log.info("Invoice due notified successfully. Headers={} Body={}", headers, body);
-    } catch (FeignException e) {
-      List<Integer> unrecoverableResponseCodes = List.of(
-        HttpStatus.GATEWAY_TIMEOUT.value(),
-        HttpStatus.BAD_REQUEST.value(),
-        HttpStatus.UNAUTHORIZED.value(),
-        HttpStatus.FORBIDDEN.value(),
-        HttpStatus.NOT_FOUND.value()
-      );
-
-      boolean isUnrecoverableRequest = unrecoverableResponseCodes.contains(e.status());
-      if (isUnrecoverableRequest) {
-        log.error("Client error. {}.", e.getMessage());
-        throw new UnrecoverableApiGeeRequestException(e.getMessage());
-      }
-
-      log.error("Server error. {}.", e.getMessage());
-      throw new RecoverableApiGeeRequestException(e.getMessage());
     } finally {
       log.info("Headers={} Body={}", headers, body);
     }
