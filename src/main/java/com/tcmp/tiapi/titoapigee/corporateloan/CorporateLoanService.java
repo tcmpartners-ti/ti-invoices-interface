@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
@@ -36,8 +37,13 @@ public class CorporateLoanService {
     try {
       return corporateLoanClient.createCredit(headers, body);
     } catch (FeignException e) {
-      log.error("Could not create credit.", e);
-      return null;
+      log.error("Could not create credit.");
+      e.responseBody().ifPresent(errorBytes -> {
+        String error = new String(errorBytes.array(), StandardCharsets.UTF_8);
+        log.info("Body={}", error);
+      });
+
+      throw e;
     }
   }
 }
