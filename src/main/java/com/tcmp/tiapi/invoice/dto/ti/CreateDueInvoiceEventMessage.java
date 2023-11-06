@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice.dto.ti;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
+import com.tcmp.tiapi.messaging.model.TIOperation;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -8,13 +9,15 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 import lombok.AllArgsConstructor;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "tfinvset")
+@XmlRootElement(name = TIOperation.DUE_INVOICE_DETAILS_VALUE, namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CreateDueInvoiceEventMessage {
   @XmlElement(name = "MessageName", namespace = TINamespace.CONTROL)

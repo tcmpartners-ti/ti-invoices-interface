@@ -19,8 +19,9 @@ public enum TIOperation {
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
   public static final String FINANCE_INVOICE_VALUE = "TFBUYFIN";
   public static final String FINANCE_ACK_INVOICE_VALUE = "TFBCFCRE";
-  public static final String FINANCE_ACK_INVOICE_DETAILS_VALUE = "tfinvfindet";
-  public static final String DUE_INVOICE_VALUE = "tfinvset";
+  public static final String FINANCE_ACK_INVOICE_DETAILS_VALUE = "tfinvfindet"; // Body tag name
+  public static final String DUE_INVOICE_VALUE = "TFINVSET";
+  public static final String DUE_INVOICE_DETAILS_VALUE = "tfinvset"; // Body tag name
 
   private final String value;
 }
