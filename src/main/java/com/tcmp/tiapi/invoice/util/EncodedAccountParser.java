@@ -13,14 +13,14 @@ public class EncodedAccountParser {
   /**
    * Builds the account object with the account number stored in a custom field in TI (EXTEVENT).
    *
-   * @param encodedAccount The anchor account that has the format {@code ^(AH|CC)\d{10}$}.
+   * @param encodedAccount The customer account that has the format {@code ^(AH|CC)\d{10}$}.
    */
   public EncodedAccountParser(String encodedAccount) {
-    if (encodedAccount == null || encodedAccount.length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
-      throw new IllegalArgumentException("Invalid anchor account.");
+    if (encodedAccount == null || encodedAccount.trim().length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
+      throw new IllegalArgumentException("Invalid account.");
     }
 
-    this.encodedAccount = encodedAccount;
+    this.encodedAccount = encodedAccount.trim();
     parseAccount();
   }
 
