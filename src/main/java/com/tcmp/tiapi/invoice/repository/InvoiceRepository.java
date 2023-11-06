@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
+  Optional<InvoiceMaster> findByProductMasterMasterReference(String masterReference);
+
   Optional<InvoiceMaster> findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
     String programId,
     String sellerMnemonic,
