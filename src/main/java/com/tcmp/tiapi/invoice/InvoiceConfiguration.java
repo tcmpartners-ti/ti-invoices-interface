@@ -2,10 +2,15 @@ package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.route.*;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
+import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
+import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
 import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
+import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
+import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
 import lombok.Getter;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,10 +34,7 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.finance.from}") private String uriFinanceFrom;
   @Value("${invoice.route.finance.to}") private String uriFinanceTo;
 
-  @Value("${invoice.route.ack-event-listener.max-retries}") private Integer maxRetriesAck;
-  @Value("${invoice.route.ack-event-listener.retry-delay}") private Integer retryDelayInMsAck;
   @Value("${invoice.route.ack-event-listener.from}") private String uriCreatedAckEventFrom;
-  @Value("${invoice.route.ack-event-listener.to}") private String uriCreatedAckEventTo;
 
   @Bean
   public CreateInvoiceRouteBuilder createInvoiceRouter(
@@ -81,17 +83,21 @@ public class InvoiceConfiguration {
   @Bean
   public InvoiceAckEventListenerRouteBuilder invoiceAckEventListenerRouteBuilder(
     JaxbDataFormat jaxbDataFormatAckEventRequest,
-    BusinessBankingService businessBankingService
+    InvoiceFinancingService invoiceFinancingService,
+    InvoiceSettlementService invoiceSettlementService,
+    CorporateLoanService corporateLoanService,
+    PaymentExecutionService paymentExecutionService,
+    OperationalGatewayService operationalGatewayService
   ) {
     return new InvoiceAckEventListenerRouteBuilder(
       jaxbDataFormatAckEventRequest,
-      businessBankingService,
+      invoiceFinancingService,
+      invoiceSettlementService,
+      corporateLoanService,
+      paymentExecutionService,
+      operationalGatewayService,
 
-      uriCreatedAckEventFrom,
-      uriCreatedAckEventTo,
-
-      maxRetriesAck,
-      retryDelayInMsAck
+      uriCreatedAckEventFrom
     );
   }
 
