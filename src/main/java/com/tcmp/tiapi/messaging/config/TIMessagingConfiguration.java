@@ -53,6 +53,6 @@ public class TIMessagingConfiguration {
   @Qualifier("jaxbDataFormatAckEventRequest")
   JaxbDataFormat jaxbDataFormatAckEventRequest() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
-    return  new JaxbDataFormat(jaxbContext);
+    return new JaxbDataFormat(jaxbContext);
   }
 }

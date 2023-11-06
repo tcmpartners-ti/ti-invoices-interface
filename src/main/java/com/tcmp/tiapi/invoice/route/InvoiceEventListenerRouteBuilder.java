@@ -60,14 +60,18 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
             body -> sendInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_CREATION, body)
           )
           .log("Invoice creation event notified.")
+
         .when(operationXpath.isEqualTo(TIOperation.FINANCE_INVOICE_VALUE))
           .process().body(
             ServiceResponse.class,
             body -> sendInvoiceEventResult(OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT, body)
           )
           .log("Invoice financing event notified.")
+
         .otherwise()
           .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
+          .to("log:body")
+
       .endChoice()
       .end();
   }
