@@ -21,22 +21,8 @@ public class PaymentExecutionService {
   private final HeaderSigner plainBodyRequestHeaderSigner;
   private final PaymentExecutionClient paymentExecutionClient;
 
-  public BusinessAccountTransfersResponse executeTransaction(
-    TransactionType transactionType,
-    String debtorAccount,
-    String creditorAccount,
-    String concept,
-    BigDecimal amount
-  ) {
-    TransactionRequest requestData = TransactionRequest.from(
-      transactionType,
-      debtorAccount,
-      creditorAccount,
-      concept,
-      amount
-    );
-
-    ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(requestData);
+  public BusinessAccountTransfersResponse makeTransactionRequest(TransactionRequest transactionRequest) {
+    ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(transactionRequest);
     Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     try {

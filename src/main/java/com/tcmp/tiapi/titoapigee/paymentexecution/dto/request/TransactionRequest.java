@@ -16,6 +16,7 @@ public record TransactionRequest(
     String debtorAccount,
     String creditorAccount,
     String concept,
+    String currency,
     BigDecimal amount
   ) {
     return TransactionRequest.builder()
@@ -25,7 +26,7 @@ public record TransactionRequest(
       .transaction(Transaction.builder()
         .concept(concept)
         .amount(amount.toString())
-        .currency(new Currency("usd"))
+        .currency(new Currency(currency))
         .build())
       .build();
   }
