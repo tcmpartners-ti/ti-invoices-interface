@@ -5,6 +5,7 @@ import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationInfo;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationsResponse;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Recipient;
+import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -42,8 +44,10 @@ class OperationalGatewayServiceTest {
         )
       )));
 
-    testedOperationalGatewayService.sendEmailNotification(
-      "", "david@mail.com", "", List.of());
+    testedOperationalGatewayService.sendNotificationRequest(InvoiceEmailInfo.builder()
+      .customerMnemonic("1722466420001")
+      .amount(BigDecimal.TEN)
+      .build());
 
     verify(operationalGatewayHeaderSigner).buildRequestHeaders(any(ApiGeeBaseRequest.class));
     //noinspection unchecked
