@@ -4,7 +4,7 @@ import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.request.*;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationsResponse;
-import com.tcmp.tiapi.titoapigee.operationalgateway.exception.EmailNotFoundException;
+import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -25,39 +25,40 @@ public class OperationalGatewayService {
   private final OperationalGatewayClient operationalGatewayClient;
 
   @Value("${bp.service.operational-gateway.business-banking-url}") private String businessBankingUrl;
+  @Value("${bp.service.operational-gateway.template-id}") private String templateId;
 
-  public void sendEmailNotification(
-    String customerMnemonic,
-    String customerEmail,
-    String templateId,
-    List<TemplateField> fields
-  ) {
-    if (customerEmail == null || customerEmail.isBlank()) {
-      throw new EmailNotFoundException("Email was not provided, could not send notification.");
-    }
-
-    NotificationsRequest requestData = NotificationsRequest.builder()
+  public void sendNotificationRequest(InvoiceEmailInfo emailInfo) {
+    NotificationsRequest notificationsRequest = NotificationsRequest.builder()
       .flow(new Flow("notificacionesAdicionales"))
-      .requester(new Requester(customerMnemonic, "001"))
+      .requester(new Requester(emailInfo.customerMnemonic(), "001"))
       .additionalRecipient(List.of(
         new Recipient(
-          new Email(customerEmail),
+          new Email(emailInfo.customerEmail()),
           new Cellphone(" ", " ")
         )))
       .template(Template.builder()
         .templateId(templateId)
         .sequentialId("0")
-        .fields(fields)
+        .fields(buildInvoiceEventEmailTemplate(
+          emailInfo.customerMnemonic(),
+          emailInfo.customerName(),
+          emailInfo.date(),
+          emailInfo.action(),
+          emailInfo.invoiceNumber(),
+          emailInfo.invoiceCurrency(),
+          emailInfo.amount()
+        ))
         .build())
       .build();
-    ApiGeeBaseRequest<NotificationsRequest> request = ApiGeeBaseRequest.<NotificationsRequest>builder()
-      .data(requestData)
+
+    ApiGeeBaseRequest<NotificationsRequest> body = ApiGeeBaseRequest.<NotificationsRequest>builder()
+      .data(notificationsRequest)
       .build();
 
-    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(body);
 
     try {
-      NotificationsResponse result = operationalGatewayClient.sendEmailNotification(headers, request);
+      NotificationsResponse result = operationalGatewayClient.sendEmailNotification(headers, body);
       Channel channel = result.data().get(0).recipient().channel();
       log.info("Successfully sent notification via {} to: {}", channel.description(), channel.value());
     } catch (FeignException e) {
