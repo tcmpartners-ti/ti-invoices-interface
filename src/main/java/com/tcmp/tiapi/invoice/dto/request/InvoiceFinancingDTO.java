@@ -60,9 +60,9 @@ public class InvoiceFinancingDTO {
   private String maturityDate;
 
   @NotNull(message = "This field is required.")
-  @Size(min = 1, max = 3, message = "Finance currency code must be between 1 and 3 characters.")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
-  @Schema(minLength = 1, maxLength = 3, description = "The currency of the advance - the invoice(s) currency is used as the default.")
+  @Size(min = 1, max = 3, message = "Finance currency code must be between 1 and 3 characters")
+  @Pattern(regexp = FieldValidationRegex.ONLY_LETTERS, message = "Only letters are allowed")
+  @Schema(description = "The currency of the advance - the invoice(s) currency is used as the default.")
   private String financeCurrency;
 
   @NotNull(message = "This field is required.")
