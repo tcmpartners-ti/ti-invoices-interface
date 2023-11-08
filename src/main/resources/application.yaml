@@ -12,6 +12,10 @@ spring:
       dialect: "org.hibernate.dialect.SQLServerDialect"
 
 ti:
+  ticc-queue:
+    sub.name: "BP.TICC.TO.DIGIBANK"
+  fti-queue:
+    sub.name: "BP.FTI.TO.DIGIBANK"
   queue:
     pub:
       name: "BP.DIGIBANK.TO.FTI"
