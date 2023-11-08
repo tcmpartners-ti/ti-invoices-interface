@@ -32,9 +32,8 @@ import org.apache.camel.support.builder.Namespaces;
 import java.math.BigDecimal;
 
 @RequiredArgsConstructor
-
 public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
-  private final JaxbDataFormat jaxbDataFormat;
+  private final JaxbDataFormat jaxbDataFormatAckEventRequest;
 
   private final InvoiceFinancingService invoiceFinancingService;
   private final InvoiceSettlementService invoiceSettlementService;
@@ -52,7 +51,7 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
     // For now, don't handle errors
 
     from(uriFrom).routeId("invoiceAckEventResult")
-      .unmarshal(jaxbDataFormat)
+      .unmarshal(jaxbDataFormatAckEventRequest)
       .choice()
         .when(operationXpath.isEqualTo(TIOperation.DUE_INVOICE_VALUE))
           .log("Started invoice settlement flow.")
@@ -68,61 +67,62 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
 
         .otherwise()
           .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
-          .to("log:body")
+          .process().body(AckServiceRequest.class, req -> log.info("[OPERATION]: {}", req.getHeader().getOperation()))
         .endChoice()
 
       .endChoice()
       .end();
   }
 
+  // Settlement
   private void startInvoiceSettlementFlow(AckServiceRequest<CreateDueInvoiceEventMessage> serviceResponse) {
     if (serviceResponse == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
-
     CreateDueInvoiceEventMessage message = serviceResponse.getBody();
+    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(new BigDecimal(message.getPaymentAmount()));
+
     Customer buyer = invoiceSettlementService.findCustomerByMnemonic(message.getBuyerIdentifier());
     Customer seller = invoiceSettlementService.findCustomerByMnemonic(message.getSellerIdentifier());
-    ProgramExtension programmeExtension = invoiceSettlementService.findByProgrammeIdOrDefault(message.getProgramme());
+    ProgramExtension programExtension = invoiceSettlementService.findByProgrammeIdOrDefault(message.getProgramme());
     InvoiceMaster invoice = invoiceSettlementService.findInvoiceByMasterRef(message.getMasterRef());
-    ProductMasterExtension invoiceExtension = invoiceSettlementService.findInvoiceExtension(invoice);
+    ProductMasterExtension invoiceExtension = invoiceSettlementService.findProductMasterExtensionByMasterId(invoice.getId());
     EncodedAccountParser buyerAccountParser = new EncodedAccountParser(invoiceExtension.getFinanceAccount());
 
-    DistributorCreditResponse settlementDistributorCreditResponse = corporateLoanService.createCredit(
-      invoiceSettlementService.buildSettlementDistributorCreditRequest(message, buyer, programmeExtension, buyerAccountParser));
+    boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;
+    boolean hasBeenFinanced = invoiceSettlementService.invoiceHasLinkedFinanceEvent(invoice);
 
-    // If we reach this point credit is created.
-    boolean programmeHasExtraFinancingDays = programmeExtension.getExtraFinancingDays() > 0;
-    InvoiceEmailEvent event = programmeHasExtraFinancingDays ? InvoiceEmailEvent.CREDITED : InvoiceEmailEvent.PROCESSED;
-    BigDecimal paidAmountInDollars = MonetaryAmountUtils.convertCentsToDollars(new BigDecimal(message.getPaymentAmount()));
-    operationalGatewayService.sendNotificationRequest(
-      invoiceSettlementService.buildInvoiceSettlementEmailInfo(message, buyer, event, paidAmountInDollars));
-
-    boolean hasPrepayment = invoiceSettlementService.invoiceHasLinkedPrepaymentEvent(invoice);
-    if (hasPrepayment) {
-      Account sellerAccount = invoiceSettlementService.findCustomerAccountByMnemonic(message.getSellerIdentifier());
-      EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
-
-      BusinessAccountTransfersResponse bglToSellerTransactionResponse = paymentExecutionService.makeTransactionRequest(
-        invoiceSettlementService.buildBglToSellerTransaction(
-          message, settlementDistributorCreditResponse, seller, sellerAccountParser));
-
-      boolean transactionExecutedSuccessfully = "OK".equals(bglToSellerTransactionResponse.data().status());
-      if (!transactionExecutedSuccessfully) {
-        log.error("Invoice settlement process failed.");
-        return;
-      }
-
+    if (hasExtraFinancingDays && !hasBeenFinanced) {
       operationalGatewayService.sendNotificationRequest(
-        invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-          message, seller, InvoiceEmailEvent.PROCESSED, paidAmountInDollars));
-      return;
+        invoiceSettlementService.buildInvoiceSettlementEmailInfo(message, seller, InvoiceEmailEvent.SETTLED, paymentAmount));
     }
 
-    // Invoice has no prepayment event linked
-    operationalGatewayService.sendNotificationRequest(
-      invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-        message, seller, InvoiceEmailEvent.SETTLED, paidAmountInDollars));
+    DistributorCreditResponse settlementDistributorCreditResponse = corporateLoanService.createCredit(
+      invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
+    boolean hasBeenCredited = settlementDistributorCreditResponse != null;
+
+    if (hasExtraFinancingDays && hasBeenCredited) { // We don't care if invoice has been financed or not
+      operationalGatewayService.sendNotificationRequest(
+        invoiceSettlementService.buildInvoiceSettlementEmailInfo(message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount));
+    }
+
+    if (!hasBeenFinanced) {
+      BusinessAccountTransfersResponse bglToSellerResponse = transferPaymentAmountToSeller(message, buyer);
+      boolean transactionExecutedSuccessfully = "OK".equals(bglToSellerResponse.data().status());
+      if (hasExtraFinancingDays && hasBeenCredited && transactionExecutedSuccessfully) {
+        operationalGatewayService.sendNotificationRequest(
+          invoiceSettlementService.buildInvoiceSettlementEmailInfo(message, seller, InvoiceEmailEvent.PROCESSED, paymentAmount));
+      }
+    }
   }
 
+  private BusinessAccountTransfersResponse transferPaymentAmountToSeller(CreateDueInvoiceEventMessage message, Customer buyer) {
+    Account sellerAccount = invoiceSettlementService.findAccountByCustomerMnemonic(message.getSellerIdentifier());
+    EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
+
+    return paymentExecutionService.makeTransactionRequest(
+      invoiceSettlementService.buildBglToSellerTransaction(message, buyer, sellerAccountParser));
+  }
+
+  // Financing
   private void startInvoiceFinancingFlow(AckServiceRequest<FinanceAckMessage> serviceRequest) {
     if (serviceRequest == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     FinanceAckMessage invoicePrepaymentMessage = serviceRequest.getBody();
@@ -130,8 +130,8 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
 
     Customer buyer = invoiceFinancingService.findCustomerByMnemonic(invoicePrepaymentMessage.getBuyerIdentifier());
     Customer seller = invoiceFinancingService.findCustomerByMnemonic(invoicePrepaymentMessage.getSellerIdentifier());
-    ProductMasterExtension invoiceExtension = invoiceFinancingService.findFinanceAccountFromInvoiceData(invoiceReference);
-    Account sellerAccount = invoiceFinancingService.findCustomerAccount(invoicePrepaymentMessage.getSellerIdentifier());
+    ProductMasterExtension invoiceExtension = invoiceFinancingService.findProductMasterExtensionByMasterReference(invoiceReference);
+    Account sellerAccount = invoiceFinancingService.findAccountByCustomerMnemonic(invoicePrepaymentMessage.getSellerIdentifier());
 
     EncodedAccountParser buyerAccountParser = new EncodedAccountParser(invoiceExtension.getFinanceAccount());
     EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
@@ -176,7 +176,12 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
       String buyerToBglStatus = buyerToBglResponse.data().status();
       String bglToSellerStatus = bglToSellerResponse.data().status();
 
-      log.info("[Anchor -> Bgl]: {} [Bgl -> Seller]: {}", buyerToBglStatus, bglToSellerStatus);
+      log.info(
+        "[Anchor -> Bgl]: {} [Bgl -> Seller]: {} DisbursementAmount={}",
+        buyerToBglStatus,
+        bglToSellerStatus,
+        distributorCreditResponse.data().disbursementAmount()
+      );
 
       return "OK".equals(buyerToBglStatus) && "OK".equals(bglToSellerStatus);
     } catch (PaymentExecutionException e) {
