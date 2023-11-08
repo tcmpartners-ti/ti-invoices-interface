@@ -1,7 +1,10 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.response;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public record Data(
   String operationId,
   int interestRate,
