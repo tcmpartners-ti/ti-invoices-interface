@@ -26,6 +26,8 @@ bp:
     operational-gateway:
       template-id: "305003729"
       business-banking-url: "https://bancaempresas.pichincha.com"
+    payment-execution:
+      bgl-account: "259090337001"
 
   api-gee:
     headers.device: "TradeInnovationInterfaceDEV"
@@ -63,6 +65,9 @@ invoice:
 
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
+
+    ack-event-listener:
+      from: "direct:mockAckQueue"
 
     finance:
       from: "direct:financeInvoiceInTI"
