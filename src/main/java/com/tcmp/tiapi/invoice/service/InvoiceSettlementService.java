@@ -14,7 +14,6 @@ import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionRequest;
@@ -50,12 +49,12 @@ public class InvoiceSettlementService {
       .orElseThrow(() -> new EntityNotFoundException("Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  public ProductMasterExtension findInvoiceExtension(InvoiceMaster invoiceMaster) {
-    return productMasterExtensionRepository.findByMasterId(invoiceMaster.getId())
+  public ProductMasterExtension findProductMasterExtensionByMasterId(Long invoiceMasterId) {
+    return productMasterExtensionRepository.findByMasterId(invoiceMasterId)
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for the given invoice master."));
   }
 
-  public Account findCustomerAccountByMnemonic(String customerMnemonic) {
+  public Account findAccountByCustomerMnemonic(String customerMnemonic) {
     return accountRepository.findByTypeAndCustomerMnemonic("CA", customerMnemonic)
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for seller " + customerMnemonic));
   }
@@ -69,14 +68,15 @@ public class InvoiceSettlementService {
         .build());
   }
 
-  public boolean invoiceHasLinkedPrepaymentEvent(InvoiceMaster invoice) {
+  public boolean invoiceHasLinkedFinanceEvent(InvoiceMaster invoice) {
+    BigDecimal discountDealAmount = invoice.getDiscountDealAmount();
+
     return !invoice.getIsDrawDownEligible()
            && invoice.getCreateFinanceEventId() != null
-           && invoice.getDiscountDealAmount() != null
-           && invoice.getDiscountDealAmount().compareTo(BigDecimal.ZERO) == 0;
+           && (discountDealAmount != null && BigDecimal.ZERO.compareTo(discountDealAmount) != 0);
   }
 
-  public DistributorCreditRequest buildSettlementDistributorCreditRequest(
+  public DistributorCreditRequest buildDistributorCreditRequest(
     CreateDueInvoiceEventMessage invoiceSettlementMessage,
     Customer buyer,
     ProgramExtension programExtension,
@@ -96,7 +96,7 @@ public class InvoiceSettlementService {
         .bankId("010")
         .form("N/C")
         .build())
-      .amount(getSettlementAmountFromInvoiceSettlementMessage(invoiceSettlementMessage))
+      .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
       .effectiveDate(invoiceSettlementMessage.getPaymentValueDate())
       .firstDueDate(invoiceSettlementMessage.getPaymentValueDate())
       .term(programExtension.getExtraFinancingDays())
@@ -117,23 +117,22 @@ public class InvoiceSettlementService {
 
   public TransactionRequest buildBglToSellerTransaction(
     CreateDueInvoiceEventMessage invoiceSettlementMessage,
-    DistributorCreditResponse settlementDistributorCreditResponse,
-    Customer seller,
+    Customer buyer,
     EncodedAccountParser sellerAccountParser
   ) {
     String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
-    String sellerName = seller.getFullName().trim();
-    String concept = String.format("Pago factura %s %s", invoiceReference, sellerName);
+    String buyerName = buyer.getFullName().trim();
+    String concept = String.format("Pago Factura %s %s", invoiceReference, buyerName);
     String currency = invoiceSettlementMessage.getPaymentCurrency();
-    BigDecimal amount = BigDecimal.valueOf(settlementDistributorCreditResponse.data().disbursementAmount());
+    BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
 
     return TransactionRequest.from(
       TransactionType.BGL_TO_CLIENT, bglAccount, sellerAccountParser.getAccount(), concept, currency, amount);
   }
 
-  private BigDecimal getSettlementAmountFromInvoiceSettlementMessage(CreateDueInvoiceEventMessage invoiceSettlementMessage) {
-    BigDecimal financeDealAmountInCents = new BigDecimal(invoiceSettlementMessage.getPaymentAmount());
-    return MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
+  private BigDecimal getPaymentAmountFromMessage(CreateDueInvoiceEventMessage invoiceSettlementMessage) {
+    BigDecimal paymentAmountInCents = new BigDecimal(invoiceSettlementMessage.getPaymentAmount());
+    return MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
   }
 
   public InvoiceEmailInfo buildInvoiceSettlementEmailInfo(
@@ -146,7 +145,7 @@ public class InvoiceSettlementService {
       .customerMnemonic(message.getBuyerIdentifier())
       .customerEmail(customer.getAddress().getCustomerEmail().trim())
       .customerName(customer.getFullName().trim())
-      .date(message.getReceivedOn())
+      .date(message.getPaymentValueDate())
       .action(event.getValue())
       .invoiceCurrency(message.getPaymentCurrency().trim())
       .invoiceNumber(message.getInvoiceNumber())

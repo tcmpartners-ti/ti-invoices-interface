@@ -47,19 +47,19 @@ public class InvoiceFinancingService {
       .orElseThrow(() -> new EntityNotFoundException("Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  public ProductMasterExtension findFinanceAccountFromInvoiceData(String invoiceMasterReference) {
+  public ProductMasterExtension findProductMasterExtensionByMasterReference(String invoiceMasterReference) {
     return productMasterExtensionRepository.findByMasterReference(invoiceMasterReference)
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for the given invoice master."));
   }
 
-  public Account findCustomerAccount(String customerMnemonic) {
+  public Account findAccountByCustomerMnemonic(String customerMnemonic) {
     return accountRepository.findByTypeAndCustomerMnemonic("CA", customerMnemonic)
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for seller " + customerMnemonic));
   }
 
   public DistributorCreditRequest buildDistributorCreditRequest(
-    FinanceAckMessage invoicePrepaymentAck,
-    com.tcmp.tiapi.customer.model.Customer buyer,
+    FinanceAckMessage invoiceFinanceAck,
+    Customer buyer,
     EncodedAccountParser buyerAccountParser
   ) {
     return DistributorCreditRequest.builder()
@@ -76,9 +76,9 @@ public class InvoiceFinancingService {
         .bankId("010")
         .form("N/C")
         .build())
-      .amount(getAmountFromFinancingAckMessage(invoicePrepaymentAck))
-      .effectiveDate(invoicePrepaymentAck.getReceivedOn())
-      .firstDueDate(invoicePrepaymentAck.getMaturityDate())
+      .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
+      .effectiveDate(invoiceFinanceAck.getReceivedOn()) // Consultar con Nas
+      .firstDueDate(invoiceFinanceAck.getMaturityDate())
       .term(0)
       .termPeriodType(new TermPeriodType("D"))
       .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
@@ -97,19 +97,19 @@ public class InvoiceFinancingService {
 
   public TransactionRequest buildBuyerToBglTransactionRequest(
     DistributorCreditResponse distributorCreditResponse,
-    FinanceAckMessage invoicePrepaymentMessage,
-    EncodedAccountParser buyerAccount
+    FinanceAckMessage invoiceFinanceMessage,
+    EncodedAccountParser buyerAccountParser
   ) {
-    String invoiceReference = invoicePrepaymentMessage.getInvoiceArray().get(0).getInvoiceReference();
-    String sellerName = invoicePrepaymentMessage.getSellerName();
-    String currency = invoicePrepaymentMessage.getPaymentDetails().getCurrency();
+    String invoiceReference = invoiceFinanceMessage.getTheirRef();
+    String sellerName = invoiceFinanceMessage.getSellerName();
+    String currency = invoiceFinanceMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
     return TransactionRequest.from(
       TransactionType.CLIENT_TO_BGL,
-      buyerAccount.getAccount(),
+      buyerAccountParser.getAccount(),
       bglAccount,
-      String.format("Descuento factura %s %s", invoiceReference, sellerName),
+      String.format("Descuento Factura %s %s", invoiceReference, sellerName),
       currency,
       amount
     );
@@ -120,8 +120,8 @@ public class InvoiceFinancingService {
     FinanceAckMessage invoicePrepaymentMessage,
     EncodedAccountParser sellerAccount
   ) {
-    String invoiceReference = invoicePrepaymentMessage.getInvoiceArray().get(0).getInvoiceReference();
-    String sellerName = invoicePrepaymentMessage.getSellerName();
+    String invoiceReference = invoicePrepaymentMessage.getTheirRef();
+    String buyerName = invoicePrepaymentMessage.getBuyerName();
     String currency = invoicePrepaymentMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
@@ -129,31 +129,31 @@ public class InvoiceFinancingService {
       TransactionType.BGL_TO_CLIENT,
       bglAccount,
       sellerAccount.getAccount(),
-      String.format("Pago factura %s %s", invoiceReference, sellerName),
+      String.format("Pago Factura %s %s", invoiceReference, buyerName),
       currency,
       amount
     );
   }
 
   public InvoiceEmailInfo buildInvoiceFinancingEmailInfo(
-    FinanceAckMessage invoicePrepaymentAck,
+    FinanceAckMessage invoiceFinanceAck,
     Customer customer,
     InvoiceEmailEvent event
   ) {
     return InvoiceEmailInfo.builder()
-      .customerMnemonic(invoicePrepaymentAck.getSellerIdentifier())
+      .customerMnemonic(invoiceFinanceAck.getSellerIdentifier())
       .customerEmail(customer.getAddress().getCustomerEmail().trim())
       .customerName(customer.getFullName().trim())
-      .date(invoicePrepaymentAck.getReceivedOn())
+      .date(invoiceFinanceAck.getReceivedOn())
       .action(event.getValue())
-      .invoiceCurrency(invoicePrepaymentAck.getFinanceDealCurrency())
-      .invoiceNumber(invoicePrepaymentAck.getTheirRef())
-      .amount(getAmountFromFinancingAckMessage(invoicePrepaymentAck))
+      .invoiceCurrency(invoiceFinanceAck.getFinanceDealCurrency())
+      .invoiceNumber(invoiceFinanceAck.getTheirRef())
+      .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
       .build();
   }
 
-  private BigDecimal getAmountFromFinancingAckMessage(FinanceAckMessage invoicePrepaymentAck) {
-    BigDecimal financeDealAmountInCents = new BigDecimal(invoicePrepaymentAck.getFinanceDealAmount());
+  private BigDecimal getFinanceDealAmountFromMessage(FinanceAckMessage invoiceFinanceAck) {
+    BigDecimal financeDealAmountInCents = new BigDecimal(invoiceFinanceAck.getFinanceDealAmount());
     return MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
   }
 }
