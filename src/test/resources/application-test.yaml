@@ -65,3 +65,7 @@ invoice:
     finance:
       from: "direct:financeInvoiceInTI"
       to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+
+    notification-invoice-creation:
+        #from: "activemq:queue:${ti.fti-queue.sub.name}"
+      from: "direct:mockti2"

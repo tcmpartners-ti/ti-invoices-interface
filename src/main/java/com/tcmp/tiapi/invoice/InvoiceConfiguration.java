@@ -3,6 +3,7 @@ package com.tcmp.tiapi.invoice;
 import com.tcmp.tiapi.invoice.route.*;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
+import com.tcmp.tiapi.invoice.service.InvoiceNotificationCreationService;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
 import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
@@ -35,6 +36,8 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.finance.to}") private String uriFinanceTo;
 
   @Value("${invoice.route.ack-event-listener.from}") private String uriCreatedAckEventFrom;
+
+  @Value("${invoice.route.notification-invoice-creation.from}") private String uriNotificationInvoiceCreationFrom;
 
   @Bean
   public CreateInvoiceRouteBuilder createInvoiceRouter(
@@ -120,5 +123,19 @@ public class InvoiceConfiguration {
   @Bean
   public InvoiceRowValidator invoiceRowValidator() {
     return new InvoiceRowValidator();
+  }
+
+  @Bean
+  public NotificationInvoiceCreationRouteBuilder notificationInvoiceCreationRouteBuilder(
+    JaxbDataFormat jaxbDataFormatAckEventRequest,
+    InvoiceNotificationCreationService invoiceNotificationCreationService,
+    OperationalGatewayService operationalGatewayService
+  ) {
+    return new NotificationInvoiceCreationRouteBuilder(
+      jaxbDataFormatAckEventRequest,
+      invoiceNotificationCreationService,
+      operationalGatewayService,
+      uriNotificationInvoiceCreationFrom
+    );
   }
 }

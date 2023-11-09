@@ -2,6 +2,7 @@ package com.tcmp.tiapi.messaging.model.requests;
 
 import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
+import com.tcmp.tiapi.invoice.dto.ti.NotificationInvoiceCreationMessage;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 
@@ -20,7 +21,8 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({
   CreateDueInvoiceEventMessage.class,
-  FinanceAckMessage.class
+  FinanceAckMessage.class,
+  NotificationInvoiceCreationMessage.class
 })
 
 public class AckServiceRequest<T> {
@@ -39,7 +41,12 @@ public class AckServiceRequest<T> {
       type = FinanceAckMessage.class,
       namespace = TINamespace.CONTROL
     ),
+    @XmlElement(
+      name = TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_DETAILS_VALUE,
+      type = NotificationInvoiceCreationMessage.class,
+      namespace = TINamespace.CONTROL
+    ),
   })
-  private T body;
 
+  private T body;
 }

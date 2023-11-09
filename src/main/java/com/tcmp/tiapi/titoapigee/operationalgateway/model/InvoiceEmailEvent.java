@@ -9,7 +9,8 @@ public enum InvoiceEmailEvent {
   PROCESSED("Procesamiento"),
   FINANCED("Anticipo"),
   SETTLED("Vencimiento"),
-  CREDITED("Consumo crédito proveedor por descuento");
+  CREDITED("Consumo crédito proveedor por descuento"),
+  POSTED("Carga");
 
   private final String value;
 }
