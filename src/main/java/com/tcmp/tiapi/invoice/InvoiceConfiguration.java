@@ -36,6 +36,8 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.finance.to}") private String uriFinanceTo;
 
   @Value("${invoice.route.ack-event-listener.from}") private String uriCreatedAckEventFrom;
+  @Value("${invoice.route.ack-event-listener.to-finance}") private String uriToFinanceFlow;
+  @Value("${invoice.route.ack-event-listener.to-settle}") private String uriToSettleFlow;
 
   @Value("${invoice.route.notification-invoice-creation.from}") private String uriNotificationInvoiceCreationFrom;
 
@@ -94,13 +96,45 @@ public class InvoiceConfiguration {
   ) {
     return new InvoiceAckEventListenerRouteBuilder(
       jaxbDataFormatAckEventRequest,
+
+      uriCreatedAckEventFrom,
+      uriToFinanceFlow,
+      uriToSettleFlow
+    );
+  }
+
+  @Bean
+  public InvoiceFinanceResultFlowRouteBuilder invoiceFinanceResultFlowRouteBuilder(
+    InvoiceFinancingService invoiceFinancingService,
+    InvoiceSettlementService invoiceSettlementService,
+    CorporateLoanService corporateLoanService,
+    PaymentExecutionService paymentExecutionService,
+    OperationalGatewayService operationalGatewayService
+  ) {
+    return new InvoiceFinanceResultFlowRouteBuilder(
       invoiceFinancingService,
+      corporateLoanService,
+      paymentExecutionService,
+      operationalGatewayService,
+
+      uriToFinanceFlow
+    );
+  }
+
+  @Bean
+  public InvoiceSettleResultFlowBuilder invoiceSettleResultFlowBuilder(
+    InvoiceSettlementService invoiceSettlementService,
+    CorporateLoanService corporateLoanService,
+    PaymentExecutionService paymentExecutionService,
+    OperationalGatewayService operationalGatewayService
+  ) {
+    return new InvoiceSettleResultFlowBuilder(
       invoiceSettlementService,
       corporateLoanService,
       paymentExecutionService,
       operationalGatewayService,
 
-      uriCreatedAckEventFrom
+      uriToSettleFlow
     );
   }
 

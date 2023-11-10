@@ -59,7 +59,7 @@ public class InvoiceSettlementService {
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for seller " + customerMnemonic));
   }
 
-  public ProgramExtension findByProgrammeIdOrDefault(String programmeId) {
+  public ProgramExtension findProgrammeExtensionByIdOrDefault(String programmeId) {
     return programExtensionRepository.findByProgrammeId(programmeId)
       .orElse(ProgramExtension.builder()
         .programmeId(programmeId)
@@ -98,12 +98,11 @@ public class InvoiceSettlementService {
         .build())
       .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
       .effectiveDate(invoiceSettlementMessage.getPaymentValueDate())
-      .firstDueDate(invoiceSettlementMessage.getPaymentValueDate())
       .term(programExtension.getExtraFinancingDays())
       .termPeriodType(new TermPeriodType("D"))
       .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
-      .interestPayment(new InterestPayment("FIN", new GracePeriod("O", "001")))
-      .maturityForm("FIJ")
+      .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
+      .maturityForm("C99")
       .quotaMaturityCriteria("*NO")
       .references(List.of())
       .tax(Tax.builder()

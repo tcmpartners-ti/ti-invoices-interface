@@ -8,6 +8,8 @@ import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
+import com.tcmp.tiapi.program.model.ProgramExtension;
+import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.AmortizationPaymentPeriodType;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.CommercialTrade;
@@ -30,6 +32,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -37,6 +41,7 @@ import java.util.List;
 @Slf4j
 public class InvoiceFinancingService {
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
+  private final ProgramExtensionRepository programExtensionRepository;
   private final CustomerRepository customerRepository;
   private final AccountRepository accountRepository;
 
@@ -57,8 +62,18 @@ public class InvoiceFinancingService {
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for seller " + customerMnemonic));
   }
 
+  public ProgramExtension findByProgrammeIdOrDefault(String programmeId) {
+    return programExtensionRepository.findByProgrammeId(programmeId)
+      .orElse(ProgramExtension.builder()
+        .programmeId(programmeId)
+        .extraFinancingDays(0)
+        .requiresExtraFinancing(false)
+        .build());
+  }
+
   public DistributorCreditRequest buildDistributorCreditRequest(
     FinanceAckMessage invoiceFinanceAck,
+    ProgramExtension programExtension,
     Customer buyer,
     EncodedAccountParser buyerAccountParser
   ) {
@@ -77,9 +92,9 @@ public class InvoiceFinancingService {
         .form("N/C")
         .build())
       .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
-      .effectiveDate(invoiceFinanceAck.getReceivedOn()) // Consultar con Nas
+      .effectiveDate(invoiceFinanceAck.getStartDate())
       .firstDueDate(invoiceFinanceAck.getMaturityDate())
-      .term(0)
+      .term(calculateInvoiceFinancingCreditTerm(invoiceFinanceAck, programExtension))
       .termPeriodType(new TermPeriodType("D"))
       .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
       .interestPayment(new InterestPayment("FIN", new GracePeriod("O", "002")))
@@ -95,6 +110,14 @@ public class InvoiceFinancingService {
       .build();
   }
 
+  private int calculateInvoiceFinancingCreditTerm(FinanceAckMessage invoiceFinanceMessage, ProgramExtension programExtension) {
+    LocalDate startDate = LocalDate.parse(invoiceFinanceMessage.getStartDate());
+    LocalDate maturityDate = LocalDate.parse(invoiceFinanceMessage.getMaturityDate());
+    int extraFinancingDays = programExtension.getExtraFinancingDays();
+
+    return extraFinancingDays + (int) ChronoUnit.DAYS.between(startDate, maturityDate);
+  }
+
   public TransactionRequest buildBuyerToBglTransactionRequest(
     DistributorCreditResponse distributorCreditResponse,
     FinanceAckMessage invoiceFinanceMessage,
@@ -102,17 +125,12 @@ public class InvoiceFinancingService {
   ) {
     String invoiceReference = invoiceFinanceMessage.getTheirRef();
     String sellerName = invoiceFinanceMessage.getSellerName();
+    String concept = String.format("Descuento Factura %s %s", invoiceReference, sellerName);
     String currency = invoiceFinanceMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
     return TransactionRequest.from(
-      TransactionType.CLIENT_TO_BGL,
-      buyerAccountParser.getAccount(),
-      bglAccount,
-      String.format("Descuento Factura %s %s", invoiceReference, sellerName),
-      currency,
-      amount
-    );
+      TransactionType.CLIENT_TO_BGL, buyerAccountParser.getAccount(), bglAccount, concept, currency, amount);
   }
 
   public TransactionRequest buildBglToSellerTransactionRequest(
@@ -122,33 +140,29 @@ public class InvoiceFinancingService {
   ) {
     String invoiceReference = invoicePrepaymentMessage.getTheirRef();
     String buyerName = invoicePrepaymentMessage.getBuyerName();
+    String concept = String.format("Pago Factura %s %s", invoiceReference, buyerName);
     String currency = invoicePrepaymentMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
     return TransactionRequest.from(
-      TransactionType.BGL_TO_CLIENT,
-      bglAccount,
-      sellerAccount.getAccount(),
-      String.format("Pago Factura %s %s", invoiceReference, buyerName),
-      currency,
-      amount
-    );
+      TransactionType.BGL_TO_CLIENT, bglAccount, sellerAccount.getAccount(), concept, currency, amount);
   }
 
   public InvoiceEmailInfo buildInvoiceFinancingEmailInfo(
     FinanceAckMessage invoiceFinanceAck,
     Customer customer,
-    InvoiceEmailEvent event
+    InvoiceEmailEvent event,
+    BigDecimal amount
   ) {
     return InvoiceEmailInfo.builder()
       .customerMnemonic(invoiceFinanceAck.getSellerIdentifier())
       .customerEmail(customer.getAddress().getCustomerEmail().trim())
       .customerName(customer.getFullName().trim())
-      .date(invoiceFinanceAck.getReceivedOn())
+      .date(invoiceFinanceAck.getStartDate())
       .action(event.getValue())
       .invoiceCurrency(invoiceFinanceAck.getFinanceDealCurrency())
       .invoiceNumber(invoiceFinanceAck.getTheirRef())
-      .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
+      .amount(amount)
       .build();
   }
 
