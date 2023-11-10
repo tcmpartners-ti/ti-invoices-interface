@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.tcmp.tiapi.shared.serializer.JsonMoneySerializer;
 import lombok.Builder;
@@ -15,6 +16,7 @@ public record DistributorCreditRequest(
   @JsonSerialize(using = JsonMoneySerializer.class)
   BigDecimal amount,
   String effectiveDate,
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   String firstDueDate,
   Integer term,
   TermPeriodType termPeriodType,
