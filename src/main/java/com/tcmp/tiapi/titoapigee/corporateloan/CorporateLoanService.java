@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,6 @@ public class CorporateLoanService {
   private final HeaderSigner encryptedBodyRequestHeaderSigner;
 
   @Value("${bp.api-gee.services.corporate-loan.user}") private String userHeader;
-  @Value("${bp.api-gee.services.corporate-loan.operation-token}") private String operationTokenHeader;
 
   public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest) {
     ApiGeeBaseRequest<DistributorCreditRequest> body = ApiGeeBaseRequest.<DistributorCreditRequest>builder()
@@ -31,11 +31,18 @@ public class CorporateLoanService {
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
     // Add missing headers for this service
     headers.put("X-User", userHeader);
-    headers.put("X-Operation-Token", operationTokenHeader);
+    headers.put("X-Operation-Token", buildOperationId());
     headers.put("X-Operation-Id", "C/D");
 
     try {
-      return corporateLoanClient.createCredit(headers, body);
+      DistributorCreditResponse credit = corporateLoanClient.createCredit(headers, body);
+      log.info(
+        "Credit created. Amount $ {}. Disbursement Amount $ {}.",
+        distributorCreditRequest.amount(),
+        credit.data().disbursementAmount()
+      );
+
+      return credit;
     } catch (FeignException e) {
       log.error("Could not create credit.");
       e.responseBody().ifPresent(errorBytes -> {
@@ -45,5 +52,11 @@ public class CorporateLoanService {
 
       throw e;
     }
+  }
+
+  private String buildOperationId() {
+    return UUID.randomUUID().toString()
+      .replace("-", "")
+      .substring(0, 20);
   }
 }
