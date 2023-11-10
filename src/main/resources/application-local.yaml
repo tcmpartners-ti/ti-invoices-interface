@@ -65,12 +65,14 @@ invoice:
       max-retries: 3
       retry-delay: 1000 # ms
 
-      from: "activemq:queue:${ti.queue.reply.name}"
+      #from: "activemq:queue:${ti.queue.reply.name}"
+      from: "direct:ignoreEventQueue"
       to: "direct:sendNotificationToApiGee"
 
     ack-event-listener:
-      #from: "activemq:queue:${ti.ticc-queue.sub.name}"
-      from: "direct:mockAckQueue"
+      from: "activemq:queue:${ti.ticc-queue.sub.name}"
+      to-finance: "direct:startFinanceFlow"
+      to-settle:  "direct:startSettleFlow"
 
     finance:
       from: "direct:financeInvoiceInTI"
@@ -78,5 +80,3 @@ invoice:
 
     notification-invoice-creation:
       from: "activemq:queue:${ti.fti-queue.sub.name}"
-      #from: "direct:mockti2"
-

@@ -24,33 +24,25 @@ spring:
 bp:
   service:
     operational-gateway:
-      template-id: "202300701"
-      url: "https://desarrollo-portalpagos.pichincha.com/#/home/electronic/file/https://desarrollo-portalpagos.pichincha.com"
-      img-background: "https://desarrollo-portalpagos.pichincha.com/assets/email/background.png"
-      img-notification: "https://desarrollo-portalpagos.pichincha.com/assets/email/notification.jpg"
+      template-id: "305003729"
+      business-banking-url: "https://bancaempresas.pichincha.com"
+    payment-execution:
+      bgl-account: "259090337001"
 
   api-gee:
-    url:
-      dev: "https://api-dev.pichincha.com"
-      test: "https://api-test.pichincha.com"
-
     headers.device: "TradeInnovationInterfaceQA"
+
+    credentials:
+      app-id: ${API_GEE_APP_ID}
+      api-key: ${API_GEE_KEY}
+      api-secret: ${API_GEE_SECRET}
 
     services:
       business-banking:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/business-banking/v1"
       payment-execution:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/payment-execution/v1"
       operational-gateway:
-        app-id: ${API_GEE_APP_ID}
-        api-key: ${API_GEE_KEY}
-        api-secret: ${API_GEE_SECRET}
         url: "${bp.api-gee.url.test}/operational-gateway/v2"
 
 invoice:
@@ -69,6 +61,11 @@ invoice:
 
       from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
+
+    ack-event-listener:
+      from: "activemq:queue:${ti.ticc-queue.sub.name}"
+      to-finance: "direct:startFinanceFlow"
+      to-settle:  "direct:startSettleFlow"
 
     finance:
       from: "direct:financeInvoiceInTI"

@@ -68,6 +68,8 @@ invoice:
 
     ack-event-listener:
       from: "direct:mockAckQueue"
+      to-finance: "direct:startFinanceFlow"
+      to-settle:  "direct:startSettleFlow"
 
     finance:
       from: "direct:financeInvoiceInTI"
