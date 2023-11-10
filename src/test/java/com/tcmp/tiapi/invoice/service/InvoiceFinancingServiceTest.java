@@ -11,6 +11,8 @@ import com.tcmp.tiapi.invoice.dto.ti.financeack.FinancePaymentDetails;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
+import com.tcmp.tiapi.program.model.ProgramExtension;
+import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Data;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +35,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class InvoiceFinancingServiceTest {
   @Mock private ProductMasterExtensionRepository productMasterExtensionRepository;
+  @Mock private ProgramExtensionRepository programExtensionRepository;
   @Mock private CustomerRepository customerRepository;
   @Mock private AccountRepository accountRepository;
 
@@ -41,6 +45,7 @@ class InvoiceFinancingServiceTest {
   void setUp() {
     invoiceFinancingService = new InvoiceFinancingService(
       productMasterExtensionRepository,
+      programExtensionRepository,
       customerRepository,
       accountRepository
     );
@@ -113,8 +118,13 @@ class InvoiceFinancingServiceTest {
   void buildDistributorCreditRequest_itShouldBuildRequest() {
     var invoiceFinanceMessage = FinanceAckMessage.builder()
       .financeDealAmount("100")
-      .receivedOn("2023-11-06")
+      .startDate("2023-11-06")
       .maturityDate("2023-11-30")
+      .build();
+
+    var programExtension = ProgramExtension.builder()
+      .requiresExtraFinancing(true)
+      .extraFinancingDays(6)
       .build();
 
     var buyer = Customer.builder()
@@ -131,11 +141,13 @@ class InvoiceFinancingServiceTest {
     var buyerAccountParser = new EncodedAccountParser("CC2777371930");
 
     var creditRequest = invoiceFinancingService.buildDistributorCreditRequest(
-      invoiceFinanceMessage, buyer, buyerAccountParser);
+      invoiceFinanceMessage, programExtension, buyer, buyerAccountParser);
 
     var expectedMnemonic = "1722466420002";
     var expectedName = "David";
     var expectedBankCode1 = "0003";
+    var expectedTerm = 30;
+    var expectedInstallmentNumber = "002";
 
     assertNotNull(creditRequest);
     assertNotNull(creditRequest.customer());
@@ -145,7 +157,8 @@ class InvoiceFinancingServiceTest {
     assertNotNull(creditRequest.disbursement());
     assertNotNull(creditRequest.effectiveDate());
     assertNotNull(creditRequest.firstDueDate());
-    assertEquals("002", creditRequest.interestPayment().gracePeriod().installmentNumber());
+    assertEquals(expectedTerm, creditRequest.term());
+    assertEquals(expectedInstallmentNumber, creditRequest.interestPayment().gracePeriod().installmentNumber());
   }
 
   @Test
@@ -221,7 +234,7 @@ class InvoiceFinancingServiceTest {
       .build();
 
     var actualRequest = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-      financeAck, customer, InvoiceEmailEvent.PROCESSED);
+      financeAck, customer, InvoiceEmailEvent.PROCESSED, BigDecimal.TEN);
 
     String expectedName = "David Reyes";
     assertNotNull(actualRequest);

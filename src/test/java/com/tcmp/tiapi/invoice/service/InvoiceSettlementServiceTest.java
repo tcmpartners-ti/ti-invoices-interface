@@ -147,7 +147,7 @@ class InvoiceSettlementServiceTest {
     when(programExtensionRepository.findByProgrammeId(anyString()))
       .thenReturn(Optional.empty());
 
-    var actualProgramExtension = invoiceSettlementService.findByProgrammeIdOrDefault("");
+    var actualProgramExtension = invoiceSettlementService.findProgrammeExtensionByIdOrDefault("");
 
     assertEquals("", actualProgramExtension.getProgrammeId());
     assertEquals(0, actualProgramExtension.getExtraFinancingDays());
@@ -163,7 +163,7 @@ class InvoiceSettlementServiceTest {
         .extraFinancingDays(30)
         .build()));
 
-    var actualProgramExtension = invoiceSettlementService.findByProgrammeIdOrDefault("Programme123");
+    var actualProgramExtension = invoiceSettlementService.findProgrammeExtensionByIdOrDefault("Programme123");
 
     assertEquals("Programme123", actualProgramExtension.getProgrammeId());
     assertEquals(30, actualProgramExtension.getExtraFinancingDays());
@@ -261,7 +261,7 @@ class InvoiceSettlementServiceTest {
     assertEquals(expectedBankCode1, creditRequest.customer().documentType());
     assertNotNull(creditRequest.disbursement());
     assertNotNull(creditRequest.effectiveDate());
-    assertNotNull(creditRequest.firstDueDate());
+    assertNull(creditRequest.firstDueDate());
     assertEquals("001", creditRequest.interestPayment().gracePeriod().installmentNumber());
     assertEquals(30, creditRequest.term());
   }
