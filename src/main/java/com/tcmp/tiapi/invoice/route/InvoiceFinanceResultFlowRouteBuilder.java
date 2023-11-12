@@ -46,6 +46,8 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     if (serviceRequest == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     FinanceAckMessage financeMessage = serviceRequest.getBody();
     String invoiceReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
+    BigDecimal financeDealAmountInCents = new BigDecimal(financeMessage.getFinanceDealAmount());
+    BigDecimal financeDealAmount = MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
 
     Customer buyer = invoiceFinancingService.findCustomerByMnemonic(financeMessage.getBuyerIdentifier());
     Customer seller = invoiceFinancingService.findCustomerByMnemonic(financeMessage.getSellerIdentifier());
@@ -56,10 +58,8 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     EncodedAccountParser buyerAccountParser = new EncodedAccountParser(invoiceExtension.getFinanceAccount());
     EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
 
-    BigDecimal financeDealAmountInCents = new BigDecimal(financeMessage.getFinanceDealAmount());
-    BigDecimal financeDealAmountInDollars = MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
     InvoiceEmailInfo financedInvoiceInfo = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-      financeMessage, seller, InvoiceEmailEvent.FINANCED, financeDealAmountInDollars);
+      financeMessage, seller, InvoiceEmailEvent.FINANCED, financeDealAmount);
     operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
 
     DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
@@ -80,7 +80,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     }
 
     InvoiceEmailInfo processedInvoiceInfo = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-      financeMessage, seller, InvoiceEmailEvent.PROCESSED, financeDealAmountInDollars);
+      financeMessage, seller, InvoiceEmailEvent.PROCESSED, financeDealAmount);
     operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
   }
 
