@@ -28,7 +28,7 @@ public class AddressId implements Serializable {
 
   @Basic(optional = false)
   @Column(name = "ADDRTYPE")
-  private Integer addressType;
+  private Integer type;
 
   @Basic(optional = false)
   @Column(name = "SEQUENCE")
@@ -41,12 +41,12 @@ public class AddressId implements Serializable {
     AddressId entity = (AddressId) o;
     return Objects.equals(this.customerMnemonic, entity.customerMnemonic)
            && Objects.equals(this.sourceBankingBusinessCode, entity.sourceBankingBusinessCode)
-           && Objects.equals(this.addressType, entity.addressType)
+           && Objects.equals(this.type, entity.type)
            && Objects.equals(this.sequence, entity.sequence);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sourceBankingBusinessCode, customerMnemonic, addressType, sequence);
+    return Objects.hash(sourceBankingBusinessCode, customerMnemonic, type, sequence);
   }
 }

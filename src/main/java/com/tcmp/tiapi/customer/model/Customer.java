@@ -6,13 +6,14 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "GFPF")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity
-@Table(name = "GFPF")
+@ToString
 public class Customer {
   @EmbeddedId
   private CustomerId id;
