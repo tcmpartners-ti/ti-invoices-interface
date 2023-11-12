@@ -4,7 +4,6 @@ import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.DistributorCreditRequ
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
-import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
