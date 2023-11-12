@@ -13,8 +13,10 @@ import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
+import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
@@ -36,7 +38,12 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
 
   @Override
   public void configure() {
-    from(uriFrom).routeId("invoiceFinanceResultFlow")
+    onException(OperationalGatewayException.class, CreditCreationException.class, PaymentExecutionException.class)
+      .handled(true)
+      .to("log:myLogger?level=ERROR&showCaughtException=true&showStackTrace=false")
+      .end();
+
+    from(uriFrom).routeId("invoiceSettleResultFlow")
       .log("Started invoice settle flow.")
       .process().body(AckServiceRequest.class, this::startInvoiceSettlementFlow)
       .log("Completed invoice settle flow.")
@@ -46,7 +53,8 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
   private void startInvoiceSettlementFlow(AckServiceRequest<CreateDueInvoiceEventMessage> serviceResponse) {
     if (serviceResponse == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     CreateDueInvoiceEventMessage message = serviceResponse.getBody();
-    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(new BigDecimal(message.getPaymentAmount()));
+    BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
+    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
 
     Customer buyer = invoiceSettlementService.findCustomerByMnemonic(message.getBuyerIdentifier());
     Customer seller = invoiceSettlementService.findCustomerByMnemonic(message.getSellerIdentifier());
@@ -58,18 +66,23 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
     boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;
     boolean hasBeenFinanced = invoiceSettlementService.invoiceHasLinkedFinanceEvent(invoice);
 
-    if (hasExtraFinancingDays) {
-      if (hasBeenFinanced) {
-        InvoiceEmailInfo creditedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-          message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
-        operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo);
-        return; // In this case, end flow, we only notify credit to buyer
-      }
-
-      InvoiceEmailInfo settledInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-        message, seller, InvoiceEmailEvent.SETTLED, paymentAmount);
-      operationalGatewayService.sendNotificationRequest(settledInvoiceInfo);
+    // For Mvp, we ignore invoices with no extra financing days.
+    if (!hasExtraFinancingDays) {
+      log.info("Programe has no extra financing days, flow ended.");
+      return;
     }
+
+    // Second settlement case: end flow, we only notify credit to buyer.
+    if (hasBeenFinanced) {
+      InvoiceEmailInfo creditedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+        message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
+      operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo);
+      return;
+    }
+
+    InvoiceEmailInfo settledInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+      message, seller, InvoiceEmailEvent.SETTLED, paymentAmount);
+    operationalGatewayService.sendNotificationRequest(settledInvoiceInfo);
 
     DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
       invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
@@ -77,24 +90,23 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
 
     boolean hasBeenCredited = creditResponseError != null && creditResponseError.hasNoError();
     if (!hasBeenCredited) {
-      log.error("Could not continue settlement flow, credit could not be created.");
+      log.error("Could not complete settlement flow, credit creation failed.");
       return;
     }
 
-    if (hasExtraFinancingDays) { // We don't care if invoice has been financed or not
-      InvoiceEmailInfo creditedEmailInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-        message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
-      operationalGatewayService.sendNotificationRequest(creditedEmailInfo);
-    }
-
-    if (hasBeenFinanced) return;
+    // We don't care if invoice has been financed or not
+    InvoiceEmailInfo creditedEmailInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+      message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
+    operationalGatewayService.sendNotificationRequest(creditedEmailInfo);
 
     boolean isBglToSellerTransactionOk = transferPaymentAmountToSeller(message, buyer);
-    if (hasExtraFinancingDays && isBglToSellerTransactionOk) {
-      InvoiceEmailInfo processedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-        message, seller, InvoiceEmailEvent.PROCESSED, paymentAmount);
-      operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
+    if (!isBglToSellerTransactionOk) {
+      log.error("Could not complete settlement flow, bgl to seller transaction failed.");
     }
+
+    InvoiceEmailInfo processedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+      message, seller, InvoiceEmailEvent.PROCESSED, paymentAmount);
+    operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
   }
 
   private boolean transferPaymentAmountToSeller(CreateDueInvoiceEventMessage message, Customer buyer) {
