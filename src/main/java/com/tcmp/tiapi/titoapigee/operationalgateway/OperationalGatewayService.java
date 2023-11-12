@@ -4,6 +4,7 @@ import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.request.*;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationsResponse;
+import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
@@ -62,7 +63,7 @@ public class OperationalGatewayService {
       Channel channel = result.data().get(0).recipient().channel();
       log.info("Successfully sent notification via {} to: {}", channel.description(), channel.value());
     } catch (FeignException e) {
-      log.error("Could not send email. {}", e.getMessage());
+      throw new OperationalGatewayException("Could not send email notification.");
     }
   }
 

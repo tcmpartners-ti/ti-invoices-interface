@@ -27,7 +27,7 @@ public class PaymentExecutionService {
       return paymentExecutionClient.postPayment(headers, request);
     } catch (FeignException e) {
       log.error("Could not execute transaction. {}", e.getMessage());
-      throw new PaymentExecutionException("Could not execute transaction.");
+      throw new PaymentExecutionException("Could not create transaction.");
     }
   }
 }

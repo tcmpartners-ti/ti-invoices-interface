@@ -2,7 +2,9 @@ package com.tcmp.tiapi.titoapigee.corporateloan;
 
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.DistributorCreditRequest;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
+import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
+import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -44,13 +46,12 @@ public class CorporateLoanService {
 
       return credit;
     } catch (FeignException e) {
-      log.error("Could not create credit.");
       e.responseBody().ifPresent(errorBytes -> {
         String error = new String(errorBytes.array(), StandardCharsets.UTF_8);
-        log.info("Body={}", error);
+        log.error("Body={}", error);
       });
 
-      throw e;
+      throw new CreditCreationException("Credit creation failed.");
     }
   }
 
