@@ -3,6 +3,7 @@ package com.tcmp.tiapi.shared.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
 import com.tcmp.tiapi.shared.dto.response.error.ErrorDetails;
 import com.tcmp.tiapi.shared.dto.response.error.SimpleHttpErrorMessage;
 import com.tcmp.tiapi.shared.dto.response.error.ValidationHttpErrorMessage;
@@ -99,5 +100,16 @@ public class GlobalHttpExceptionHandler {
 
     return "The provided fields have data type inconsistencies.";
   }
-}
 
+  @ExceptionHandler(FieldsInconsistenciesException.class)
+  public ResponseEntity<ValidationHttpErrorMessage> handleFieldsInconsistenciesException(FieldsInconsistenciesException e) {
+    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity.status(badRequest)
+      .body(new ValidationHttpErrorMessage(
+        badRequest.value(),
+        "Fields inconsistencies error.",
+        e.getErrorDetails()
+      ));
+  }
+}

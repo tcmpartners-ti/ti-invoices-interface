@@ -8,8 +8,10 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
+import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -55,12 +58,54 @@ public class InvoiceService {
   }
 
   public void createSingleInvoiceInTi(InvoiceCreationDTO invoiceDTO) {
+    if (!areBuyerMnemonicFieldsEquals(invoiceDTO)) {
+      throw new FieldsInconsistenciesException("The 'buyer' fields do not match.", List.of(
+        "context.customer",
+        "anchorParty",
+        "buyer"
+      ));
+    }
+
+    if (!areInvoiceReferenceFieldsEquals(invoiceDTO)) {
+      throw new FieldsInconsistenciesException("The 'invoice number' fields do not match.", List.of(
+        "context.theirReference",
+        "invoiceNumber"
+      ));
+    }
+
+    if (!areInvoiceMonetaryFieldsEquals(invoiceDTO)) {
+      throw new FieldsInconsistenciesException("The 'amount and currency' fields do not match.", List.of(
+        "faceValue",
+        "outstandingAmount"
+      ));
+    }
+
     CreateInvoiceEventMessage createInvoiceEventMessage = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
 
-    producerTemplate.sendBody(
-      invoiceConfiguration.getUriCreateFrom(),
-      createInvoiceEventMessage
-    );
+    producerTemplate.sendBody(invoiceConfiguration.getUriCreateFrom(), createInvoiceEventMessage);
+  }
+
+  private boolean areBuyerMnemonicFieldsEquals(InvoiceCreationDTO invoiceDTO) {
+    String customer = invoiceDTO.getContext().getCustomer();
+    String anchorParty = invoiceDTO.getAnchorParty();
+    String buyerMnemonic = invoiceDTO.getBuyer();
+
+    return customer.equals(anchorParty) && anchorParty.equals(buyerMnemonic);
+  }
+
+  private boolean areInvoiceReferenceFieldsEquals(InvoiceCreationDTO invoiceDTO) {
+    String theirReference = invoiceDTO.getContext().getTheirReference();
+    String invoiceNumber = invoiceDTO.getInvoiceNumber();
+
+    return theirReference.equals(invoiceNumber);
+  }
+
+  private boolean areInvoiceMonetaryFieldsEquals(InvoiceCreationDTO invoiceDTO) {
+    CurrencyAmountDTO faceValue = invoiceDTO.getFaceValue();
+    CurrencyAmountDTO outstandingValue = invoiceDTO.getOutstandingAmount();
+
+    return faceValue.getAmount().compareTo(outstandingValue.getAmount()) == 0
+           && faceValue.getCurrency().equals(outstandingValue.getCurrency());
   }
 
   public void createMultipleInvoicesInTi(MultipartFile invoicesFile, String batchId) {
