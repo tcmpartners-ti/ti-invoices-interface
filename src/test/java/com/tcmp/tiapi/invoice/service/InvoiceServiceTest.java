@@ -2,6 +2,7 @@ package com.tcmp.tiapi.invoice.service;
 
 import com.tcmp.tiapi.invoice.InvoiceConfiguration;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
+import com.tcmp.tiapi.invoice.dto.request.InvoiceContextDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
@@ -9,6 +10,7 @@ import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
+import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.apache.camel.ProducerTemplate;
@@ -26,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -110,7 +113,21 @@ class InvoiceServiceTest {
   @Test
   void createSingleInvoiceInTi_itShouldInvokeCamelRouteWhenCreatingInvoice() {
     InvoiceCreationDTO invoiceCreationDTO = InvoiceCreationDTO.builder()
+      .context(InvoiceContextDTO.builder()
+        .theirReference("INV123")
+        .customer("C123")
+        .build())
+      .anchorParty("C123")
+      .buyer("C123")
       .invoiceNumber("INV123")
+      .faceValue(CurrencyAmountDTO.builder()
+        .amount(BigDecimal.TEN)
+        .currency("USD")
+        .build())
+      .outstandingAmount(CurrencyAmountDTO.builder()
+        .amount(BigDecimal.TEN)
+        .currency("USD")
+        .build())
       .build();
 
     String expectedRoute = "direct:mockCreate";
