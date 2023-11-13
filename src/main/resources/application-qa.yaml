@@ -44,6 +44,10 @@ bp:
         url: "${bp.api-gee.url.test}/payment-execution/v1"
       operational-gateway:
         url: "${bp.api-gee.url.test}/operational-gateway/v2"
+      corporate-loan:
+        user: ${CL_USER}
+        operation-token: ${CL_OP_TOKEN}
+        url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
 
 invoice:
   route:
@@ -63,7 +67,8 @@ invoice:
       to: "direct:sendNotificationToApiGee"
 
     ack-event-listener:
-      from: "activemq:queue:${ti.ticc-queue.sub.name}"
+      #from: "activemq:queue:${ti.ticc-queue.sub.name}"
+      from: "direct:mockAckQueue"
       to-finance: "direct:startFinanceFlow"
       to-settle:  "direct:startSettleFlow"
 
