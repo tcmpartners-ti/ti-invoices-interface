@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.titoapigee.operationalgateway;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.request.*;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
@@ -22,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class OperationalGatewayService {
+  private final ObjectMapper objectMapper;
   private final HeaderSigner plainBodyRequestHeaderSigner;
   private final OperationalGatewayClient operationalGatewayClient;
 
@@ -52,22 +55,22 @@ public class OperationalGatewayService {
         .build())
       .build();
 
-    ApiGeeBaseRequest<NotificationsRequest> body = ApiGeeBaseRequest.<NotificationsRequest>builder()
+    ApiGeeBaseRequest<NotificationsRequest> request = ApiGeeBaseRequest.<NotificationsRequest>builder()
       .data(notificationsRequest)
       .build();
-
-    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(body);
+    Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     try {
-      NotificationsResponse result = operationalGatewayClient.sendEmailNotification(headers, body);
-      Channel channel = result.data().get(0).recipient().channel();
+      NotificationsResponse response = operationalGatewayClient.sendEmailNotification(headers, request);
+      Channel channel = response.data().get(0).recipient().channel();
       log.info("Successfully sent notification via {} to: {}", channel.description(), channel.value());
+      tryRequestAndResponseLogging(request, response);
     } catch (FeignException e) {
       throw new OperationalGatewayException("Could not send email notification.");
     }
   }
 
-  public List<TemplateField> buildInvoiceEventEmailTemplate(
+  private List<TemplateField> buildInvoiceEventEmailTemplate(
     String customerMnemonic,
     String customerName,
     String date,
@@ -90,5 +93,14 @@ public class OperationalGatewayService {
       new TemplateField("action", message),
       new TemplateField("urlBanca", businessBankingUrl)
     );
+  }
+
+  private void tryRequestAndResponseLogging(ApiGeeBaseRequest<?> request, Object response) {
+    try {
+      log.info("Request={}", objectMapper.writeValueAsString(request));
+      log.info("Response={}", objectMapper.writeValueAsString(response));
+    } catch (JsonProcessingException e) {
+      log.error("Could not log request and response json.");
+    }
   }
 }

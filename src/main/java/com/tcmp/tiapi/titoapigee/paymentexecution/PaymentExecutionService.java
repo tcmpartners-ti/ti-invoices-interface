@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.titoapigee.paymentexecution;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionRequest;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
@@ -16,6 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentExecutionService {
+  private final ObjectMapper objectMapper;
   private final HeaderSigner plainBodyRequestHeaderSigner;
   private final PaymentExecutionClient paymentExecutionClient;
 
@@ -24,10 +27,22 @@ public class PaymentExecutionService {
     Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     try {
-      return paymentExecutionClient.postPayment(headers, request);
+      BusinessAccountTransfersResponse response = paymentExecutionClient.postPayment(headers, request);
+      tryRequestAndResponseLogging(request, response);
+
+      return response;
     } catch (FeignException e) {
       log.error("Could not execute transaction. {}", e.getMessage());
       throw new PaymentExecutionException("Could not create transaction.");
+    }
+  }
+
+  private void tryRequestAndResponseLogging(ApiGeeBaseRequest<?> request, Object response) {
+    try {
+      log.info("Request={}", objectMapper.writeValueAsString(request));
+      log.info("Response={}", objectMapper.writeValueAsString(response));
+    } catch (JsonProcessingException e) {
+      log.error("Could not log request and response json.");
     }
   }
 }
