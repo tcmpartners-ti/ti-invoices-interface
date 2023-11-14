@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.titoapigee.operationalgateway;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationInfo;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OperationalGatewayServiceTest {
+  @Mock ObjectMapper objectMapper;
   @Mock private HeaderSigner operationalGatewayHeaderSigner;
   @Mock private OperationalGatewayClient operationalGatewayClient;
 
@@ -28,6 +30,7 @@ class OperationalGatewayServiceTest {
   @BeforeEach
   void setUo() {
     testedOperationalGatewayService = new OperationalGatewayService(
+      objectMapper,
       operationalGatewayHeaderSigner,
       operationalGatewayClient
     );
