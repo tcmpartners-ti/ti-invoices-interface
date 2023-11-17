@@ -31,14 +31,14 @@ public class BusinessBankingService {
   private final BusinessBankingClient businessBankingClient;
   private final BusinessBankingMapper businessBankingMapper;
 
-  public void sendInvoiceEventResult(
+  public void notifyInvoiceEventResult(
     OperationalGatewayProcessCode processCode,
     ServiceResponse serviceResponse,
     InvoiceEventInfo invoice
   ) {
     OperationalGatewayRequestPayload payload = businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
 
-    ApiGeeBaseRequest<OperationalGatewayRequest> body = ApiGeeBaseRequest.<OperationalGatewayRequest>builder()
+    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body = ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
       .data(OperationalGatewayRequest.builder()
         .referenceData(ReferenceData.builder()
           .provider(REQUEST_PROVIDER)
@@ -51,9 +51,30 @@ public class BusinessBankingService {
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
+    tryEventNotification(headers, body);
+  }
+
+  public void notifyEvent(OperationalGatewayProcessCode processCode,  Object payload) {
+    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body = ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
+      .data(OperationalGatewayRequest.builder()
+        .referenceData(ReferenceData.builder()
+          .provider(REQUEST_PROVIDER)
+          .correlatedMessageId(UUID.randomUUID().toString())
+          .processCode(ProcessCode.of(processCode))
+          .build())
+        .payload(payload)
+        .build())
+      .build();
+
+    Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
+
+    tryEventNotification(headers, body);
+  }
+
+  private void tryEventNotification(Map<String, String> headers, ApiGeeBaseRequest<OperationalGatewayRequest<?>> body) {
     try {
-      businessBankingClient.sendInvoiceEventResult(headers, body);
-      log.info("Invoice creation notified successfully");
+      businessBankingClient.notifyEvent(headers, body);
+      log.info("Event notified successfully");
     } catch (FeignException e) {
       List<Integer> unrecoverableResponseCodes = List.of(
         HttpStatus.GATEWAY_TIMEOUT.value(),

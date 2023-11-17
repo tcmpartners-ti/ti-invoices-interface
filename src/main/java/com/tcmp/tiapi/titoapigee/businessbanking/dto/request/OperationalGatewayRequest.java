@@ -3,9 +3,9 @@ package com.tcmp.tiapi.titoapigee.businessbanking.dto.request;
 import lombok.Builder;
 
 @Builder
-public record OperationalGatewayRequest(
+public record OperationalGatewayRequest<T>(
   ReferenceData referenceData,
-  OperationalGatewayRequestPayload payload
+  T payload
 ) {
 
 }
