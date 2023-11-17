@@ -29,8 +29,10 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
       .choice()
         .when(operationXpath.isEqualTo(TIOperation.DUE_INVOICE_VALUE))
           .to(toSettleFlow)
-        .when(operationXpath.isEqualTo(TIOperation.FINANCE_ACK_INVOICE_VALUE))
-          .to(toFinanceFlow)
+        // For MVP, we don't handle this event.
+         .when(operationXpath.isEqualTo(TIOperation.FINANCE_ACK_INVOICE_VALUE))
+            .process().body(AckServiceRequest.class, this::logUnhandledOperation)
+           .log(toFinanceFlow)
         .otherwise()
           .process().body(AckServiceRequest.class, this::logUnhandledOperation)
         .endChoice()
