@@ -33,6 +33,7 @@ public class ProgramController {
 
   @GetMapping(path = "{programId}/sellers", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get a program's sellers by its identifier")
+  @Parameter(name = "programId", description = "Program Id", in = ParameterIn.PATH, example = "IDEAL01")
   @Parameter(name = "page", description = "Page (0 based).", in = ParameterIn.QUERY, example = "0")
   @Parameter(name = "size", description = "Page size (items per page).", in = ParameterIn.QUERY, example = "10")
   public PaginatedResult<CounterPartyDTO> getProgramSellersById(
