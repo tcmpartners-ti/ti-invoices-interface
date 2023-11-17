@@ -41,7 +41,11 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
   }
 
   private void logUnhandledOperation(AckServiceRequest<?> request) {
-    String operation = request.getHeader().getOperation();
-    log.error("[Unhandled Operation]: {}", operation);
+    if (request != null && request.getHeader() != null) {
+      String operation = request.getHeader().getOperation();
+      log.error("[Unhandled Operation]: {}", operation);
+    } else {
+      log.error("[Unhandled Operation]: Received null or invalid AckServiceRequest");
+    }
   }
 }

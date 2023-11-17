@@ -1,33 +1,39 @@
 package com.tcmp.tiapi.invoice.route;
 
+import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import org.apache.camel.EndpointInject;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RoutesBuilder;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @ExtendWith(MockitoExtension.class)
 class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
   private static final String URI_FROM = "direct:mockActiveMqAck";
-  private static final String URI_TO_FINANCE = "direct:startFinanceFlow";
-  private static final String URI_TO_SETTLE = "direct:startSettleFlow";
+  private static final String URI_TO_FINANCE = "mock:startFinanceFlow";
+  private static final String URI_TO_SETTLE = "mock:startSettleFlow";
 
-  // Descomenta esto y borra este comentario
-  // @EndpointInject(URI_FROM) ProducerTemplate from;
+
+  @EndpointInject(URI_FROM) ProducerTemplate from;
+  @EndpointInject(URI_TO_SETTLE)
+  private MockEndpoint mockToSettleFlow;
+
+  @EndpointInject(URI_TO_FINANCE)
+  private MockEndpoint mockToFinanceFlow;
 
   @Override
   protected RoutesBuilder createRouteBuilder() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
-    var jaxbDataFormat = new JaxbDataFormat(jaxbContext);
 
     return new InvoiceAckEventListenerRouteBuilder(
-      jaxbDataFormat,
+      new JaxbDataFormat(jaxbContext),
 
       URI_FROM,
       URI_TO_FINANCE,
@@ -35,11 +41,46 @@ class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
     );
   }
 
-  // Puedes borrar esta prueba, solo es para que no me salten alertas.
+   @Test
+  void itShouldRouteToSettleFlow() throws Exception {
+
+    mockToSettleFlow.expectedMessageCount(1);
+    mockToFinanceFlow.expectedMessageCount(0);
+
+    String body = buildMockMessage(TIOperation.DUE_INVOICE_VALUE);
+
+    from.sendBody(URI_FROM, body);
+
+    mockToSettleFlow.assertIsSatisfied();
+    mockToFinanceFlow.assertIsSatisfied();
+  }
+
   @Test
-  void test() {
-    assertNotNull(buildMockMessage("OPERATION1"));
-    assertNotNull(buildMockMessage("OPERATION2"));
+  void itShouldRouteToFinanceFlow() throws Exception {
+
+    mockToSettleFlow.expectedMessageCount(0);
+    mockToFinanceFlow.expectedMessageCount(1);
+
+    String body = buildMockMessage(TIOperation.FINANCE_ACK_INVOICE_VALUE);
+
+    from.sendBody(URI_FROM, body);
+
+    mockToSettleFlow.assertIsSatisfied();
+    mockToFinanceFlow.assertIsSatisfied();
+  }
+
+  @Test
+  void  itShouldRouteToUnhandledOperation() throws Exception {
+
+    mockToSettleFlow.expectedMessageCount(0);
+    mockToFinanceFlow.expectedMessageCount(0);
+
+    String body = buildMockMessage(TIOperation.CREATE_INVOICE_VALUE);
+
+    from.sendBody(URI_FROM, body);
+
+    mockToSettleFlow.assertIsSatisfied();
+    mockToFinanceFlow.assertIsSatisfied();
   }
 
   private String buildMockMessage(String operation) {
