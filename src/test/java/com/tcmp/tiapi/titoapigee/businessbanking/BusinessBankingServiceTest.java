@@ -36,7 +36,7 @@ class BusinessBankingServiceTest {
   @Mock private BusinessBankingMapper businessBankingMapper;
 
   @Captor private ArgumentCaptor<Map<String, String>> headersArgumentCaptor;
-  @Captor private ArgumentCaptor<ApiGeeBaseRequest<OperationalGatewayRequest>> bodyArgumentCaptor;
+  @Captor private ArgumentCaptor<ApiGeeBaseRequest<OperationalGatewayRequest<?>>> bodyArgumentCaptor;
 
   private BusinessBankingService testedService;
 
@@ -51,16 +51,16 @@ class BusinessBankingServiceTest {
 
   @Test
   void sendInvoiceEventResult_itShouldNotifyInvoiceEvent() {
-    var processCode = OperationalGatewayProcessCode.INVOICE_CREATION;
+    var processCode = OperationalGatewayProcessCode.INVOICE_SETTLEMENT;
     var serviceResponse = ServiceResponse.builder().build();
     var invoiceEventInfo = InvoiceEventInfo.builder().build();
 
     when(businessBankingMapper.mapToRequestPayload(any(), any()))
       .thenReturn(OperationalGatewayRequestPayload.builder().build());
 
-    testedService.sendInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo);
+    testedService.notifyInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo);
 
-    verify(businessBankingClient).sendInvoiceEventResult(headersArgumentCaptor.capture(), bodyArgumentCaptor.capture());
+    verify(businessBankingClient).notifyEvent(headersArgumentCaptor.capture(), bodyArgumentCaptor.capture());
 
     assertNotNull(headersArgumentCaptor.getValue());
     assertNotNull(bodyArgumentCaptor.getValue().data().referenceData());
@@ -69,29 +69,29 @@ class BusinessBankingServiceTest {
 
   @Test
   void sendInvoiceEventResult_itShouldThrowUnrecoverableExceptionWhenResponseCodeIsUnrecoverable() {
-    var processCode = OperationalGatewayProcessCode.INVOICE_CREATION;
+    var processCode = OperationalGatewayProcessCode.INVOICE_SETTLEMENT;
     var serviceResponse = ServiceResponse.builder().build();
     var invoiceEventInfo = InvoiceEventInfo.builder().build();
 
     Request request = Request.create(Request.HttpMethod.POST, "", Map.of(), null, new RequestTemplate());
-    when(businessBankingClient.sendInvoiceEventResult(anyMap(), any()))
+    when(businessBankingClient.notifyEvent(anyMap(), any()))
       .thenThrow(new FeignException.GatewayTimeout("", request, null, null));
 
     assertThrows(UnrecoverableApiGeeRequestException.class,
-      () -> testedService.sendInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo));
+      () -> testedService.notifyInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo));
   }
 
   @Test
   void sendInvoiceEventResult_itShouldThrowRecoverableExceptionWhenResponseCodeIsRecoverable() {
-    var processCode = OperationalGatewayProcessCode.INVOICE_CREATION;
+    var processCode = OperationalGatewayProcessCode.INVOICE_SETTLEMENT;
     var serviceResponse = ServiceResponse.builder().build();
     var invoiceEventInfo = InvoiceEventInfo.builder().build();
 
     Request request = Request.create(Request.HttpMethod.POST, "", Map.of(), null, new RequestTemplate());
-    when(businessBankingClient.sendInvoiceEventResult(anyMap(), any()))
+    when(businessBankingClient.notifyEvent(anyMap(), any()))
       .thenThrow(new FeignException.TooManyRequests("", request, null, null));
 
     assertThrows(RecoverableApiGeeRequestException.class,
-      () -> testedService.sendInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo));
+      () -> testedService.notifyInvoiceEventResult(processCode, serviceResponse, invoiceEventInfo));
   }
 }

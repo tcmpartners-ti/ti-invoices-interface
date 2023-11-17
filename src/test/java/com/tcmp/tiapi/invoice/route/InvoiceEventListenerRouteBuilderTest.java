@@ -62,7 +62,7 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
 
     verify(jaxbDataFormat).unmarshal(any(), any());
     verify(invoiceEventService).findInvoiceEventInfoByUuid(anyString());
-    verify(businessBankingService).sendInvoiceEventResult(
+    verify(businessBankingService).notifyInvoiceEventResult(
       any(),
       any(ServiceResponse.class),
       any(InvoiceEventInfo.class)
@@ -71,8 +71,8 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
 
   static Stream<Arguments> provideItShouldHandleInvoiceEventsTestCases() {
     return Stream.of(
-      Arguments.of(TIOperation.CREATE_INVOICE, OperationalGatewayProcessCode.INVOICE_CREATION),
-      Arguments.of(TIOperation.FINANCE_INVOICE, OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT)
+      Arguments.of(TIOperation.CREATE_INVOICE, OperationalGatewayProcessCode.INVOICE_CREATED),
+      Arguments.of(TIOperation.FINANCE_INVOICE, OperationalGatewayProcessCode.INVOICE_FINANCING)
     );
   }
 
@@ -85,7 +85,7 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
     String body = buildMockFailedServiceResponse(operation);
     sendBodyToRoute(body);
 
-    verify(businessBankingService).sendInvoiceEventResult(
+    verify(businessBankingService).notifyInvoiceEventResult(
       eq(expectedProcessCode),
       any(ServiceResponse.class),
       any(InvoiceEventInfo.class)
@@ -100,12 +100,12 @@ class InvoiceEventListenerRouteBuilderTest extends CamelTestSupport {
     doThrow(new RecoverableApiGeeRequestException("Error in first attempt.")) // Attempt 1 Retry 0
       .doThrow(new RecoverableApiGeeRequestException("Error in second attempt")) // Attempt 2 Retry 1
       .doNothing() // Attempt 3 Retry 2
-      .when(businessBankingService).sendInvoiceEventResult(any(), any(), any());
+      .when(businessBankingService).notifyInvoiceEventResult(any(), any(), any());
 
     sendBodyToRoute(body);
 
     verify(businessBankingService, times(expectedNumberOfAttempts))
-      .sendInvoiceEventResult(any(), any(), any());
+      .notifyInvoiceEventResult(any(), any(), any());
   }
 
   private void sendBodyToRoute(String mockXmlBody) {

@@ -303,7 +303,7 @@ class InvoiceSettlementServiceTest {
       .build();
 
     var actualRequest = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-      invoiceSettlementMessage, customer, InvoiceEmailEvent.PROCESSED, BigDecimal.TEN);
+      InvoiceEmailEvent.PROCESSED, invoiceSettlementMessage, customer, BigDecimal.TEN);
 
     assertNotNull(actualRequest);
   }
