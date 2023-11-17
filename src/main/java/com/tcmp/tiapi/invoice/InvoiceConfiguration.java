@@ -86,14 +86,7 @@ public class InvoiceConfiguration {
   }
 
   @Bean
-  public InvoiceAckEventListenerRouteBuilder invoiceAckEventListenerRouteBuilder(
-    JaxbDataFormat jaxbDataFormatAckEventRequest,
-    InvoiceFinancingService invoiceFinancingService,
-    InvoiceSettlementService invoiceSettlementService,
-    CorporateLoanService corporateLoanService,
-    PaymentExecutionService paymentExecutionService,
-    OperationalGatewayService operationalGatewayService
-  ) {
+  public InvoiceAckEventListenerRouteBuilder invoiceAckEventListenerRouteBuilder(JaxbDataFormat jaxbDataFormatAckEventRequest) {
     return new InvoiceAckEventListenerRouteBuilder(
       jaxbDataFormatAckEventRequest,
 
@@ -126,13 +119,15 @@ public class InvoiceConfiguration {
     InvoiceSettlementService invoiceSettlementService,
     CorporateLoanService corporateLoanService,
     PaymentExecutionService paymentExecutionService,
-    OperationalGatewayService operationalGatewayService
+    OperationalGatewayService operationalGatewayService,
+    BusinessBankingService businessBankingService
   ) {
     return new InvoiceSettleResultFlowBuilder(
       invoiceSettlementService,
       corporateLoanService,
       paymentExecutionService,
       operationalGatewayService,
+      businessBankingService,
 
       uriToSettleFlow
     );

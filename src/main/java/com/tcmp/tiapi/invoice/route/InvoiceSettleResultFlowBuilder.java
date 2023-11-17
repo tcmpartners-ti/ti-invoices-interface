@@ -10,22 +10,29 @@ import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadDetails;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadInvoice;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;
+import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
-import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
 import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
@@ -33,16 +40,12 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
   private final CorporateLoanService corporateLoanService;
   private final PaymentExecutionService paymentExecutionService;
   private final OperationalGatewayService operationalGatewayService;
+  private final BusinessBankingService businessBankingService;
 
   private final String uriFrom;
 
   @Override
   public void configure() {
-    onException(OperationalGatewayException.class, CreditCreationException.class, PaymentExecutionException.class)
-      .handled(true)
-      .to("log:myLogger?level=ERROR&showCaughtException=true&showStackTrace=false")
-      .end();
-
     from(uriFrom).routeId("invoiceSettleResultFlow")
       .log("Started invoice settle flow.")
       .process().body(AckServiceRequest.class, this::startInvoiceSettlementFlow)
@@ -75,51 +78,96 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
     // Second settlement case: end flow, we only notify credit to buyer.
     if (hasBeenFinanced) {
       InvoiceEmailInfo creditedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-        message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
+        InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
       operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo);
       return;
     }
 
     InvoiceEmailInfo settledInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-      message, seller, InvoiceEmailEvent.SETTLED, paymentAmount);
+      InvoiceEmailEvent.SETTLED, message, seller, paymentAmount);
     operationalGatewayService.sendNotificationRequest(settledInvoiceInfo);
 
-    DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
-      invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
-    Error creditResponseError = creditResponse.data().error();
+    try {
+      log.info("Started credit creation.");
+      DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
+        invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
+      Error creditResponseError = creditResponse.data().error();
 
-    boolean hasBeenCredited = creditResponseError != null && creditResponseError.hasNoError();
-    if (!hasBeenCredited) {
-      log.error("Could not complete settlement flow, credit creation failed.");
-      return;
+      boolean hasBeenCredited = creditResponseError != null && creditResponseError.hasNoError();
+      if (!hasBeenCredited) {
+        String creditCreationError = creditResponseError != null
+          ? creditResponseError.message()
+          : "Credit creation failed.";
+        log.error(creditCreationError);
+        notifySettlementStatus(PayloadStatus.FAILED, message, invoice, creditCreationError);
+
+        return;
+      }
+
+      // We don't care if invoice has been financed or not
+      InvoiceEmailInfo creditedEmailInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+        InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
+      operationalGatewayService.sendNotificationRequest(creditedEmailInfo);
+
+      log.info("Started buyer to seller transaction.");
+      boolean isBuyerToSellerTransactionOk = transferPaymentAmountFromBuyerToSeller(message, buyer, seller, buyerAccountParser);
+      if (!isBuyerToSellerTransactionOk) {
+        String transferError = "Could not transfer invoice payment amount from buyer to seller.";
+        log.error(transferError);
+        notifySettlementStatus(PayloadStatus.FAILED, message, invoice, transferError);
+
+        return;
+      }
+
+      InvoiceEmailInfo processedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+        InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount);
+      operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
+
+      notifySettlementStatus(PayloadStatus.SUCCEEDED, message, invoice, null);
+    } catch (CreditCreationException e) {
+      notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getMessage());
+    } catch (PaymentExecutionException e) {
+      notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getTransferResponseError().title());
     }
-
-    // We don't care if invoice has been financed or not
-    InvoiceEmailInfo creditedEmailInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-      message, buyer, InvoiceEmailEvent.CREDITED, paymentAmount);
-    operationalGatewayService.sendNotificationRequest(creditedEmailInfo);
-
-    boolean isBglToSellerTransactionOk = transferPaymentAmountToSeller(message, buyer);
-    if (!isBglToSellerTransactionOk) {
-      log.error("Could not complete settlement flow, bgl to seller transaction failed.");
-    }
-
-    InvoiceEmailInfo processedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-      message, seller, InvoiceEmailEvent.PROCESSED, paymentAmount);
-    operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
   }
 
-  private boolean transferPaymentAmountToSeller(CreateDueInvoiceEventMessage message, Customer buyer) {
+  private boolean transferPaymentAmountFromBuyerToSeller(
+    CreateDueInvoiceEventMessage message,
+    Customer buyer,
+    Customer seller,
+    EncodedAccountParser buyerAccountParser
+  ) throws PaymentExecutionException {
     Account sellerAccount = invoiceSettlementService.findAccountByCustomerMnemonic(message.getSellerIdentifier());
     EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
 
-    try {
-      BusinessAccountTransfersResponse bglToSellerTransactionResponse = paymentExecutionService.makeTransactionRequest(
-        invoiceSettlementService.buildBglToSellerTransaction(message, buyer, sellerAccountParser));
+    BusinessAccountTransfersResponse buyerToBglTransactionResponse = paymentExecutionService.makeTransactionRequest(
+      invoiceSettlementService.buildBuyerToBglTransactionRequest(message, seller, buyerAccountParser));
 
-      return "OK".equals(bglToSellerTransactionResponse.data().status());
-    } catch (PaymentExecutionException e) {
-      return false;
-    }
+    BusinessAccountTransfersResponse bglToSellerTransactionResponse = paymentExecutionService.makeTransactionRequest(
+      invoiceSettlementService.buildBglToSellerTransaction(message, buyer, sellerAccountParser));
+
+    if (buyerToBglTransactionResponse == null || bglToSellerTransactionResponse == null) return false;
+    return buyerToBglTransactionResponse.isOk() && bglToSellerTransactionResponse.isOk();
+  }
+
+  private void notifySettlementStatus(
+    PayloadStatus status,
+    CreateDueInvoiceEventMessage message,
+    InvoiceMaster invoice,
+    @Nullable String error
+  ) {
+    List<String> errors = error == null ? null : List.of(error);
+
+    OperationalGatewayRequestPayload payload = OperationalGatewayRequestPayload.builder()
+      .status(status.getValue())
+      .invoice(PayloadInvoice.builder()
+        .batchId(invoice.getBatchId().trim())
+        .reference(message.getInvoiceNumber())
+        .sellerMnemonic(message.getSellerIdentifier())
+        .build())
+      .details(new PayloadDetails(errors, null, null))
+      .build();
+
+    businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_SETTLEMENT, payload);
   }
 }

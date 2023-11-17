@@ -62,6 +62,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
       financeMessage, seller, InvoiceEmailEvent.FINANCED, financeDealAmount);
     operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
 
+    log.info("Starting credit creation.");
     DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
       invoiceFinancingService.buildDistributorCreditRequest(financeMessage, programExtension, buyer, buyerAccountParser));
     Error creditResponseError = creditResponse.data().error();
@@ -72,6 +73,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
       return;
     }
 
+    log.info("Starting buyer to seller transaction.");
     boolean buyerToSellerTransactionSuccessful = transferCreditAmountFromBuyerToSeller(
       creditResponse, financeMessage, buyerAccountParser, sellerAccountParser);
     if (!buyerToSellerTransactionSuccessful) {

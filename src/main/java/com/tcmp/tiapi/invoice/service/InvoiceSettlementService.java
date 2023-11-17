@@ -107,11 +107,26 @@ public class InvoiceSettlementService {
       .references(List.of())
       .tax(Tax.builder()
         .code("L")
-        .paymentForm(new PaymentForm("D"))
+        .paymentForm(new PaymentForm("C"))
         .rate(BigDecimal.ZERO)
         .amount(BigDecimal.ZERO)
         .build())
       .build();
+  }
+
+  public TransactionRequest buildBuyerToBglTransactionRequest(
+    CreateDueInvoiceEventMessage invoiceSettlementMessage,
+    Customer seller,
+    EncodedAccountParser buyerAccountParser
+  ) {
+    String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
+    String sellerName = seller.getFullName().trim();
+    String concept = String.format("Descuento Factura %s %s", invoiceReference, sellerName);
+    String currency = invoiceSettlementMessage.getPaymentCurrency();
+    BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
+
+    return TransactionRequest.from(
+      TransactionType.CLIENT_TO_BGL, buyerAccountParser.getAccount(), bglAccount, concept, currency, amount);
   }
 
   public TransactionRequest buildBglToSellerTransaction(
@@ -135,9 +150,9 @@ public class InvoiceSettlementService {
   }
 
   public InvoiceEmailInfo buildInvoiceSettlementEmailInfo(
+    InvoiceEmailEvent event,
     CreateDueInvoiceEventMessage message,
     Customer customer,
-    InvoiceEmailEvent event,
     BigDecimal amount
   ) {
     return InvoiceEmailInfo.builder()
