@@ -4,6 +4,7 @@ import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import com.tcmp.tiapi.messaging.model.TIOperation;
+import com.tcmp.tiapi.messaging.model.response.ResponseStatus;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
@@ -55,17 +56,11 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
     from(uriTo).routeId("apiGeeInvoiceCreationNotifier")
       .choice()
         .when(operationXpath.isEqualTo(TIOperation.CREATE_INVOICE_VALUE))
-          .process().body(
-            ServiceResponse.class,
-            body -> sendInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_CREATION, body)
-          )
+          .process().body(ServiceResponse.class, this::notifyFailedInvoiceCreation)
           .log("Invoice creation event notified.")
 
         .when(operationXpath.isEqualTo(TIOperation.FINANCE_INVOICE_VALUE))
-          .process().body(
-            ServiceResponse.class,
-            body -> sendInvoiceEventResult(OperationalGatewayProcessCode.ADVANCE_INVOICE_DISCOUNT, body)
-          )
+          .process().body(ServiceResponse.class, this::notifyFailedInvoiceFinancing)
           .log("Invoice financing event notified.")
 
         .otherwise()
@@ -76,17 +71,51 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
       .end();
   }
 
-  private void sendInvoiceEventResult(OperationalGatewayProcessCode processCode, ServiceResponse serviceResponse) {
-    if (serviceResponse == null) {
+
+  private void notifyFailedInvoiceCreation(ServiceResponse response) {
+    if (response == null) {
       throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     }
 
-    String invoiceUuidFromCorrelationId = serviceResponse.getResponseHeader().getCorrelationId();
+    String invoiceUuidFromCorrelationId = response.getResponseHeader().getCorrelationId();
+
+    String responseStatus = response.getResponseHeader().getStatus();
+    boolean creationWasSuccessful = ResponseStatus.SUCCESS.getValue().equals(responseStatus);
+    if (creationWasSuccessful) {
+      log.info("Invoice created successfully, don't notify.");
+      invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
+      return;
+    }
 
     try {
       InvoiceEventInfo invoice = invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
 
-      businessBankingService.sendInvoiceEventResult(processCode, serviceResponse, invoice);
+      businessBankingService.notifyInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_CREATED, response, invoice);
+      invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
+    } catch (EntityNotFoundException e) {
+      throw new UnrecoverableApiGeeRequestException(e.getMessage());
+    }
+  }
+
+  private void notifyFailedInvoiceFinancing(ServiceResponse response) {
+    if (response == null) {
+      throw new UnrecoverableApiGeeRequestException("Message with no body received.");
+    }
+
+    String invoiceUuidFromCorrelationId = response.getResponseHeader().getCorrelationId();
+
+    String responseStatus = response.getResponseHeader().getStatus();
+    boolean financingWasSuccessful = ResponseStatus.SUCCESS.getValue().equals(responseStatus);
+    if (financingWasSuccessful) {
+      log.info("Invoice financed successfully, don't notify.");
+      invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
+      return;
+    }
+
+    try {
+      InvoiceEventInfo invoice = invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
+
+      businessBankingService.notifyInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_FINANCING, response, invoice);
       invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
     } catch (EntityNotFoundException e) {
       throw new UnrecoverableApiGeeRequestException(e.getMessage());
