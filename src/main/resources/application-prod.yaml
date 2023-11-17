@@ -1,6 +1,3 @@
-server:
-  port: 80
-
 spring:
   datasource:
     host: ${DB_HOST}
@@ -9,6 +6,11 @@ spring:
     password: ${DB_PASS}
     url: "jdbc:sqlserver://${spring.datasource.host}:${spring.datasource.port};database=TIZONE1;encrypt=true;trustServerCertificate=true;"
     driver-class-name: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+
+  data.redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASS}
 
   activemq:
     host: ${MQ_HOST}
@@ -20,19 +22,32 @@ spring:
       trust-all: true
 
 bp:
+  service:
+    operational-gateway:
+      template-id: "305003729"
+      business-banking-url: "https://bancaempresas.pichincha.com"
+    payment-execution:
+      bgl-account: "259090337001"
+
   api-gee:
-    headers:
-      device: "TradeInnovationInterface"
+    headers.device: "TradeInnovationInterfaceDEV"
 
-    app-id: ${API_GEE_APP_ID}
-    api-encryption-key: ${API_GEE_KEY}
-    api-secret: ${API_GEE_SECRET}
+    credentials:
+      app-id: ${API_GEE_APP_ID}
+      api-key: ${API_GEE_KEY}
+      api-secret: ${API_GEE_SECRET}
 
-    base-url: "http://localhost:5000"
     services:
       business-banking:
-        operational-gateway:
-          url: "${bp.api-gee.base-url}/business-banking/v1/operational-gateway"
+        url: "${bp.api-gee.url.prod}/business-banking/v1"
+      payment-execution:
+        url: "${bp.api-gee.url.prod}/payment-execution/v1"
+      operational-gateway:
+        url: "${bp.api-gee.url.prod}/operational-gateway/v2"
+      corporate-loan:
+        user: ${CL_USER}
+        operation-token: ${CL_OP_TOKEN}
+        url: "${bp.api-gee.url.prod}/domain/corporate-loan/v1"
 
 invoice:
   route:
@@ -42,19 +57,23 @@ invoice:
 
     create-bulk:
       from: "direct:bulkCreateInvoicesInTi"
-      to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
+      to: "${invoice.route.create.from}"
 
-    creation-listener:
-      # Temporal
-      from: "direct:${ti.queue.reply.name}"
+    event-listener:
+      max-retries: 3
+      retry-delay: 1000 # ms
+
+      from: "activemq:queue:${ti.queue.reply.name}"
       to: "direct:sendNotificationToApiGee"
+
+    ack-event-listener:
+      from: "activemq:queue:${ti.ticc-queue.sub.name}"
+      to-finance: "direct:startFinanceFlow"
+      to-settle:  "direct:startSettleFlow"
 
     finance:
       from: "direct:financeInvoiceInTI"
       to: "activemq:queue:${ti.queue.pub.name}?replyTo=${ti.queue.reply.jndi}"
 
-program:
-  route:
-    create:
-      from: "direct:createProgramInTI"
-      to: "mock:programQueue"
+    notification-invoice-creation:
+      from: "activemq:queue:${ti.fti-queue.sub.name}"
