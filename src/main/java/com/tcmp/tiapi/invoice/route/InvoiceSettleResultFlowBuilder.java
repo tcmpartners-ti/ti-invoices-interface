@@ -26,6 +26,7 @@ import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
+import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.TransferResponseError;
 import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -91,17 +92,12 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
       log.info("Started credit creation.");
       DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
         invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
-      Error creditResponseError = creditResponse.data().error();
+      Error creditError = creditResponse.data().error();
 
-      boolean hasBeenCredited = creditResponseError != null && creditResponseError.hasNoError();
+      boolean hasBeenCredited = creditError != null && creditError.hasNoError();
       if (!hasBeenCredited) {
-        String creditCreationError = creditResponseError != null
-          ? creditResponseError.message()
-          : "Credit creation failed.";
-        log.error(creditCreationError);
-        notifySettlementStatus(PayloadStatus.FAILED, message, invoice, creditCreationError);
-
-        return;
+        String creditErrorMessage = creditError != null ? creditError.message() : "Credit creation failed.";
+        throw new CreditCreationException(creditErrorMessage);
       }
 
       // We don't care if invoice has been financed or not
@@ -113,10 +109,7 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
       boolean isBuyerToSellerTransactionOk = transferPaymentAmountFromBuyerToSeller(message, buyer, seller, buyerAccountParser);
       if (!isBuyerToSellerTransactionOk) {
         String transferError = "Could not transfer invoice payment amount from buyer to seller.";
-        log.error(transferError);
-        notifySettlementStatus(PayloadStatus.FAILED, message, invoice, transferError);
-
-        return;
+        throw new PaymentExecutionException(TransferResponseError.builder().title(transferError).build());
       }
 
       InvoiceEmailInfo processedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
@@ -125,8 +118,10 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
 
       notifySettlementStatus(PayloadStatus.SUCCEEDED, message, invoice, null);
     } catch (CreditCreationException e) {
+      log.error(e.getMessage());
       notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getMessage());
     } catch (PaymentExecutionException e) {
+      log.error(e.getTransferResponseError().title());
       notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getTransferResponseError().title());
     }
   }

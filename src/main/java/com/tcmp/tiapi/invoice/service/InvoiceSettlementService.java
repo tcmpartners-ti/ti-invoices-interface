@@ -12,6 +12,7 @@ import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
+import com.tcmp.tiapi.shared.ApplicationEnv;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
@@ -25,6 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -37,6 +40,7 @@ public class InvoiceSettlementService {
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
   private final ProgramExtensionRepository programExtensionRepository;
 
+  @Value("${spring.profiles.active}") private String activeProfile;
   @Value("${bp.service.payment-execution.bgl-account}") private String bglAccount;
 
   public InvoiceMaster findInvoiceByMasterRef(String masterReference) {
@@ -82,6 +86,12 @@ public class InvoiceSettlementService {
     ProgramExtension programExtension,
     EncodedAccountParser buyerAccountParser
   ) {
+    // Mock this value for dev testing purposes.
+    boolean isDevelopment = ApplicationEnv.LOCAL.value().equals(activeProfile) || ApplicationEnv.DEV.value().equals(activeProfile);
+    String paymentValueDate = isDevelopment
+      ? getSystemDate()
+      : invoiceSettlementMessage.getPaymentValueDate();
+
     return DistributorCreditRequest.builder()
       .commercialTrade(new CommercialTrade(buyer.getType().trim()))
       .customer(com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Customer.builder()
@@ -97,7 +107,7 @@ public class InvoiceSettlementService {
         .form("N/C")
         .build())
       .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
-      .effectiveDate(invoiceSettlementMessage.getPaymentValueDate())
+      .effectiveDate(paymentValueDate)
       .term(programExtension.getExtraFinancingDays())
       .termPeriodType(new TermPeriodType("D"))
       .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
@@ -112,6 +122,13 @@ public class InvoiceSettlementService {
         .amount(BigDecimal.ZERO)
         .build())
       .build();
+  }
+
+  private String getSystemDate() {
+    LocalDate currentDate = LocalDate.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    return currentDate.format(formatter);
   }
 
   public TransactionRequest buildBuyerToBglTransactionRequest(
