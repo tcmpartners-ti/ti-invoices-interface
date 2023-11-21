@@ -5,7 +5,9 @@ import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
@@ -44,6 +46,7 @@ public class InvoiceFinancingService {
   private final ProgramExtensionRepository programExtensionRepository;
   private final CustomerRepository customerRepository;
   private final AccountRepository accountRepository;
+  private final InvoiceRepository invoiceRepository;
 
   @Value("${bp.service.payment-execution.bgl-account}") private String bglAccount;
 
@@ -55,6 +58,11 @@ public class InvoiceFinancingService {
   public ProductMasterExtension findProductMasterExtensionByMasterReference(String invoiceMasterReference) {
     return productMasterExtensionRepository.findByMasterReference(invoiceMasterReference)
       .orElseThrow(() -> new EntityNotFoundException("Could not find account for the given invoice master."));
+  }
+
+  public InvoiceMaster findInvoiceByMasterReference(String invoiceMasterReference) {
+    return invoiceRepository.findByProductMasterMasterReference(invoiceMasterReference)
+      .orElseThrow(() -> new EntityNotFoundException("Could not find invoice for the given invoice master."));
   }
 
   public Account findAccountByCustomerMnemonic(String customerMnemonic) {
@@ -149,9 +157,9 @@ public class InvoiceFinancingService {
   }
 
   public InvoiceEmailInfo buildInvoiceFinancingEmailInfo(
+    InvoiceEmailEvent event,
     FinanceAckMessage invoiceFinanceAck,
     Customer customer,
-    InvoiceEmailEvent event,
     BigDecimal amount
   ) {
     return InvoiceEmailInfo.builder()

@@ -102,13 +102,15 @@ public class InvoiceConfiguration {
     InvoiceSettlementService invoiceSettlementService,
     CorporateLoanService corporateLoanService,
     PaymentExecutionService paymentExecutionService,
-    OperationalGatewayService operationalGatewayService
+    OperationalGatewayService operationalGatewayService,
+    BusinessBankingService businessBankingService
   ) {
     return new InvoiceFinanceResultFlowRouteBuilder(
       invoiceFinancingService,
       corporateLoanService,
       paymentExecutionService,
       operationalGatewayService,
+      businessBankingService,
 
       uriToFinanceFlow
     );

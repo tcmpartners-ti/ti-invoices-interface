@@ -5,6 +5,10 @@ public record Error(
   String message,
   String type
 ) {
+  public static Error empty() {
+    return new Error("", "", "INFO");
+  }
+
   // Gaf responds with an error like this if everything is fine `{ code: '', message: '', type: 'INFO' }`
   public boolean hasNoError() {
     return code != null
