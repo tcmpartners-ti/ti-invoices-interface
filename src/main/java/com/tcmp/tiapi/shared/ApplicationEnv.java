@@ -1,14 +1,11 @@
 package com.tcmp.tiapi.shared;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum ApplicationEnv {
   LOCAL("local"),
-  DEV("dev"),
-  QA("qa"),
-  PROD("prod");
+  DEV("dev");
 
   private final String value;
 
