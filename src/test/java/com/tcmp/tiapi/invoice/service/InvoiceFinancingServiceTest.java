@@ -9,6 +9,7 @@ import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinancePaymentDetails;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
@@ -38,6 +39,7 @@ class InvoiceFinancingServiceTest {
   @Mock private ProgramExtensionRepository programExtensionRepository;
   @Mock private CustomerRepository customerRepository;
   @Mock private AccountRepository accountRepository;
+  @Mock private InvoiceRepository invoiceRepository;
 
   private InvoiceFinancingService invoiceFinancingService;
 
@@ -47,7 +49,8 @@ class InvoiceFinancingServiceTest {
       productMasterExtensionRepository,
       programExtensionRepository,
       customerRepository,
-      accountRepository
+      accountRepository,
+      invoiceRepository
     );
   }
 
@@ -234,7 +237,7 @@ class InvoiceFinancingServiceTest {
       .build();
 
     var actualRequest = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-      financeAck, customer, InvoiceEmailEvent.PROCESSED, BigDecimal.TEN);
+      InvoiceEmailEvent.PROCESSED, financeAck, customer, BigDecimal.TEN);
 
     String expectedName = "David Reyes";
     assertNotNull(actualRequest);

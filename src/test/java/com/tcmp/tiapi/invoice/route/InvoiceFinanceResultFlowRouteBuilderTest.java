@@ -4,9 +4,11 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.Invoice;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Data;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
@@ -44,6 +46,7 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
   @Mock private CorporateLoanService corporateLoanService;
   @Mock private PaymentExecutionService paymentExecutionService;
   @Mock private OperationalGatewayService operationalGatewayService;
+  @Mock private BusinessBankingService businessBankingService;
 
   @Captor ArgumentCaptor<Customer> customerArgumentCaptor;
   @Captor ArgumentCaptor<InvoiceEmailEvent> emailEventArgumentCaptor;
@@ -58,6 +61,7 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
       corporateLoanService,
       paymentExecutionService,
       operationalGatewayService,
+      businessBankingService,
 
       URI_FROM
     );
@@ -79,10 +83,13 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
       .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
       .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+    when(invoiceFinancingService.findInvoiceByMasterReference(any()))
+      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+
     when(corporateLoanService.createCredit(any()))
       .thenReturn(new DistributorCreditResponse(Data.builder()
         .disbursementAmount(100)
-        .error(new Error("", "", "INFO"))
+        .error(Error.empty())
         .build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
       .thenReturn(InvoiceEmailInfo.builder().build());
@@ -95,30 +102,27 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
     verify(invoiceFinancingService, times(2)).buildInvoiceFinancingEmailInfo(
+      emailEventArgumentCaptor.capture(),
       any(FinanceAckMessage.class),
       customerArgumentCaptor.capture(),
-      emailEventArgumentCaptor.capture(),
       amountArgumentCaptor.capture()
     );
     verify(operationalGatewayService, times(2))
       .sendNotificationRequest(any(InvoiceEmailInfo.class));
 
-    var firstCustomer = customerArgumentCaptor.getAllValues().get(0);
-    var secondCustomer = customerArgumentCaptor.getAllValues().get(1);
-    var firstEmailEvent = emailEventArgumentCaptor.getAllValues().get(0);
-    var secondEmailEvent = emailEventArgumentCaptor.getAllValues().get(1);
-    var firstAmount = amountArgumentCaptor.getAllValues().get(0);
-    var secondAmount = amountArgumentCaptor.getAllValues().get(1);
+    var customers = customerArgumentCaptor.getAllValues();
+    var emailEvents = emailEventArgumentCaptor.getAllValues();
+    var amounts = amountArgumentCaptor.getAllValues();
 
     var expectedAmount = new BigDecimal("100.00");
 
-    assertEquals("Seller", firstCustomer.getFullName());
-    assertEquals(InvoiceEmailEvent.FINANCED, firstEmailEvent);
-    assertEquals(expectedAmount, firstAmount);
+    assertEquals("Seller", customers.get(0).getFullName());
+    assertEquals(InvoiceEmailEvent.FINANCED, emailEvents.get(0));
+    assertEquals(expectedAmount, amounts.get(0));
 
-    assertEquals("Seller", secondCustomer.getFullName());
-    assertEquals(InvoiceEmailEvent.PROCESSED, secondEmailEvent);
-    assertEquals(expectedAmount, secondAmount);
+    assertEquals("Seller", customers.get(1).getFullName());
+    assertEquals(InvoiceEmailEvent.PROCESSED, emailEvents.get(1));
+    assertEquals(expectedAmount, amounts.get(1));
   }
 
   @Test
@@ -137,10 +141,13 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
       .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
       .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+    when(invoiceFinancingService.findInvoiceByMasterReference(any()))
+      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+
     when(corporateLoanService.createCredit(any()))
       .thenReturn(new DistributorCreditResponse(Data.builder()
         .disbursementAmount(100)
-        .error(new Error("", "", "INFO"))
+        .error(Error.empty())
         .build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
       .thenReturn(InvoiceEmailInfo.builder().build());
