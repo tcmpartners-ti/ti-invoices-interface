@@ -13,6 +13,7 @@ import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Data;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
+import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
@@ -161,5 +162,39 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
 
     verify(operationalGatewayService, times(1))
       .sendNotificationRequest(any(InvoiceEmailInfo.class));
+  }
+
+  @Test
+  void itShouldSendNotifyOperationalGwIfCreditFailed() {
+    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
+      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+      .buyerIdentifier("B123")
+      .sellerIdentifier("S123")
+      .financeDealAmount("10000")
+      .build();
+
+    when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
+      .thenReturn(Customer.builder().build()) // Buyer
+      .thenReturn(Customer.builder().build()); // Seller
+    when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
+      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+    when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
+      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+    when(invoiceFinancingService.findInvoiceByMasterReference(any()))
+      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+
+    when(corporateLoanService.createCredit(any()))
+      .thenThrow(new CreditCreationException("Error"))
+      .thenReturn(new DistributorCreditResponse(Data.builder()
+        .error(new Error("001", "Error", "ERROR"))
+        .build()));
+
+    from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
+    from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
+
+    verify(operationalGatewayService, times(2))
+      .sendNotificationRequest(any());
+    verify(businessBankingService, times(2))
+      .notifyEvent(any(), any());
   }
 }
