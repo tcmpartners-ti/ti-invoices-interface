@@ -72,32 +72,9 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
 
     try {
-      InvoiceEmailInfo financedInvoiceInfo = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-        InvoiceEmailEvent.FINANCED, financeMessage, seller, financeDealAmount);
-      operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
-
-      log.info("Starting credit creation.");
-      DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
-        invoiceFinancingService.buildDistributorCreditRequest(financeMessage, programExtension, buyer, buyerAccountParser));
-      Error creditError = creditResponse.data().error();
-
-      boolean hasBeenCredited = creditError != null && creditError.hasNoError();
-      if (!hasBeenCredited) {
-        String creditErrorMessage = creditError != null ? creditError.message() : "Credit creation failed.";
-        throw new CreditCreationException(creditErrorMessage);
-      }
-
-      log.info("Starting buyer to seller transaction.");
-      boolean buyerToSellerTransactionSuccessful = transferCreditAmountFromBuyerToSeller(
-        creditResponse, financeMessage, buyerAccountParser, sellerAccountParser);
-      if (!buyerToSellerTransactionSuccessful) {
-        String transferError = "Could not transfer invoice payment amount from buyer to seller.";
-        throw new PaymentExecutionException(TransferResponseError.builder().title(transferError).build());
-      }
-
-      InvoiceEmailInfo processedInvoiceInfo = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
-        InvoiceEmailEvent.PROCESSED, financeMessage, seller, financeDealAmount);
-      operationalGatewayService.sendNotificationRequest(processedInvoiceInfo);
+      notifyInvoiceStatusToSeller(InvoiceEmailEvent.FINANCED, financeMessage, seller, financeDealAmount);
+      createAndTransferCreditAmountOrThrowException(financeMessage, programExtension, buyer, buyerAccountParser, sellerAccountParser);
+      notifyInvoiceStatusToSeller(InvoiceEmailEvent.PROCESSED, financeMessage, seller, financeDealAmount);
 
       notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
     } catch (CreditCreationException e) {
@@ -106,6 +83,39 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     } catch (PaymentExecutionException e) {
       log.error(e.getTransferResponseError().title());
       notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, e.getTransferResponseError().title());
+    }
+  }
+
+  private void notifyInvoiceStatusToSeller(InvoiceEmailEvent event, FinanceAckMessage financeMessage, Customer seller, BigDecimal financeDealAmount) {
+    InvoiceEmailInfo financedInvoiceInfo = invoiceFinancingService.buildInvoiceFinancingEmailInfo(
+      event, financeMessage, seller, financeDealAmount);
+    operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
+  }
+
+  private void createAndTransferCreditAmountOrThrowException(
+    FinanceAckMessage financeMessage,
+    ProgramExtension programExtension,
+    Customer buyer,
+    EncodedAccountParser buyerAccountParser,
+    EncodedAccountParser sellerAccountParser
+  ) throws CreditCreationException, PaymentExecutionException {
+    log.info("Starting credit creation.");
+    DistributorCreditResponse distributorCreditResponse = corporateLoanService.createCredit(
+      invoiceFinancingService.buildDistributorCreditRequest(financeMessage, programExtension, buyer, buyerAccountParser));
+    Error creditError = distributorCreditResponse.data().error();
+
+    boolean hasBeenCredited = creditError != null && creditError.hasNoError();
+    if (!hasBeenCredited) {
+      String creditErrorMessage = creditError != null ? creditError.message() : "Credit creation failed.";
+      throw new CreditCreationException(creditErrorMessage);
+    }
+
+    log.info("Starting buyer to seller transaction.");
+    boolean buyerToSellerTransactionSuccessful = transferCreditAmountFromBuyerToSeller(
+      distributorCreditResponse, financeMessage, buyerAccountParser, sellerAccountParser);
+    if (!buyerToSellerTransactionSuccessful) {
+      String transferError = "Could not transfer invoice payment amount from buyer to seller.";
+      throw new PaymentExecutionException(TransferResponseError.builder().title(transferError).build());
     }
   }
 
@@ -126,7 +136,6 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     if (buyerToBglResponse == null || bglToSellerResponse == null) return false;
     return buyerToBglResponse.isOk() && bglToSellerResponse.isOk();
   }
-
 
   private void notifyFinanceStatus(
     PayloadStatus status,
