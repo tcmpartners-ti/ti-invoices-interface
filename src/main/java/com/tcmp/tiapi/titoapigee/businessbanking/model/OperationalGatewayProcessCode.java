@@ -6,9 +6,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum OperationalGatewayProcessCode {
-  INVOICE_CREATED("FTI001"),
-  INVOICE_SETTLEMENT("FTI001"),
-  INVOICE_FINANCING("FTI002");
+  INVOICE_CREATED(OperationalGatewayProcessCode.PROCESS_CODE),
+  INVOICE_SETTLEMENT(OperationalGatewayProcessCode.PROCESS_CODE),
+  INVOICE_FINANCING(OperationalGatewayProcessCode.PROCESS_CODE);
+
+  // Use the same code for everything (Kerlly said so)
+  public static final String PROCESS_CODE = "FTI001";
 
   private final String value;
 }
