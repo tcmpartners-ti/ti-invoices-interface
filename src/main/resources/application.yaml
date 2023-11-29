@@ -11,17 +11,18 @@ spring:
     properties.hibernate:
       dialect: "org.hibernate.dialect.SQLServerDialect"
 
-ti:
-  ticc-queue:
-    sub.name: "BP.TICC.TO.DIGIBANK"
-  fti-queue:
+ti.queue:
+  fti:
+    pub.name: "BP.DIGIBANK.TO.FTI"
     sub.name: "BP.FTI.TO.DIGIBANK"
-  queue:
-    pub:
-      name: "BP.DIGIBANK.TO.FTI"
     reply:
       name: "BP.DIGIBANK.TO.FTI.REPLY"
       jndi: "queue/digibankInIncomingReply"
+  ticc:
+    sub.name: "BP.TICC.TO.DIGIBANK"
+  # Custom component
+  scheduler:
+    sub.name: "BP.SCHEDULER.TO.DIGIBANK"
 
 bp.api-gee.url:
   dev: "https://api-dev.pichincha.com"
