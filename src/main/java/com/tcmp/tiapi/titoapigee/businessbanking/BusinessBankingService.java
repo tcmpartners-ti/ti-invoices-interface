@@ -54,7 +54,7 @@ public class BusinessBankingService {
     tryEventNotification(headers, body);
   }
 
-  public void notifyEvent(OperationalGatewayProcessCode processCode,  Object payload) {
+  public void notifyEvent(OperationalGatewayProcessCode processCode, Object payload) {
     ApiGeeBaseRequest<OperationalGatewayRequest<?>> body = ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
       .data(OperationalGatewayRequest.builder()
         .referenceData(ReferenceData.builder()
@@ -93,7 +93,7 @@ public class BusinessBankingService {
       log.error("Server error. {}.", e.getMessage());
       throw new RecoverableApiGeeRequestException(e.getMessage());
     } finally {
-      log.info("Headers={} Body={}", headers, body);
+      log.info("Body={}", body);
     }
   }
 }

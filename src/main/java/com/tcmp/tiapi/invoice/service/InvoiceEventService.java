@@ -39,7 +39,7 @@ public class InvoiceEventService {
 
     InvoiceEventInfo invoiceInfo = InvoiceEventInfo.builder()
       .id(invoiceUuid)
-      .batchId(invoice.getBatchId())
+      .batchId(invoice.getBatchId().trim())
       .reference(invoiceNumber)
       .sellerMnemonic(invoiceEventMessage.getSeller())
       .build();
