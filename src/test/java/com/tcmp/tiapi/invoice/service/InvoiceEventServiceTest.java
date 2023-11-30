@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice.service;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
+import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,13 +19,14 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceEventServiceTest {
+  @Mock private InvoiceRepository invoiceRepository;
   @Mock private InvoiceCreationEventRepository invoiceCreationEventRepository;
 
   private InvoiceEventService testedInvoiceEventService;
 
   @BeforeEach
   void setUp() {
-    testedInvoiceEventService = new InvoiceEventService(invoiceCreationEventRepository);
+    testedInvoiceEventService = new InvoiceEventService(invoiceRepository, invoiceCreationEventRepository);
   }
 
   @Test

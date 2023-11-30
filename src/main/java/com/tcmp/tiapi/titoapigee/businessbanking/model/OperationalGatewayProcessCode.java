@@ -10,7 +10,7 @@ public enum OperationalGatewayProcessCode {
   INVOICE_SETTLEMENT(OperationalGatewayProcessCode.PROCESS_CODE),
   INVOICE_FINANCING(OperationalGatewayProcessCode.PROCESS_CODE);
 
-  // Use the same code for everything (Kerlly said so)
+  // Use the same code for everything (Kerly said so)
   public static final String PROCESS_CODE = "FTI001";
 
   private final String value;

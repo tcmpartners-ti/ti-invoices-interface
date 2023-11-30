@@ -21,4 +21,3 @@ public interface BusinessBankingMapper {
     InvoiceEventInfo invoice
   );
 }
-
