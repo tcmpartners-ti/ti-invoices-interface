@@ -57,14 +57,14 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
   private void startInvoiceFinancingFlow(AckServiceRequest<FinanceAckMessage> serviceRequest) {
     if (serviceRequest == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     FinanceAckMessage financeMessage = serviceRequest.getBody();
-    String invoiceReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
+    String masterReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
     BigDecimal financeDealAmountInCents = new BigDecimal(financeMessage.getFinanceDealAmount());
     BigDecimal financeDealAmount = MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
 
     Customer buyer = invoiceFinancingService.findCustomerByMnemonic(financeMessage.getBuyerIdentifier());
     Customer seller = invoiceFinancingService.findCustomerByMnemonic(financeMessage.getSellerIdentifier());
-    ProductMasterExtension invoiceExtension = invoiceFinancingService.findProductMasterExtensionByMasterReference(invoiceReference);
-    InvoiceMaster invoice = invoiceFinancingService.findInvoiceByMasterReference(financeMessage.getMasterRef());
+    ProductMasterExtension invoiceExtension = invoiceFinancingService.findProductMasterExtensionByMasterReference(masterReference);
+    InvoiceMaster invoice = invoiceFinancingService.findInvoiceByMasterReference(masterReference);
     Account sellerAccount = invoiceFinancingService.findAccountByCustomerMnemonic(financeMessage.getSellerIdentifier());
     ProgramExtension programExtension = invoiceFinancingService.findByProgrammeIdOrDefault(financeMessage.getProgramme());
 
