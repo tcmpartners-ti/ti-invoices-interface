@@ -13,15 +13,7 @@ import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.AmortizationPaymentPeriodType;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.CommercialTrade;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Disbursement;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.DistributorCreditRequest;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.GracePeriod;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.InterestPayment;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.PaymentForm;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Tax;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.TermPeriodType;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
@@ -83,7 +75,8 @@ public class InvoiceFinancingService {
     FinanceAckMessage invoiceFinanceAck,
     ProgramExtension programExtension,
     Customer buyer,
-    EncodedAccountParser buyerAccountParser
+    EncodedAccountParser buyerAccountParser,
+    boolean isSimulation
   ) {
     return DistributorCreditRequest.builder()
       .commercialTrade(new CommercialTrade(buyer.getType().trim()))
@@ -101,17 +94,18 @@ public class InvoiceFinancingService {
         .build())
       .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
       .effectiveDate(invoiceFinanceAck.getStartDate())
-      .firstDueDate(invoiceFinanceAck.getMaturityDate())
-      .term(calculateInvoiceFinancingCreditTerm(invoiceFinanceAck, programExtension))
+      .term(isSimulation
+        ? calculateDaysBetweenStartAndMaturityDays(invoiceFinanceAck)
+        : calculateInvoiceFinancingCreditTerm(invoiceFinanceAck, programExtension))
       .termPeriodType(new TermPeriodType("D"))
       .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
-      .interestPayment(new InterestPayment("C01", new GracePeriod("O", "002")))
+      .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
       .maturityForm("C99")
       .quotaMaturityCriteria("*NO")
       .references(List.of())
       .tax(Tax.builder()
         .code("L")
-        .paymentForm(new PaymentForm("D"))
+        .paymentForm(new PaymentForm("C"))
         .rate(BigDecimal.ZERO)
         .amount(BigDecimal.ZERO)
         .build())
@@ -119,41 +113,68 @@ public class InvoiceFinancingService {
   }
 
   private int calculateInvoiceFinancingCreditTerm(FinanceAckMessage invoiceFinanceMessage, ProgramExtension programExtension) {
+    int extraFinancingDays = programExtension.getExtraFinancingDays();
+    return extraFinancingDays + calculateDaysBetweenStartAndMaturityDays(invoiceFinanceMessage);
+  }
+
+  private int calculateDaysBetweenStartAndMaturityDays(FinanceAckMessage invoiceFinanceMessage) {
     LocalDate startDate = LocalDate.parse(invoiceFinanceMessage.getStartDate());
     LocalDate maturityDate = LocalDate.parse(invoiceFinanceMessage.getMaturityDate());
-    int extraFinancingDays = programExtension.getExtraFinancingDays();
 
-    return extraFinancingDays + (int) ChronoUnit.DAYS.between(startDate, maturityDate);
+    return (int) ChronoUnit.DAYS.between(startDate, maturityDate);
   }
 
   public TransactionRequest buildBuyerToBglTransactionRequest(
-    DistributorCreditResponse distributorCreditResponse,
-    FinanceAckMessage invoiceFinanceMessage,
-    EncodedAccountParser buyerAccountParser
-  ) {
-    String invoiceReference = invoiceFinanceMessage.getTheirRef();
-    String sellerName = invoiceFinanceMessage.getSellerName();
-    String concept = String.format("Descuento Factura %s %s", invoiceReference, sellerName);
-    String currency = invoiceFinanceMessage.getPaymentDetails().getCurrency();
+    DistributorCreditResponse distributorCreditResponse, FinanceAckMessage financeMessage, EncodedAccountParser buyerAccount) {
+    String concept = String.format("Descuento Factura %s %s", financeMessage.getTheirRef(), financeMessage.getSellerName());
+    String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
     return TransactionRequest.from(
-      TransactionType.CLIENT_TO_BGL, buyerAccountParser.getAccount(), bglAccount, concept, currency, amount);
+      TransactionType.CLIENT_TO_BGL, buyerAccount.getAccount(), bglAccount, concept, currency, amount);
   }
 
   public TransactionRequest buildBglToSellerTransactionRequest(
-    DistributorCreditResponse distributorCreditResponse,
-    FinanceAckMessage invoicePrepaymentMessage,
-    EncodedAccountParser sellerAccount
-  ) {
-    String invoiceReference = invoicePrepaymentMessage.getTheirRef();
-    String buyerName = invoicePrepaymentMessage.getBuyerName();
-    String concept = String.format("Pago Factura %s %s", invoiceReference, buyerName);
-    String currency = invoicePrepaymentMessage.getPaymentDetails().getCurrency();
+    DistributorCreditResponse distributorCreditResponse, FinanceAckMessage financeMessage, EncodedAccountParser sellerAccount) {
+    String concept = String.format("Pago Factura %s %s", financeMessage.getTheirRef(), financeMessage.getBuyerName());
+    String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
     return TransactionRequest.from(
       TransactionType.BGL_TO_CLIENT, bglAccount, sellerAccount.getAccount(), concept, currency, amount);
+  }
+
+  public TransactionRequest buildSellerToBglSolcaAndTaxesTransactionRequest(
+    DistributorCreditResponse sellerCreditResponse, FinanceAckMessage financeMessage, EncodedAccountParser sellerAccount) {
+
+    String concept = String.format(
+      "Intereses y Solca Factura %s %s", financeMessage.getTheirRef(), financeMessage.getBuyerName());
+    String currency = financeMessage.getPaymentDetails().getCurrency();
+    BigDecimal amount = calculateSolcaAndTaxesFromCreditResponse(sellerCreditResponse, financeMessage);
+
+    return TransactionRequest.from(
+      TransactionType.CLIENT_TO_BGL, sellerAccount.getAccount(), bglAccount, concept, currency, amount);
+  }
+
+  public TransactionRequest buildBglToBuyerSolcaAndTaxesTransactionRequest(
+    DistributorCreditResponse sellerCreditResponse, FinanceAckMessage financeMessage, EncodedAccountParser buyerAccount) {
+
+    String concept = String.format(
+      "Intereses y Solca Factura %s %s", financeMessage.getTheirRef(), financeMessage.getSellerName());
+    String currency = financeMessage.getPaymentDetails().getCurrency();
+    BigDecimal amount = calculateSolcaAndTaxesFromCreditResponse(sellerCreditResponse, financeMessage);
+
+    return TransactionRequest.from(
+      TransactionType.BGL_TO_CLIENT, bglAccount, buyerAccount.getAccount(), concept, currency, amount);
+  }
+
+  private BigDecimal calculateSolcaAndTaxesFromCreditResponse(
+    DistributorCreditResponse sellerCreditResponse, FinanceAckMessage financeMessage) {
+    BigDecimal financeDealAmount = getFinanceDealAmountFromMessage(financeMessage);
+    // totalInstallmentsAmount = Invoice value + taxes + solca
+    BigDecimal totalInstallmentsAmount = BigDecimal.valueOf(sellerCreditResponse.data().totalInstallmentsAmount());
+
+    return totalInstallmentsAmount.subtract(financeDealAmount);
   }
 
   public InvoiceEmailInfo buildInvoiceFinancingEmailInfo(

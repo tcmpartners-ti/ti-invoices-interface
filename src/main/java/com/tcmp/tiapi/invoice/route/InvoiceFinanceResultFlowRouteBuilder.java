@@ -73,7 +73,10 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
 
     try {
       notifyInvoiceStatusToSeller(InvoiceEmailEvent.FINANCED, financeMessage, seller, financeDealAmount);
-      createAndTransferCreditAmountOrThrowException(financeMessage, programExtension, buyer, buyerAccountParser, sellerAccountParser);
+      createAndTransferCreditAmountFromBuyerToSellerOrThrowException(
+        financeMessage, programExtension, buyer, buyerAccountParser, sellerAccountParser);
+      simulateCreditWithSolcaPlusTaxesAndTransferAmountFromSellerToBuyerOrThrowException(
+        financeMessage, programExtension, buyer, buyerAccountParser, sellerAccountParser);
       notifyInvoiceStatusToSeller(InvoiceEmailEvent.PROCESSED, financeMessage, seller, financeDealAmount);
 
       notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
@@ -92,7 +95,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
   }
 
-  private void createAndTransferCreditAmountOrThrowException(
+  private void createAndTransferCreditAmountFromBuyerToSellerOrThrowException(
     FinanceAckMessage financeMessage,
     ProgramExtension programExtension,
     Customer buyer,
@@ -101,7 +104,8 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
   ) throws CreditCreationException, PaymentExecutionException {
     log.info("Starting credit creation.");
     DistributorCreditResponse distributorCreditResponse = corporateLoanService.createCredit(
-      invoiceFinancingService.buildDistributorCreditRequest(financeMessage, programExtension, buyer, buyerAccountParser));
+      invoiceFinancingService.buildDistributorCreditRequest(
+        financeMessage, programExtension, buyer, buyerAccountParser, false));
     Error creditError = distributorCreditResponse.data().error();
 
     boolean hasBeenCredited = creditError != null && creditError.hasNoError();
@@ -121,20 +125,67 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
 
   private boolean transferCreditAmountFromBuyerToSeller(
     DistributorCreditResponse distributorCreditResponse,
-    FinanceAckMessage invoicePrepaymentAckMessage,
+    FinanceAckMessage invoiceFinanceMessage,
     EncodedAccountParser buyerAccount,
     EncodedAccountParser sellerAccount
   ) {
     BusinessAccountTransfersResponse buyerToBglResponse = paymentExecutionService.makeTransactionRequest(
       invoiceFinancingService.buildBuyerToBglTransactionRequest(
-        distributorCreditResponse, invoicePrepaymentAckMessage, buyerAccount));
+        distributorCreditResponse, invoiceFinanceMessage, buyerAccount));
 
     BusinessAccountTransfersResponse bglToSellerResponse = paymentExecutionService.makeTransactionRequest(
       invoiceFinancingService.buildBglToSellerTransactionRequest(
-        distributorCreditResponse, invoicePrepaymentAckMessage, sellerAccount));
+        distributorCreditResponse, invoiceFinanceMessage, sellerAccount));
 
     if (buyerToBglResponse == null || bglToSellerResponse == null) return false;
     return buyerToBglResponse.isOk() && bglToSellerResponse.isOk();
+  }
+
+
+  private void simulateCreditWithSolcaPlusTaxesAndTransferAmountFromSellerToBuyerOrThrowException(
+    FinanceAckMessage financeMessage,
+    ProgramExtension programExtension,
+    Customer buyer,
+    EncodedAccountParser buyerAccountParser,
+    EncodedAccountParser sellerAccountParser
+  ) throws CreditCreationException, PaymentExecutionException {
+    log.info("Starting credit simulation.");
+    DistributorCreditResponse sellerCreditSimulationResponse = corporateLoanService.createCredit(
+      invoiceFinancingService.buildDistributorCreditRequest(
+        financeMessage, programExtension, buyer, buyerAccountParser, true));
+    Error creditError = sellerCreditSimulationResponse.data().error();
+
+    boolean hasBeenCredited = creditError != null && creditError.hasNoError();
+    if (!hasBeenCredited) {
+      String creditErrorMessage = creditError != null ? creditError.message() : "Credit simulation failed.";
+      throw new CreditCreationException(creditErrorMessage);
+    }
+
+    log.info("Starting buyer to seller taxes and solca transaction.");
+    boolean buyerToSellerTransactionSuccessful = transferSolcaAndTaxesAmountFromSellerToBuyer(
+      sellerCreditSimulationResponse, financeMessage, sellerAccountParser, buyerAccountParser);
+    if (!buyerToSellerTransactionSuccessful) {
+      String transferError = "Could not transfer solca plus taxes amount from seller to buyer.";
+      throw new PaymentExecutionException(TransferResponseError.builder().title(transferError).build());
+    }
+  }
+
+  private boolean transferSolcaAndTaxesAmountFromSellerToBuyer(
+    DistributorCreditResponse sellerCreditResponse,
+    FinanceAckMessage financeMessage,
+    EncodedAccountParser sellerAccount,
+    EncodedAccountParser buyerAccount
+  ) {
+
+    BusinessAccountTransfersResponse sellerToBglResponse = paymentExecutionService.makeTransactionRequest(
+      invoiceFinancingService.buildSellerToBglSolcaAndTaxesTransactionRequest(sellerCreditResponse, financeMessage, sellerAccount));
+
+    BusinessAccountTransfersResponse bglToBuyerResponse = paymentExecutionService.makeTransactionRequest(
+      invoiceFinancingService.buildBglToBuyerSolcaAndTaxesTransactionRequest(sellerCreditResponse, financeMessage, buyerAccount));
+
+    if (sellerToBglResponse == null || bglToBuyerResponse == null) return false;
+    return sellerToBglResponse.isOk() && bglToBuyerResponse.isOk();
+
   }
 
   private void notifyFinanceStatus(
