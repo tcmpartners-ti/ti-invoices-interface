@@ -27,7 +27,20 @@ public class CorporateLoanService {
 
   @Value("${bp.api-gee.services.corporate-loan.user}") private String userHeader;
 
+
   public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest) {
+    return createCredit(distributorCreditRequest, false);
+  }
+
+  /**
+   * This method creates a credit in GAF. If there's  an error, throws an exception.
+   *
+   * @param distributorCreditRequest The request body.
+   * @param isSimulation Used to tell GAF if the operation should impact as a real operation or not. Used when we want
+   *                     to ask GAF the values for the seller taxes and solca.
+   * @return The operation result.
+   */
+  public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest, boolean isSimulation) {
     ApiGeeBaseRequest<DistributorCreditRequest> request = ApiGeeBaseRequest.<DistributorCreditRequest>builder()
       .data(distributorCreditRequest)
       .build();
@@ -36,7 +49,7 @@ public class CorporateLoanService {
     // Add missing headers for this service
     headers.put("X-User", userHeader);
     headers.put("X-Operation-Token", buildOperationId());
-    headers.put("X-Operation-Id", "C/D");
+    headers.put("X-Operation-Id", isSimulation ? "V/X" : "C/D");
 
     try {
       DistributorCreditResponse response = corporateLoanClient.createCredit(headers, request);
