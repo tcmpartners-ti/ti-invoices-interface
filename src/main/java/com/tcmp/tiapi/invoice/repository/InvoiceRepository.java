@@ -13,6 +13,13 @@ import java.util.Optional;
 public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
   Optional<InvoiceMaster> findByProductMasterMasterReference(String masterReference);
 
+
+  Optional<InvoiceMaster> findByProgramIdAndSellerMnemonicAndReference(
+    String programId,
+    String sellerMnemonic,
+    String invoiceReference
+  );
+
   Optional<InvoiceMaster> findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
     String programId,
     String sellerMnemonic,

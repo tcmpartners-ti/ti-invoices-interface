@@ -49,11 +49,10 @@ public class InvoiceEventService {
 
   // Hotfix: find a better and cleaner way of doing this.
   private InvoiceMaster findInvoiceFromFinanceMessage(FinanceBuyerCentricInvoiceEventMessage invoiceEventMessage) {
-    return invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
+    return invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(
       invoiceEventMessage.getProgramme(),
       invoiceEventMessage.getSeller(),
-      invoiceEventMessage.getTheirReference(),
-      true
+      invoiceEventMessage.getTheirReference()
     ).orElseThrow(
       () -> new EntityNotFoundException("Could not find invoice for given programme / buyer / seller relationship."));
   }
