@@ -144,7 +144,7 @@ class InvoiceFinancingServiceTest {
     var buyerAccountParser = new EncodedAccountParser("CC2777371930");
 
     var creditRequest = invoiceFinancingService.buildDistributorCreditRequest(
-      invoiceFinanceMessage, programExtension, buyer, buyerAccountParser);
+      invoiceFinanceMessage, programExtension, buyer, buyerAccountParser, false);
 
     var expectedMnemonic = "1722466420002";
     var expectedName = "David";
