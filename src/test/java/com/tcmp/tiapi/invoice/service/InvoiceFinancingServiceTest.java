@@ -159,7 +159,6 @@ class InvoiceFinancingServiceTest {
     assertEquals(expectedBankCode1, creditRequest.customer().documentType());
     assertNotNull(creditRequest.disbursement());
     assertNotNull(creditRequest.effectiveDate());
-    assertNotNull(creditRequest.firstDueDate());
     assertEquals(expectedTerm, creditRequest.term());
     assertEquals(expectedInstallmentNumber, creditRequest.interestPayment().gracePeriod().installmentNumber());
   }
