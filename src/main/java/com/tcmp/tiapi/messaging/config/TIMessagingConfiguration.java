@@ -22,13 +22,13 @@ public class TIMessagingConfiguration {
   public static final String COMMON_PREFIX = "ns3";
   public static final String CUSTOM_PREFIX = "ns4";
 
-  public static final Map<String, String> namespacesPrefixes = Map.of(
-    TINamespace.CONTROL, CONTROL_PREFIX,
-    TINamespace.SCHEMA, SCHEMA_PREFIX,
-    TINamespace.MESSAGES, MESSAGES_PREFIX,
-    TINamespace.COMMON, COMMON_PREFIX,
-    TINamespace.CUSTOM, CUSTOM_PREFIX
-  );
+  public static final Map<String, String> namespacesPrefixes =
+      Map.of(
+          TINamespace.CONTROL, CONTROL_PREFIX,
+          TINamespace.SCHEMA, SCHEMA_PREFIX,
+          TINamespace.MESSAGES, MESSAGES_PREFIX,
+          TINamespace.COMMON, COMMON_PREFIX,
+          TINamespace.CUSTOM, CUSTOM_PREFIX);
 
   @Bean
   @Qualifier("jaxbDataFormatServiceRequest")

@@ -10,14 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
-  contextId = "paymentExecutionContextId",
-  value = "paymentExecutionClient",
-  url = "${bp.api-gee.services.payment-execution.url}"
-)
+    contextId = "paymentExecutionContextId",
+    value = "paymentExecutionClient",
+    url = "${bp.api-gee.services.payment-execution.url}")
 public interface PaymentExecutionClient {
   @PostMapping("/bussines-account-transfers/customer")
   BusinessAccountTransfersResponse postPayment(
-    @RequestHeader Map<String, String> headers,
-    @RequestBody ApiGeeBaseRequest<TransactionRequest> body
-  );
+      @RequestHeader Map<String, String> headers,
+      @RequestBody ApiGeeBaseRequest<TransactionRequest> body);
 }

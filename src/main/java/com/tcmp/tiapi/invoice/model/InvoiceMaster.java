@@ -203,7 +203,11 @@ public class InvoiceMaster {
   private ProductMaster productMaster; // Parent table
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = "KEY97", referencedColumnName = "MASTER", insertable = false, updatable = false)
+  @JoinColumn(
+      name = "KEY97",
+      referencedColumnName = "MASTER",
+      insertable = false,
+      updatable = false)
   private ProductMasterExtension productMasterExtension;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -211,10 +215,18 @@ public class InvoiceMaster {
   private CounterParty buyer;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = "SELLER", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  @JoinColumn(
+      name = "SELLER",
+      referencedColumnName = "KEY97",
+      insertable = false,
+      updatable = false)
   private CounterParty seller;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = "PROGRAMME", referencedColumnName = "KEY97", insertable = false, updatable = false)
+  @JoinColumn(
+      name = "PROGRAMME",
+      referencedColumnName = "KEY97",
+      insertable = false,
+      updatable = false)
   private Program program;
 }

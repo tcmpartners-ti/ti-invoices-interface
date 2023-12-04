@@ -24,7 +24,9 @@ public class InvoiceCreationRowCSV implements Serializable {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "This field must be between 1 and 20 characters.")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed.")
   @DataField(pos = 1, name = "CustomerMnemonic")
   @CsvBindByPosition(position = 0)
   private String customer;
@@ -44,7 +46,9 @@ public class InvoiceCreationRowCSV implements Serializable {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "This field must be between 1 and 20 characters.")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed.")
   @DataField(pos = 4, name = "AnchorPartyMnemonic")
   @CsvBindByPosition(position = 3)
   private String anchorParty;
@@ -57,14 +61,18 @@ public class InvoiceCreationRowCSV implements Serializable {
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "This field must be between 1 and 20 characters.")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed.")
   @DataField(pos = 6, name = "SellerId")
   @CsvBindByPosition(position = 5)
   private String seller;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 20, message = "Debited party id must be between 1 and 20 characters long.")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed.")
   @DataField(pos = 7, name = "BuyerId")
   @CsvBindByPosition(position = 6)
   private String buyer;
@@ -76,13 +84,17 @@ public class InvoiceCreationRowCSV implements Serializable {
   private String invoiceNumber;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Issue date must be in format dd-MM-yyyy.")
+  @Pattern(
+      regexp = FieldValidationRegex.FORMATTED_DATE,
+      message = "Issue date must be in format dd-MM-yyyy.")
   @DataField(pos = 9, name = "IssueDate", pattern = DATE_FORMAT)
   @CsvBindByPosition(position = 8)
   private String issueDate;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = FieldValidationRegex.NUMBER_WITH_DECIMALS, message = "This field must be in format ##.##")
+  @Pattern(
+      regexp = FieldValidationRegex.NUMBER_WITH_DECIMALS,
+      message = "This field must be in format ##.##")
   @DataField(pos = 10, name = "FaceValueAmount", pattern = NUMBER_FORMAT, precision = 2)
   @CsvBindByPosition(position = 9)
   private String faceValueAmount;
@@ -95,7 +107,9 @@ public class InvoiceCreationRowCSV implements Serializable {
 
   @NotNull(message = "This field is required.")
   @DataField(pos = 12, name = "OutstandingAmount", pattern = NUMBER_FORMAT, precision = 2)
-  @Pattern(regexp = FieldValidationRegex.NUMBER_WITH_DECIMALS, message = "This field must be in format ##.##")
+  @Pattern(
+      regexp = FieldValidationRegex.NUMBER_WITH_DECIMALS,
+      message = "This field must be in format ##.##")
   @CsvBindByPosition(position = 11)
   private String outstandingAmount;
 
@@ -106,14 +120,18 @@ public class InvoiceCreationRowCSV implements Serializable {
   private String outstandingCurrency;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Settlement date must be in format dd-MM-yyyy.")
+  @Pattern(
+      regexp = FieldValidationRegex.FORMATTED_DATE,
+      message = "Settlement date must be in format dd-MM-yyyy.")
   @DataField(pos = 14, name = "SettlementDate", pattern = DATE_FORMAT)
   @CsvBindByPosition(position = 13)
   private String settlementDate;
 
   @NotNull(message = "This field is required.")
   @Size(min = 12, max = 12, message = "This field must be 12 characters long")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed.")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed.")
   @DataField(pos = 15, name = "AnchorAccount")
   @CsvBindByPosition(position = 14)
   private String anchorAccount;

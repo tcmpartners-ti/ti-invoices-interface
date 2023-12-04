@@ -11,15 +11,19 @@ import org.springframework.validation.FieldError;
 
 @Slf4j
 public class InvoiceRowValidator {
-  public List<FieldError> validate(int line, InvoiceCreationRowCSV invoiceRow, Validator validator) {
+  public List<FieldError> validate(
+      int line, InvoiceCreationRowCSV invoiceRow, Validator validator) {
     Set<ConstraintViolation<InvoiceCreationRowCSV>> violations = validator.validate(invoiceRow);
 
-    return violations.stream().map(violation -> new FieldError(
-        violation.getLeafBean().toString(),
-        violation.getPropertyPath().toString(),
-        buildCustomErrorMessage(line, violation.getPropertyPath(), violation.getMessage())
-      )
-    ).toList();
+    return violations.stream()
+        .map(
+            violation ->
+                new FieldError(
+                    violation.getLeafBean().toString(),
+                    violation.getPropertyPath().toString(),
+                    buildCustomErrorMessage(
+                        line, violation.getPropertyPath(), violation.getMessage())))
+        .toList();
   }
 
   private String buildCustomErrorMessage(int line, Path path, String baseErrorMessage) {

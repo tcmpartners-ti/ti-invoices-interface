@@ -10,16 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
-  contextId = "businessBankingContextId",
-  value = "businessBankingClient",
-  url = "${bp.api-gee.services.business-banking.url}",
-  configuration = {RequestBodyEncryptionConfiguration.class}
-)
+    contextId = "businessBankingContextId",
+    value = "businessBankingClient",
+    url = "${bp.api-gee.services.business-banking.url}",
+    configuration = {RequestBodyEncryptionConfiguration.class})
 public interface BusinessBankingClient {
   @PostMapping("/operational-gateway")
   Void notifyEvent(
-    @RequestHeader Map<String, String> headers,
-    @RequestBody ApiGeeBaseRequest<OperationalGatewayRequest<?>> body
-  );
+      @RequestHeader Map<String, String> headers,
+      @RequestBody ApiGeeBaseRequest<OperationalGatewayRequest<?>> body);
 }
-

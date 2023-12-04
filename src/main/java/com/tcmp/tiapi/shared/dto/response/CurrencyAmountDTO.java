@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 public class CurrencyAmountDTO {
   @NotNull(message = "This field is required.")
   @DecimalMin(value = "0", message = "The amount must be positive")
-  @DecimalMax(value = "99999999999999999999", message = "The amount must not exceed 9999999999999999999999.")
+  @DecimalMax(
+      value = "99999999999999999999",
+      message = "The amount must not exceed 9999999999999999999999.")
   @Schema(description = "Monetary amount.")
   private BigDecimal amount;
 

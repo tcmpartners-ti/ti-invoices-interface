@@ -31,22 +31,25 @@ public class BusinessBankingService {
   private final BusinessBankingMapper businessBankingMapper;
 
   public void notifyInvoiceEventResult(
-    OperationalGatewayProcessCode processCode,
-    ServiceResponse serviceResponse,
-    InvoiceEventInfo invoice
-  ) {
-    OperationalGatewayRequestPayload payload = businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
+      OperationalGatewayProcessCode processCode,
+      ServiceResponse serviceResponse,
+      InvoiceEventInfo invoice) {
+    OperationalGatewayRequestPayload payload =
+        businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
 
-    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body = ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
-      .data(OperationalGatewayRequest.builder()
-        .referenceData(ReferenceData.builder()
-          .provider(REQUEST_PROVIDER)
-          .correlatedMessageId(UUID.randomUUID().toString())
-          .processCode(ProcessCode.of(processCode))
-          .build())
-        .payload(payload)
-        .build())
-      .build();
+    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body =
+        ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
+            .data(
+                OperationalGatewayRequest.builder()
+                    .referenceData(
+                        ReferenceData.builder()
+                            .provider(REQUEST_PROVIDER)
+                            .correlatedMessageId(UUID.randomUUID().toString())
+                            .processCode(ProcessCode.of(processCode))
+                            .build())
+                    .payload(payload)
+                    .build())
+            .build();
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
@@ -54,34 +57,38 @@ public class BusinessBankingService {
   }
 
   public void notifyEvent(OperationalGatewayProcessCode processCode, Object payload) {
-    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body = ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
-      .data(OperationalGatewayRequest.builder()
-        .referenceData(ReferenceData.builder()
-          .provider(REQUEST_PROVIDER)
-          .correlatedMessageId(UUID.randomUUID().toString())
-          .processCode(ProcessCode.of(processCode))
-          .build())
-        .payload(payload)
-        .build())
-      .build();
+    ApiGeeBaseRequest<OperationalGatewayRequest<?>> body =
+        ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
+            .data(
+                OperationalGatewayRequest.builder()
+                    .referenceData(
+                        ReferenceData.builder()
+                            .provider(REQUEST_PROVIDER)
+                            .correlatedMessageId(UUID.randomUUID().toString())
+                            .processCode(ProcessCode.of(processCode))
+                            .build())
+                    .payload(payload)
+                    .build())
+            .build();
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
     tryEventNotification(headers, body);
   }
 
-  private void tryEventNotification(Map<String, String> headers, ApiGeeBaseRequest<OperationalGatewayRequest<?>> body) {
+  private void tryEventNotification(
+      Map<String, String> headers, ApiGeeBaseRequest<OperationalGatewayRequest<?>> body) {
     try {
       businessBankingClient.notifyEvent(headers, body);
       log.info("Event notified successfully");
     } catch (FeignException e) {
-      List<Integer> unrecoverableResponseCodes = List.of(
-        HttpStatus.GATEWAY_TIMEOUT.value(),
-        HttpStatus.BAD_REQUEST.value(),
-        HttpStatus.UNAUTHORIZED.value(),
-        HttpStatus.FORBIDDEN.value(),
-        HttpStatus.NOT_FOUND.value()
-      );
+      List<Integer> unrecoverableResponseCodes =
+          List.of(
+              HttpStatus.GATEWAY_TIMEOUT.value(),
+              HttpStatus.BAD_REQUEST.value(),
+              HttpStatus.UNAUTHORIZED.value(),
+              HttpStatus.FORBIDDEN.value(),
+              HttpStatus.NOT_FOUND.value());
 
       boolean isUnrecoverableRequest = unrecoverableResponseCodes.contains(e.status());
       if (isUnrecoverableRequest) {

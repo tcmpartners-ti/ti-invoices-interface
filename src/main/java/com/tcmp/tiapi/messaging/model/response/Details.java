@@ -2,11 +2,10 @@ package com.tcmp.tiapi.messaging.model.response;
 
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import jakarta.xml.bind.annotation.*;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @XmlType
 @XmlRootElement(name = "Details")

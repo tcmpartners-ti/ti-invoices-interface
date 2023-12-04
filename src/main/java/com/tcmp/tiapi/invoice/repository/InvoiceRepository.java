@@ -12,19 +12,11 @@ import org.springframework.stereotype.Repository;
 public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
   Optional<InvoiceMaster> findByProductMasterMasterReference(String masterReference);
 
-
   Optional<InvoiceMaster> findByProgramIdAndSellerMnemonicAndReference(
-    String programId,
-    String sellerMnemonic,
-    String invoiceReference
-  );
+      String programId, String sellerMnemonic, String invoiceReference);
 
   Optional<InvoiceMaster> findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
-    String programId,
-    String sellerMnemonic,
-    String invoiceReference,
-    boolean isActive
-  );
+      String programId, String sellerMnemonic, String invoiceReference, boolean isActive);
 
   Page<InvoiceMaster> findAll(Specification<InvoiceMaster> spec, Pageable pageable);
 }

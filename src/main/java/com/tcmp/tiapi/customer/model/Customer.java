@@ -14,8 +14,7 @@ import lombok.*;
 @Setter
 @ToString
 public class Customer {
-  @EmbeddedId
-  private CustomerId id;
+  @EmbeddedId private CustomerId id;
 
   @Column(name = "GFCUN", length = 35)
   private String fullName;
@@ -136,6 +135,10 @@ public class Customer {
   private String gfctp;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = "GFCUS1", referencedColumnName = "SXCUS1", insertable = false, updatable = false)
+  @JoinColumn(
+      name = "GFCUS1",
+      referencedColumnName = "SXCUS1",
+      insertable = false,
+      updatable = false)
   private Address address;
 }

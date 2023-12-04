@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
   FinanceAckMessage.class,
   NotificationInvoiceCreationMessage.class
 })
-
 public class AckServiceRequest<T> {
 
   @XmlElement(name = "RequestHeader", namespace = TINamespace.CONTROL)
@@ -30,21 +29,17 @@ public class AckServiceRequest<T> {
 
   @XmlElements({
     @XmlElement(
-      name = TIOperation.DUE_INVOICE_DETAILS_VALUE,
-      type = CreateDueInvoiceEventMessage.class,
-      namespace = TINamespace.CONTROL
-    ),
+        name = TIOperation.DUE_INVOICE_DETAILS_VALUE,
+        type = CreateDueInvoiceEventMessage.class,
+        namespace = TINamespace.CONTROL),
     @XmlElement(
-      name = TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE,
-      type = FinanceAckMessage.class,
-      namespace = TINamespace.CONTROL
-    ),
+        name = TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE,
+        type = FinanceAckMessage.class,
+        namespace = TINamespace.CONTROL),
     @XmlElement(
-      name = TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_DETAILS_VALUE,
-      type = NotificationInvoiceCreationMessage.class,
-      namespace = TINamespace.CONTROL
-    ),
+        name = TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_DETAILS_VALUE,
+        type = NotificationInvoiceCreationMessage.class,
+        namespace = TINamespace.CONTROL),
   })
-
   private T body;
 }

@@ -12,15 +12,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
-  contextId = "corporateLoanContextId",
-  value = "corporateLoanClient",
-  url = "${bp.api-gee.services.corporate-loan.url}",
-  configuration = {ResponseBodyDecryptionConfiguration.class, RequestBodyEncryptionConfiguration.class}
-)
+    contextId = "corporateLoanContextId",
+    value = "corporateLoanClient",
+    url = "${bp.api-gee.services.corporate-loan.url}",
+    configuration = {
+      ResponseBodyDecryptionConfiguration.class,
+      RequestBodyEncryptionConfiguration.class
+    })
 public interface CorporateLoanClient {
   @PostMapping("/cfs-loans/distributor-credits")
   DistributorCreditResponse createCredit(
-    @RequestHeader Map<String, String> headers,
-    @RequestBody ApiGeeBaseRequest<DistributorCreditRequest> request
-  );
+      @RequestHeader Map<String, String> headers,
+      @RequestBody ApiGeeBaseRequest<DistributorCreditRequest> request);
 }

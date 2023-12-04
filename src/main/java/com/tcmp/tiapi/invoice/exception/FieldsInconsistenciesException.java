@@ -1,9 +1,8 @@
 package com.tcmp.tiapi.invoice.exception;
 
 import com.tcmp.tiapi.shared.dto.response.error.ErrorDetails;
-import lombok.Getter;
-
 import java.util.List;
+import lombok.Getter;
 
 @Getter
 public class FieldsInconsistenciesException extends RuntimeException {

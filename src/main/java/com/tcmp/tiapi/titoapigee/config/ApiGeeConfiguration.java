@@ -15,32 +15,40 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class ApiGeeConfiguration {
   private static final String DEFAULT_DEVICE_IP = "10.0.0.1";
-  @Value("${bp.api-gee.headers.device}") private String device;
 
-  @Value("${bp.api-gee.credentials.app-id}") private String appId;
-  @Value("${bp.api-gee.credentials.api-key}") private String apiKey;
-  @Value("${bp.api-gee.credentials.api-secret}") private String apiSecret;
+  @Value("${bp.api-gee.headers.device}")
+  private String device;
+
+  @Value("${bp.api-gee.credentials.app-id}")
+  private String appId;
+
+  @Value("${bp.api-gee.credentials.api-key}")
+  private String apiKey;
+
+  @Value("${bp.api-gee.credentials.api-secret}")
+  private String apiSecret;
 
   @Bean
   @Qualifier("encryptedBodyRequestHeaderSigner")
   public HeaderSigner encryptedBodyRequestHeaderSigner(ObjectMapper objectMapper) {
-    return new EncryptedBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, getPublicIp());
+    return new EncryptedBodyRequestHeaderSigner(
+        objectMapper, appId, apiKey, apiSecret, device, getPublicIp());
   }
 
   @Bean
   @Qualifier("plainBodyRequestHeaderSigner")
   public HeaderSigner plainBodyRequestHeaderSigner(ObjectMapper objectMapper) {
-    return new PlainBodyRequestHeaderSigner(objectMapper, appId, apiKey, apiSecret, device, getPublicIp());
+    return new PlainBodyRequestHeaderSigner(
+        objectMapper, appId, apiKey, apiSecret, device, getPublicIp());
   }
 
-  private String getPublicIp(){
+  private String getPublicIp() {
     try {
       InetAddress direccionIP = InetAddress.getLocalHost();
       return direccionIP.getHostAddress();
     } catch (java.net.UnknownHostException e) {
-       log.info("Could not determine the public IP address.");
-       return DEFAULT_DEVICE_IP;
+      log.info("Could not determine the public IP address.");
+      return DEFAULT_DEVICE_IP;
     }
   }
-
 }

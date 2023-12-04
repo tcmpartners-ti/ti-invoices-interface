@@ -27,19 +27,17 @@ public class SellerService {
   private final InvoiceMapper invoiceMapper;
 
   public PaginatedResult<InvoiceDTO> getSellerInvoices(
-    String sellerMnemonic,
-    SearchSellerInvoicesParams searchParams,
-    PageParams pageParams
-  ) {
+      String sellerMnemonic, SearchSellerInvoicesParams searchParams, PageParams pageParams) {
     if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
       throw new NotFoundHttpException(
-        String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
+          String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
     }
 
-    Page<InvoiceMaster> sellerInvoicesPage = invoiceRepository.findAll(
-      InvoiceSpecifications.filterBySellerMnemonicAndStatus(sellerMnemonic, searchParams.status()),
-      PageRequest.of(pageParams.getPage(), pageParams.getSize())
-    );
+    Page<InvoiceMaster> sellerInvoicesPage =
+        invoiceRepository.findAll(
+            InvoiceSpecifications.filterBySellerMnemonicAndStatus(
+                sellerMnemonic, searchParams.status()),
+            PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
     if (sellerInvoicesPage.getTotalElements() == 0) {
       StringBuilder errorMessage = new StringBuilder("Could not find invoices ");
@@ -53,11 +51,12 @@ public class SellerService {
       throw new NotFoundHttpException(errorMessage.toString());
     }
 
-    List<InvoiceDTO> invoicesDTOs = invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent());
+    List<InvoiceDTO> invoicesDTOs =
+        invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent());
 
     return PaginatedResult.<InvoiceDTO>builder()
-      .data(invoicesDTOs)
-      .meta(PaginatedResultMeta.from(sellerInvoicesPage))
-      .build();
+        .data(invoicesDTOs)
+        .meta(PaginatedResultMeta.from(sellerInvoicesPage))
+        .build();
   }
 }

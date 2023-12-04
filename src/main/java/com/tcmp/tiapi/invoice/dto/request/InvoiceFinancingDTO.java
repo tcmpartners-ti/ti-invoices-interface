@@ -27,54 +27,85 @@ public class InvoiceFinancingDTO {
 
   @NotNull(message = "This field is required.")
   @Size(min = 13, max = 13, message = "This field must have 13 characters")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+      message = "Special characters are not allowed")
   @Schema(description = "The anchor party's mnemonic.")
   private String anchorParty;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 35, message = "This field must be between 1 and 35 characters")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+      message = "Special characters are not allowed")
   @Schema(description = "Indicates the credit line to which the invoice relates.")
   private String programme;
 
   @NotNull(message = "This field is required.")
   @Size(min = 13, max = 13, message = "This field must have 13 characters")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+      message = "Special characters are not allowed")
   @Schema(description = "The customer who is the credit party on the invoice(s).")
   private String seller;
 
   @NotNull(message = "This field is required.")
   @Size(min = 13, max = 13, message = "This field must have 13 characters")
-  @Pattern(regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES, message = "Only numeric values are allowed")
-  @Pattern(regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS, message = "Special characters are not allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+      message = "Only numeric values are allowed")
+  @Pattern(
+      regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+      message = "Special characters are not allowed")
   @Schema(description = "The customer who is the debit party on the invoice(s).")
   private String buyer;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(
+      regexp = FieldValidationRegex.FORMATTED_DATE,
+      message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
-  @Schema(description = "The date the invoice(s) will become mature.", format = DATE_FORMAT, type = "date")
+  @Schema(
+      description = "The date the invoice(s) will become mature.",
+      format = DATE_FORMAT,
+      type = "date")
   private String maturityDate;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Finance currency code must be between 1 and 3 characters")
   @Pattern(regexp = FieldValidationRegex.ONLY_LETTERS, message = "Only letters are allowed")
-  @Schema(description = "The currency of the advance - the invoice(s) currency is used as the default.")
+  @Schema(
+      description = "The currency of the advance - the invoice(s) currency is used as the default.")
   private String financeCurrency;
 
   @NotNull(message = "This field is required.")
-  @Schema(minimum = "0.1", maximum = "100", description = "The percentage of the amount to be financed.")
+  @Schema(
+      minimum = "0.1",
+      maximum = "100",
+      description = "The percentage of the amount to be financed.")
   @DecimalMin(value = "0.1", message = "This field can't be less than 0.1")
   @DecimalMax(value = "100", message = "This field can't be greater than 100")
-  @Digits(integer = 15, fraction = 2, message = "Up to 15 integer digits and 2 fractional digits are allowed")
+  @Digits(
+      integer = 15,
+      fraction = 2,
+      message = "Up to 15 integer digits and 2 fractional digits are allowed")
   private BigDecimal financePercent;
 
   @NotNull(message = "This field is required.")
-  @Pattern(regexp = FieldValidationRegex.FORMATTED_DATE, message = "Date must be in the format " + DATE_FORMAT)
+  @Pattern(
+      regexp = FieldValidationRegex.FORMATTED_DATE,
+      message = "Date must be in the format " + DATE_FORMAT)
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
-  @Schema(description = "The start date of the advance - required for interest calculation.", format = DATE_FORMAT, type = "date")
+  @Schema(
+      description = "The start date of the advance - required for interest calculation.",
+      format = DATE_FORMAT,
+      type = "date")
   private String financeDate;
 
   @Valid

@@ -179,5 +179,4 @@ public class CounterParty {
 
   @Column(name = "TSTAMP")
   private Integer tstamp;
-
 }

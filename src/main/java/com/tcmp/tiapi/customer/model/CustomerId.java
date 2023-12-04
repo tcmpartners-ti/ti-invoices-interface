@@ -2,12 +2,11 @@ package com.tcmp.tiapi.customer.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.*;
-import org.hibernate.Hibernate;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
+import lombok.*;
+import org.hibernate.Hibernate;
 
 @Builder
 @AllArgsConstructor

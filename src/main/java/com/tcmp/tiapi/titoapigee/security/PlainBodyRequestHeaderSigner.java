@@ -15,12 +15,17 @@ public class PlainBodyRequestHeaderSigner extends ApiGeeHeaderSigner implements 
   private final String device;
   private final String deviceIp;
 
-  public PlainBodyRequestHeaderSigner(ObjectMapper objectMapper, String appId, String apiEncryptionKey, String apiSecret, String device, String deviceIp) {
+  public PlainBodyRequestHeaderSigner(
+      ObjectMapper objectMapper,
+      String appId,
+      String apiEncryptionKey,
+      String apiSecret,
+      String device,
+      String deviceIp) {
     super(objectMapper, appId, apiEncryptionKey, apiSecret);
     this.device = device;
     this.deviceIp = deviceIp;
   }
-
 
   @Override
   public Map<String, String> buildRequestHeaders(ApiGeeBaseRequest<?> baseRequest) {
@@ -37,13 +42,12 @@ public class PlainBodyRequestHeaderSigner extends ApiGeeHeaderSigner implements 
     }
 
     return Map.ofEntries(
-      Map.entry(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE),
-      Map.entry("X-Apigee-Credentials", credentialsHeader),
-      Map.entry("X-Signature", signatureHeader),
-      Map.entry("X-Session", session),
-      Map.entry("X-Guid", guid),
-      Map.entry("X-Device", device),
-      Map.entry("X-Device-IP", deviceIp)
-    );
+        Map.entry(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE),
+        Map.entry("X-Apigee-Credentials", credentialsHeader),
+        Map.entry("X-Signature", signatureHeader),
+        Map.entry("X-Session", session),
+        Map.entry("X-Guid", guid),
+        Map.entry("X-Device", device),
+        Map.entry("X-Device-IP", deviceIp));
   }
 }

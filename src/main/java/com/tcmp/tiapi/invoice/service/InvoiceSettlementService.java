@@ -39,88 +39,109 @@ public class InvoiceSettlementService {
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
   private final ProgramExtensionRepository programExtensionRepository;
 
-  @Value("${spring.profiles.active}") private String activeProfile;
-  @Value("${bp.service.payment-execution.bgl-account}") private String bglAccount;
+  @Value("${spring.profiles.active}")
+  private String activeProfile;
+
+  @Value("${bp.service.payment-execution.bgl-account}")
+  private String bglAccount;
 
   public InvoiceMaster findInvoiceByMasterRef(String masterReference) {
-    return invoiceRepository.findByProductMasterMasterReference(masterReference)
-      .orElseThrow(() -> new EntityNotFoundException("Could not find invoice."));
+    return invoiceRepository
+        .findByProductMasterMasterReference(masterReference)
+        .orElseThrow(() -> new EntityNotFoundException("Could not find invoice."));
   }
 
   public Customer findCustomerByMnemonic(String customerMnemonic) {
-    return customerRepository.findFirstByIdMnemonic(customerMnemonic)
-      .orElseThrow(() -> new EntityNotFoundException("Could not find customer with mnemonic " + customerMnemonic));
+    return customerRepository
+        .findFirstByIdMnemonic(customerMnemonic)
+        .orElseThrow(
+            () ->
+                new EntityNotFoundException(
+                    "Could not find customer with mnemonic " + customerMnemonic));
   }
 
   public ProductMasterExtension findProductMasterExtensionByMasterId(Long invoiceMasterId) {
-    return productMasterExtensionRepository.findByMasterId(invoiceMasterId)
-      .orElseThrow(() -> new EntityNotFoundException("Could not find account for the given invoice master."));
+    return productMasterExtensionRepository
+        .findByMasterId(invoiceMasterId)
+        .orElseThrow(
+            () ->
+                new EntityNotFoundException(
+                    "Could not find account for the given invoice master."));
   }
 
   public Account findAccountByCustomerMnemonic(String customerMnemonic) {
-    return accountRepository.findByTypeAndCustomerMnemonic("CA", customerMnemonic)
-      .orElseThrow(() -> new EntityNotFoundException("Could not find account for seller " + customerMnemonic));
+    return accountRepository
+        .findByTypeAndCustomerMnemonic("CA", customerMnemonic)
+        .orElseThrow(
+            () ->
+                new EntityNotFoundException(
+                    "Could not find account for seller " + customerMnemonic));
   }
 
   public ProgramExtension findProgrammeExtensionByIdOrDefault(String programmeId) {
-    return programExtensionRepository.findByProgrammeId(programmeId)
-      .orElse(ProgramExtension.builder()
-        .programmeId(programmeId)
-        .extraFinancingDays(0)
-        .requiresExtraFinancing(false)
-        .build());
+    return programExtensionRepository
+        .findByProgrammeId(programmeId)
+        .orElse(
+            ProgramExtension.builder()
+                .programmeId(programmeId)
+                .extraFinancingDays(0)
+                .requiresExtraFinancing(false)
+                .build());
   }
 
   public boolean invoiceHasLinkedFinanceEvent(InvoiceMaster invoice) {
     BigDecimal discountDealAmount = invoice.getDiscountDealAmount();
 
     return !invoice.getIsDrawDownEligible()
-           && invoice.getCreateFinanceEventId() != null
-           && (discountDealAmount != null && BigDecimal.ZERO.compareTo(discountDealAmount) != 0);
+        && invoice.getCreateFinanceEventId() != null
+        && (discountDealAmount != null && BigDecimal.ZERO.compareTo(discountDealAmount) != 0);
   }
 
   public DistributorCreditRequest buildDistributorCreditRequest(
-    CreateDueInvoiceEventMessage invoiceSettlementMessage,
-    Customer buyer,
-    ProgramExtension programExtension,
-    EncodedAccountParser buyerAccountParser
-  ) {
+      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      Customer buyer,
+      ProgramExtension programExtension,
+      EncodedAccountParser buyerAccountParser) {
     // Mock this value for dev testing purposes.
-    boolean isDevelopment = ApplicationEnv.LOCAL.value().equals(activeProfile) || ApplicationEnv.DEV.value().equals(activeProfile);
-    String paymentValueDate = isDevelopment
-      ? getSystemDate()
-      : invoiceSettlementMessage.getPaymentValueDate();
+    boolean isDevelopment =
+        ApplicationEnv.LOCAL.value().equals(activeProfile)
+            || ApplicationEnv.DEV.value().equals(activeProfile);
+    String paymentValueDate =
+        isDevelopment ? getSystemDate() : invoiceSettlementMessage.getPaymentValueDate();
 
     return DistributorCreditRequest.builder()
-      .commercialTrade(new CommercialTrade(buyer.getType().trim()))
-      .customer(com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Customer.builder()
-        .customerId(buyer.getNumber().trim())
-        .documentNumber(buyer.getId().getMnemonic().trim())
-        .fullName(buyer.getFullName().trim())
-        .documentType(buyer.getBankCode1().trim())
-        .build())
-      .disbursement(Disbursement.builder()
-        .accountNumber(buyerAccountParser.getAccount())
-        .accountType(buyerAccountParser.getType())
-        .bankId("010")
-        .form("N/C")
-        .build())
-      .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
-      .effectiveDate(paymentValueDate)
-      .term(programExtension.getExtraFinancingDays())
-      .termPeriodType(new TermPeriodType("D"))
-      .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
-      .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
-      .maturityForm("C99")
-      .quotaMaturityCriteria("*NO")
-      .references(List.of())
-      .tax(Tax.builder()
-        .code("L")
-        .paymentForm(new PaymentForm("C"))
-        .rate(BigDecimal.ZERO)
-        .amount(BigDecimal.ZERO)
-        .build())
-      .build();
+        .commercialTrade(new CommercialTrade(buyer.getType().trim()))
+        .customer(
+            com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Customer.builder()
+                .customerId(buyer.getNumber().trim())
+                .documentNumber(buyer.getId().getMnemonic().trim())
+                .fullName(buyer.getFullName().trim())
+                .documentType(buyer.getBankCode1().trim())
+                .build())
+        .disbursement(
+            Disbursement.builder()
+                .accountNumber(buyerAccountParser.getAccount())
+                .accountType(buyerAccountParser.getType())
+                .bankId("010")
+                .form("N/C")
+                .build())
+        .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
+        .effectiveDate(paymentValueDate)
+        .term(programExtension.getExtraFinancingDays())
+        .termPeriodType(new TermPeriodType("D"))
+        .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
+        .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
+        .maturityForm("C99")
+        .quotaMaturityCriteria("*NO")
+        .references(List.of())
+        .tax(
+            Tax.builder()
+                .code("L")
+                .paymentForm(new PaymentForm("C"))
+                .rate(BigDecimal.ZERO)
+                .amount(BigDecimal.ZERO)
+                .build())
+        .build();
   }
 
   private String getSystemDate() {
@@ -131,10 +152,9 @@ public class InvoiceSettlementService {
   }
 
   public TransactionRequest buildBuyerToBglTransactionRequest(
-    CreateDueInvoiceEventMessage invoiceSettlementMessage,
-    Customer seller,
-    EncodedAccountParser buyerAccountParser
-  ) {
+      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      Customer seller,
+      EncodedAccountParser buyerAccountParser) {
     String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
     String sellerName = seller.getFullName().trim();
     String concept = String.format("Descuento Factura %s %s", invoiceReference, sellerName);
@@ -142,14 +162,18 @@ public class InvoiceSettlementService {
     BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
 
     return TransactionRequest.from(
-      TransactionType.CLIENT_TO_BGL, buyerAccountParser.getAccount(), bglAccount, concept, currency, amount);
+        TransactionType.CLIENT_TO_BGL,
+        buyerAccountParser.getAccount(),
+        bglAccount,
+        concept,
+        currency,
+        amount);
   }
 
   public TransactionRequest buildBglToSellerTransaction(
-    CreateDueInvoiceEventMessage invoiceSettlementMessage,
-    Customer buyer,
-    EncodedAccountParser sellerAccountParser
-  ) {
+      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      Customer buyer,
+      EncodedAccountParser sellerAccountParser) {
     String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
     String buyerName = buyer.getFullName().trim();
     String concept = String.format("Pago Factura %s %s", invoiceReference, buyerName);
@@ -157,29 +181,34 @@ public class InvoiceSettlementService {
     BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
 
     return TransactionRequest.from(
-      TransactionType.BGL_TO_CLIENT, bglAccount, sellerAccountParser.getAccount(), concept, currency, amount);
+        TransactionType.BGL_TO_CLIENT,
+        bglAccount,
+        sellerAccountParser.getAccount(),
+        concept,
+        currency,
+        amount);
   }
 
-  private BigDecimal getPaymentAmountFromMessage(CreateDueInvoiceEventMessage invoiceSettlementMessage) {
+  private BigDecimal getPaymentAmountFromMessage(
+      CreateDueInvoiceEventMessage invoiceSettlementMessage) {
     BigDecimal paymentAmountInCents = new BigDecimal(invoiceSettlementMessage.getPaymentAmount());
     return MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
   }
 
   public InvoiceEmailInfo buildInvoiceSettlementEmailInfo(
-    InvoiceEmailEvent event,
-    CreateDueInvoiceEventMessage message,
-    Customer customer,
-    BigDecimal amount
-  ) {
+      InvoiceEmailEvent event,
+      CreateDueInvoiceEventMessage message,
+      Customer customer,
+      BigDecimal amount) {
     return InvoiceEmailInfo.builder()
-      .customerMnemonic(message.getBuyerIdentifier())
-      .customerEmail(customer.getAddress().getCustomerEmail().trim())
-      .customerName(customer.getFullName().trim())
-      .date(message.getPaymentValueDate())
-      .action(event.getValue())
-      .invoiceCurrency(message.getPaymentCurrency().trim())
-      .invoiceNumber(message.getInvoiceNumber())
-      .amount(amount)
-      .build();
+        .customerMnemonic(message.getBuyerIdentifier())
+        .customerEmail(customer.getAddress().getCustomerEmail().trim())
+        .customerName(customer.getFullName().trim())
+        .date(message.getPaymentValueDate())
+        .action(event.getValue())
+        .invoiceCurrency(message.getPaymentCurrency().trim())
+        .invoiceNumber(message.getInvoiceNumber())
+        .amount(amount)
+        .build();
   }
 }

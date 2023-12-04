@@ -18,8 +18,7 @@ import org.hibernate.annotations.Where;
 public class Address implements Serializable {
   @Serial private static final long serialVersionUID = 88791827389774L;
 
-  @EmbeddedId
-  protected AddressId id;
+  @EmbeddedId protected AddressId id;
 
   @Column(name = "SXCUS1", length = 20, insertable = false, updatable = false)
   private String customerMnemonic;

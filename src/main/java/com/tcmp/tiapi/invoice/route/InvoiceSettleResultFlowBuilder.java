@@ -46,25 +46,33 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
 
   @Override
   public void configure() {
-    from(uriFrom).routeId("invoiceSettleResultFlow")
-      .log("Started invoice settle flow.")
-      .process().body(AckServiceRequest.class, this::startInvoiceSettlementFlow)
-      .log("Completed invoice settle flow.")
-      .end();
+    from(uriFrom)
+        .routeId("invoiceSettleResultFlow")
+        .log("Started invoice settle flow.")
+        .process()
+        .body(AckServiceRequest.class, this::startInvoiceSettlementFlow)
+        .log("Completed invoice settle flow.")
+        .end();
   }
 
-  private void startInvoiceSettlementFlow(AckServiceRequest<CreateDueInvoiceEventMessage> serviceResponse) {
-    if (serviceResponse == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
+  private void startInvoiceSettlementFlow(
+      AckServiceRequest<CreateDueInvoiceEventMessage> serviceResponse) {
+    if (serviceResponse == null)
+      throw new UnrecoverableApiGeeRequestException("Message with no body received.");
     CreateDueInvoiceEventMessage message = serviceResponse.getBody();
     BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
     BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
 
     Customer buyer = invoiceSettlementService.findCustomerByMnemonic(message.getBuyerIdentifier());
-    Customer seller = invoiceSettlementService.findCustomerByMnemonic(message.getSellerIdentifier());
-    ProgramExtension programExtension = invoiceSettlementService.findProgrammeExtensionByIdOrDefault(message.getProgramme());
+    Customer seller =
+        invoiceSettlementService.findCustomerByMnemonic(message.getSellerIdentifier());
+    ProgramExtension programExtension =
+        invoiceSettlementService.findProgrammeExtensionByIdOrDefault(message.getProgramme());
     InvoiceMaster invoice = invoiceSettlementService.findInvoiceByMasterRef(message.getMasterRef());
-    ProductMasterExtension invoiceExtension = invoiceSettlementService.findProductMasterExtensionByMasterId(invoice.getId());
-    EncodedAccountParser buyerAccountParser = new EncodedAccountParser(invoiceExtension.getFinanceAccount());
+    ProductMasterExtension invoiceExtension =
+        invoiceSettlementService.findProductMasterExtensionByMasterId(invoice.getId());
+    EncodedAccountParser buyerAccountParser =
+        new EncodedAccountParser(invoiceExtension.getFinanceAccount());
 
     boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;
     boolean hasBeenFinanced = invoiceSettlementService.invoiceHasLinkedFinanceEvent(invoice);
@@ -86,7 +94,8 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
       notifyInvoiceStatusToCustomer(InvoiceEmailEvent.SETTLED, message, seller, paymentAmount);
       createBuyerCreditOrThrowException(message, buyer, programExtension, buyerAccountParser);
       notifyInvoiceStatusToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
-      transferPaymentAmountFromBuyerToSellerOrThrowException(message, buyer, seller, buyerAccountParser);
+      transferPaymentAmountFromBuyerToSellerOrThrowException(
+          message, buyer, seller, buyerAccountParser);
       notifyInvoiceStatusToCustomer(InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount);
 
       notifySettlementStatus(PayloadStatus.SUCCEEDED, message, invoice, null);
@@ -95,77 +104,96 @@ public class InvoiceSettleResultFlowBuilder extends RouteBuilder {
       notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getMessage());
     } catch (PaymentExecutionException e) {
       log.error(e.getTransferResponseError().title());
-      notifySettlementStatus(PayloadStatus.FAILED, message, invoice, e.getTransferResponseError().title());
+      notifySettlementStatus(
+          PayloadStatus.FAILED, message, invoice, e.getTransferResponseError().title());
     }
   }
 
   private void notifyInvoiceStatusToCustomer(
-    InvoiceEmailEvent event, CreateDueInvoiceEventMessage message, Customer customer, BigDecimal paymentAmount) {
-    InvoiceEmailInfo creditedInvoiceInfo = invoiceSettlementService.buildInvoiceSettlementEmailInfo(
-      event, message, customer, paymentAmount);
+      InvoiceEmailEvent event,
+      CreateDueInvoiceEventMessage message,
+      Customer customer,
+      BigDecimal paymentAmount) {
+    InvoiceEmailInfo creditedInvoiceInfo =
+        invoiceSettlementService.buildInvoiceSettlementEmailInfo(
+            event, message, customer, paymentAmount);
     operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo);
   }
 
   private void createBuyerCreditOrThrowException(
-    CreateDueInvoiceEventMessage message,
-    Customer buyer, ProgramExtension programExtension,
-    EncodedAccountParser buyerAccountParser
-  ) throws CreditCreationException {
+      CreateDueInvoiceEventMessage message,
+      Customer buyer,
+      ProgramExtension programExtension,
+      EncodedAccountParser buyerAccountParser)
+      throws CreditCreationException {
     log.info("Started credit creation.");
-    DistributorCreditResponse creditResponse = corporateLoanService.createCredit(
-      invoiceSettlementService.buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser));
+    DistributorCreditResponse creditResponse =
+        corporateLoanService.createCredit(
+            invoiceSettlementService.buildDistributorCreditRequest(
+                message, buyer, programExtension, buyerAccountParser));
     Error creditError = creditResponse.data().error();
 
     boolean hasBeenCredited = creditError != null && creditError.hasNoError();
     if (!hasBeenCredited) {
-      String creditErrorMessage = creditError != null ? creditError.message() : "Credit creation failed.";
+      String creditErrorMessage =
+          creditError != null ? creditError.message() : "Credit creation failed.";
       throw new CreditCreationException(creditErrorMessage);
     }
   }
 
   private void transferPaymentAmountFromBuyerToSellerOrThrowException(
-    CreateDueInvoiceEventMessage message,
-    Customer buyer,
-    Customer seller,
-    EncodedAccountParser buyerAccountParser
-  ) throws PaymentExecutionException {
+      CreateDueInvoiceEventMessage message,
+      Customer buyer,
+      Customer seller,
+      EncodedAccountParser buyerAccountParser)
+      throws PaymentExecutionException {
     log.info("Started buyer to seller transaction.");
-    Account sellerAccount = invoiceSettlementService.findAccountByCustomerMnemonic(message.getSellerIdentifier());
-    EncodedAccountParser sellerAccountParser = new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
+    Account sellerAccount =
+        invoiceSettlementService.findAccountByCustomerMnemonic(message.getSellerIdentifier());
+    EncodedAccountParser sellerAccountParser =
+        new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
 
-    BusinessAccountTransfersResponse buyerToBglTransactionResponse = paymentExecutionService.makeTransactionRequest(
-      invoiceSettlementService.buildBuyerToBglTransactionRequest(message, seller, buyerAccountParser));
+    BusinessAccountTransfersResponse buyerToBglTransactionResponse =
+        paymentExecutionService.makeTransactionRequest(
+            invoiceSettlementService.buildBuyerToBglTransactionRequest(
+                message, seller, buyerAccountParser));
 
-    BusinessAccountTransfersResponse bglToSellerTransactionResponse = paymentExecutionService.makeTransactionRequest(
-      invoiceSettlementService.buildBglToSellerTransaction(message, buyer, sellerAccountParser));
+    BusinessAccountTransfersResponse bglToSellerTransactionResponse =
+        paymentExecutionService.makeTransactionRequest(
+            invoiceSettlementService.buildBglToSellerTransaction(
+                message, buyer, sellerAccountParser));
 
-    boolean isBuyerToSellerTransactionOk = buyerToBglTransactionResponse != null
-                                           && bglToSellerTransactionResponse != null
-                                           && buyerToBglTransactionResponse.isOk()
-                                           && bglToSellerTransactionResponse.isOk();
+    boolean isBuyerToSellerTransactionOk =
+        buyerToBglTransactionResponse != null
+            && bglToSellerTransactionResponse != null
+            && buyerToBglTransactionResponse.isOk()
+            && bglToSellerTransactionResponse.isOk();
     if (!isBuyerToSellerTransactionOk) {
-      String defaultTransferError = "Could not transfer invoice payment amount from buyer to seller.";
-      throw new PaymentExecutionException(TransferResponseError.builder().title(defaultTransferError).build());
+      String defaultTransferError =
+          "Could not transfer invoice payment amount from buyer to seller.";
+      throw new PaymentExecutionException(
+          TransferResponseError.builder().title(defaultTransferError).build());
     }
   }
 
   private void notifySettlementStatus(
-    PayloadStatus status,
-    CreateDueInvoiceEventMessage message,
-    InvoiceMaster invoice,
-    @Nullable String error
-  ) {
+      PayloadStatus status,
+      CreateDueInvoiceEventMessage message,
+      InvoiceMaster invoice,
+      @Nullable String error) {
     List<String> errors = error == null ? null : List.of(error);
 
-    OperationalGatewayRequestPayload payload = OperationalGatewayRequestPayload.builder()
-      .status(status.getValue())
-      .invoice(PayloadInvoice.builder()
-        .batchId(invoice.getBatchId().trim())
-        .reference(message.getInvoiceNumber())
-        .sellerMnemonic(message.getSellerIdentifier())
-        .build())
-      .details(new PayloadDetails(errors, null, null))
-      .build();
+    OperationalGatewayRequestPayload payload =
+        OperationalGatewayRequestPayload.builder()
+            .status(status.getValue())
+            .invoice(
+                PayloadInvoice.builder()
+                    .batchId(invoice.getBatchId().trim())
+                    .reference(message.getInvoiceNumber())
+                    .sellerMnemonic(message.getSellerIdentifier())
+                    .build())
+            .details(new PayloadDetails(errors, null, null))
+            .build();
 
     businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_SETTLEMENT, payload);
   }

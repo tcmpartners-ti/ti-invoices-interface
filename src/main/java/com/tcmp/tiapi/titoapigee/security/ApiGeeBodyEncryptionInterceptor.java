@@ -42,7 +42,8 @@ public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
     try {
       String jsonRequestBody = new String(requestBody, StandardCharsets.UTF_8);
 
-      SecretKeySpec secretKeySpec = new SecretKeySpec(apiEncryptionKey.getBytes(StandardCharsets.UTF_8), AES_ALGORITHM);
+      SecretKeySpec secretKeySpec =
+          new SecretKeySpec(apiEncryptionKey.getBytes(StandardCharsets.UTF_8), AES_ALGORITHM);
       byte[] iv = apiSecret.getBytes(StandardCharsets.UTF_8);
 
       Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION, "BC");
@@ -51,8 +52,13 @@ public class ApiGeeBodyEncryptionInterceptor implements RequestInterceptor {
       byte[] encryptedBytes = cipher.doFinal(jsonRequestBody.getBytes(StandardCharsets.UTF_8));
 
       return Base64.toBase64String(encryptedBytes);
-    } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException |
-             InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+    } catch (NoSuchAlgorithmException
+        | NoSuchProviderException
+        | NoSuchPaddingException
+        | InvalidKeyException
+        | InvalidAlgorithmParameterException
+        | IllegalBlockSizeException
+        | BadPaddingException e) {
       log.error("Could not encrypt body request. {}.", e.getMessage());
       throw new UnrecoverableApiGeeRequestException("Could not cypher request body.");
     }

@@ -5,13 +5,11 @@ import lombok.Builder;
 
 @Builder
 public record InvoiceEmailInfo(
-  String customerMnemonic,
-  String customerEmail,
-  String customerName,
-  String date,
-  String action,
-  String invoiceNumber,
-  String invoiceCurrency,
-  BigDecimal amount
-) {
-}
+    String customerMnemonic,
+    String customerEmail,
+    String customerName,
+    String date,
+    String action,
+    String invoiceNumber,
+    String invoiceCurrency,
+    BigDecimal amount) {}

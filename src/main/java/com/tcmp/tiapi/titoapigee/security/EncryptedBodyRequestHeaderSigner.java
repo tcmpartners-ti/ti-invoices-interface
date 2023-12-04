@@ -16,7 +16,13 @@ public class EncryptedBodyRequestHeaderSigner extends ApiGeeHeaderSigner impleme
   private final String device;
   private final String deviceIp;
 
-  public EncryptedBodyRequestHeaderSigner(ObjectMapper objectMapper, String appId, String apiEncryptionKey, String apiSecret, String device, String deviceIp) {
+  public EncryptedBodyRequestHeaderSigner(
+      ObjectMapper objectMapper,
+      String appId,
+      String apiEncryptionKey,
+      String apiSecret,
+      String device,
+      String deviceIp) {
     super(objectMapper, appId, apiEncryptionKey, apiSecret);
     this.device = device;
     this.deviceIp = deviceIp;

@@ -26,12 +26,14 @@ public class PaymentExecutionService {
   private final HeaderSigner plainBodyRequestHeaderSigner;
   private final PaymentExecutionClient paymentExecutionClient;
 
-  public BusinessAccountTransfersResponse makeTransactionRequest(TransactionRequest transactionRequest) {
+  public BusinessAccountTransfersResponse makeTransactionRequest(
+      TransactionRequest transactionRequest) {
     ApiGeeBaseRequest<TransactionRequest> request = new ApiGeeBaseRequest<>(transactionRequest);
     Map<String, String> headers = plainBodyRequestHeaderSigner.buildRequestHeaders(request);
 
     try {
-      BusinessAccountTransfersResponse response = paymentExecutionClient.postPayment(headers, request);
+      BusinessAccountTransfersResponse response =
+          paymentExecutionClient.postPayment(headers, request);
       tryRequestAndResponseLogging(request, response);
 
       return response;
@@ -39,10 +41,7 @@ public class PaymentExecutionService {
       log.error("Could not execute transaction. {}", e.getMessage());
 
       throw new PaymentExecutionException(
-        DEFAULT_ERROR_MESSAGE,
-        e,
-        tryBuildTransferErrorFromExceptionOrDefault(e)
-      );
+          DEFAULT_ERROR_MESSAGE, e, tryBuildTransferErrorFromExceptionOrDefault(e));
     }
   }
 
@@ -56,9 +55,8 @@ public class PaymentExecutionService {
   }
 
   private TransferResponseError tryBuildTransferErrorFromExceptionOrDefault(FeignException e) {
-    final TransferResponseError defaultResponseError = TransferResponseError.builder()
-      .title(DEFAULT_ERROR_MESSAGE)
-      .build();
+    final TransferResponseError defaultResponseError =
+        TransferResponseError.builder().title(DEFAULT_ERROR_MESSAGE).build();
 
     try {
       ByteBuffer body = e.responseBody().orElseThrow(IOException::new);

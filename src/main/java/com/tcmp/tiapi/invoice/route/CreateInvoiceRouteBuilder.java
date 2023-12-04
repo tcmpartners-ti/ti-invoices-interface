@@ -26,25 +26,28 @@ public class CreateInvoiceRouteBuilder extends RouteBuilder {
 
   @Override
   public void configure() {
-    from(uriFrom).routeId("createInvoiceInTI")
-      .transform().body(CreateInvoiceEventMessage.class, this::wrapToServiceRequest)
-      .process(this::saveInvoiceCreationInfo)
-      .marshal(jaxbDataFormat)
-      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
-      .to(uriTo)
-      .end();
+    from(uriFrom)
+        .routeId("createInvoiceInTI")
+        .transform()
+        .body(CreateInvoiceEventMessage.class, this::wrapToServiceRequest)
+        .process(this::saveInvoiceCreationInfo)
+        .marshal(jaxbDataFormat)
+        .transform()
+        .body(String.class, xmlNamespaceFixer::fixNamespaces)
+        .to(uriTo)
+        .end();
   }
 
-  private ServiceRequest<CreateInvoiceEventMessage> wrapToServiceRequest(CreateInvoiceEventMessage message) {
+  private ServiceRequest<CreateInvoiceEventMessage> wrapToServiceRequest(
+      CreateInvoiceEventMessage message) {
     String invoiceCreationInfoUuid = UUID.randomUUID().toString();
 
     return tiServiceRequestWrapper.wrapRequest(
-      TIService.TRADE_INNOVATION,
-      TIOperation.CREATE_INVOICE,
-      ReplyFormat.STATUS,
-      invoiceCreationInfoUuid,
-      message
-    );
+        TIService.TRADE_INNOVATION,
+        TIOperation.CREATE_INVOICE,
+        ReplyFormat.STATUS,
+        invoiceCreationInfoUuid,
+        message);
   }
 
   private void saveInvoiceCreationInfo(Exchange exchange) {
@@ -53,8 +56,7 @@ public class CreateInvoiceRouteBuilder extends RouteBuilder {
     if (createInvoiceServiceRequest == null) return;
 
     invoiceEventService.saveInvoiceInfoFromCreationMessage(
-      createInvoiceServiceRequest.getHeader().getCorrelationId(),
-      (CreateInvoiceEventMessage) createInvoiceServiceRequest.getBody()
-    );
+        createInvoiceServiceRequest.getHeader().getCorrelationId(),
+        (CreateInvoiceEventMessage) createInvoiceServiceRequest.getBody());
   }
 }

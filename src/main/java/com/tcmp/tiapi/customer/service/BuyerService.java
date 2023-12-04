@@ -21,24 +21,25 @@ public class BuyerService {
   private final ProgramRepository programRepository;
   private final ProgramMapper programMapper;
 
-  public PaginatedResult<ProgramDTO> getBuyerProgramsByMnemonic(String buyerMnemonic, PageParams pageParams) {
+  public PaginatedResult<ProgramDTO> getBuyerProgramsByMnemonic(
+      String buyerMnemonic, PageParams pageParams) {
     if (!customerRepository.existsByIdMnemonic(buyerMnemonic)) {
       throw new NotFoundHttpException(
-        String.format("Could not find customer with mnemonic %s.", buyerMnemonic));
+          String.format("Could not find customer with mnemonic %s.", buyerMnemonic));
     }
 
-    Page<Program> programsPage = programRepository.findAllByCustomerMnemonic(
-      buyerMnemonic,
-      PageRequest.of(pageParams.getPage(), pageParams.getSize())
-    );
+    Page<Program> programsPage =
+        programRepository.findAllByCustomerMnemonic(
+            buyerMnemonic, PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
     return PaginatedResult.<ProgramDTO>builder()
-      .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
-      .meta(PaginatedResultMeta.builder()
-        .isLastPage(programsPage.isLast())
-        .totalPages(programsPage.getTotalPages())
-        .totalItems(programsPage.getTotalElements())
-        .build())
-      .build();
+        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
+        .meta(
+            PaginatedResultMeta.builder()
+                .isLastPage(programsPage.isLast())
+                .totalPages(programsPage.getTotalPages())
+                .totalItems(programsPage.getTotalElements())
+                .build())
+        .build();
   }
 }

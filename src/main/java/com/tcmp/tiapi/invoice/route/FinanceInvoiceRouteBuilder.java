@@ -26,25 +26,28 @@ public class FinanceInvoiceRouteBuilder extends RouteBuilder {
 
   @Override
   public void configure() {
-    from(uriFrom).routeId("financeInvoiceInTi")
-      .transform().body(FinanceBuyerCentricInvoiceEventMessage.class, this::wrapToServiceRequest)
-      .process(this::saveInvoiceFinanceInfo)
-      .marshal(jaxbDataFormat)
-      .transform().body(String.class, xmlNamespaceFixer::fixNamespaces)
-      .to(uriTo)
-      .end();
+    from(uriFrom)
+        .routeId("financeInvoiceInTi")
+        .transform()
+        .body(FinanceBuyerCentricInvoiceEventMessage.class, this::wrapToServiceRequest)
+        .process(this::saveInvoiceFinanceInfo)
+        .marshal(jaxbDataFormat)
+        .transform()
+        .body(String.class, xmlNamespaceFixer::fixNamespaces)
+        .to(uriTo)
+        .end();
   }
 
-  private ServiceRequest<FinanceBuyerCentricInvoiceEventMessage> wrapToServiceRequest(FinanceBuyerCentricInvoiceEventMessage message) {
+  private ServiceRequest<FinanceBuyerCentricInvoiceEventMessage> wrapToServiceRequest(
+      FinanceBuyerCentricInvoiceEventMessage message) {
     String invoiceFinanceInfoUuid = UUID.randomUUID().toString();
 
     return tiServiceRequestWrapper.wrapRequest(
-      TIService.TRADE_INNOVATION,
-      TIOperation.FINANCE_INVOICE,
-      ReplyFormat.STATUS,
-      invoiceFinanceInfoUuid,
-      message
-    );
+        TIService.TRADE_INNOVATION,
+        TIOperation.FINANCE_INVOICE,
+        ReplyFormat.STATUS,
+        invoiceFinanceInfoUuid,
+        message);
   }
 
   private void saveInvoiceFinanceInfo(Exchange exchange) {
@@ -53,8 +56,7 @@ public class FinanceInvoiceRouteBuilder extends RouteBuilder {
     if (createInvoiceServiceRequest == null) return;
 
     invoiceEventService.saveInvoiceEventInfoFromFinanceMessage(
-      createInvoiceServiceRequest.getHeader().getCorrelationId(),
-      (FinanceBuyerCentricInvoiceEventMessage) createInvoiceServiceRequest.getBody()
-    );
+        createInvoiceServiceRequest.getHeader().getCorrelationId(),
+        (FinanceBuyerCentricInvoiceEventMessage) createInvoiceServiceRequest.getBody());
   }
 }
