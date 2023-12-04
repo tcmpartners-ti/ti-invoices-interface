@@ -8,6 +8,7 @@ import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinancePaymentDetails;
+import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
@@ -22,6 +23,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -97,6 +100,27 @@ class InvoiceFinancingServiceTest {
   }
 
   @Test
+  void findInvoiceByMasterReference_itShouldThrowExceptionIfNotFound() {
+    when(invoiceRepository.findByProductMasterMasterReference(anyString()))
+      .thenReturn(Optional.empty());
+
+    assertThrows(
+      EntityNotFoundException.class,
+      () -> invoiceFinancingService.findInvoiceByMasterReference("")
+    );
+  }
+
+  @Test
+  void findInvoiceByMasterReference_itShouldReturnInvoiceMaster() {
+    when(invoiceRepository.findByProductMasterMasterReference(anyString()))
+      .thenReturn(Optional.of(InvoiceMaster.builder().build()));
+
+    var actualInvoice = invoiceFinancingService.findInvoiceByMasterReference("");
+
+    assertNotNull(actualInvoice);
+  }
+
+  @Test
   void findAccountByCustomerMnemonic_itShouldThrowExceptionWhenNotFound() {
     when(accountRepository.findByTypeAndCustomerMnemonic(eq("CA"), anyString()))
       .thenReturn(Optional.empty());
@@ -118,7 +142,31 @@ class InvoiceFinancingServiceTest {
   }
 
   @Test
-  void buildDistributorCreditRequest_itShouldBuildRequest() {
+  void findByProgrammeIdOrDefault_itShouldReturnDefaultProgramIfNotFound() {
+    when(programExtensionRepository.findByProgrammeId(anyString()))
+      .thenReturn(Optional.empty());
+
+    var actualProgramExtension = invoiceFinancingService.findByProgrammeIdOrDefault("");
+
+    assertNotNull(actualProgramExtension);
+  }
+
+  @Test
+  void findByProgrammeIdOrDefault_itShouldReturnProgram() {
+    when(programExtensionRepository.findByProgrammeId(anyString()))
+      .thenReturn(Optional.of(ProgramExtension.builder().build()));
+
+    var actualProgramExtension = invoiceFinancingService.findByProgrammeIdOrDefault("");
+
+    assertNotNull(actualProgramExtension);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "false,30",
+    "true,24"
+  })
+  void buildDistributorCreditRequest_itShouldBuildRequest(boolean isSimulation, int expectedTerm) {
     var invoiceFinanceMessage = FinanceAckMessage.builder()
       .financeDealAmount("100")
       .startDate("2023-11-06")
@@ -144,13 +192,12 @@ class InvoiceFinancingServiceTest {
     var buyerAccountParser = new EncodedAccountParser("CC2777371930");
 
     var creditRequest = invoiceFinancingService.buildDistributorCreditRequest(
-      invoiceFinanceMessage, programExtension, buyer, buyerAccountParser, false);
+      invoiceFinanceMessage, programExtension, buyer, buyerAccountParser, isSimulation);
 
     var expectedMnemonic = "1722466420002";
     var expectedName = "David";
     var expectedBankCode1 = "0003";
-    var expectedTerm = 30;
-    var expectedInstallmentNumber = "002";
+    var expectedInstallmentNumber = "001";
 
     assertNotNull(creditRequest);
     assertNotNull(creditRequest.customer());
@@ -217,6 +264,70 @@ class InvoiceFinancingServiceTest {
     assertEquals(actualTransactionRequest.transactionType(), TransactionType.BGL_TO_CLIENT.getValue());
     assertEquals(expectedAccount, actualTransactionRequest.creditor().account().accountId());
     assertNotNull(actualTransactionRequest.transaction());
+  }
+
+  @Test
+  void buildSellerToBglSolcaAndTaxesTransactionRequest_itShouldBuildRequest() {
+    var creditorResponse = new DistributorCreditResponse(
+      Data.builder()
+        .disbursementAmount(200)
+        .totalInstallmentsAmount(210)
+        .build()
+    );
+
+    var invoiceFinanceMessage = FinanceAckMessage.builder()
+      .buyerName("SUPER MAXI")
+      .theirRef("001-001-000001")
+      .financeDealAmount("20000") // TI Sends this in cents
+      .paymentDetails(FinancePaymentDetails.builder()
+        .currency("USD")
+        .build())
+      .build();
+
+    var sellerAccountParser = new EncodedAccountParser("AH0129487195");
+
+    var actualTransactionRequest = invoiceFinancingService.buildSellerToBglSolcaAndTaxesTransactionRequest(
+      creditorResponse, invoiceFinanceMessage, sellerAccountParser);
+
+    var expectedAccount = "0129487195";
+    var expectedAmount = new BigDecimal("10.00");
+    assertNotNull(actualTransactionRequest);
+    assertNotNull(actualTransactionRequest.transaction());
+    assertEquals(TransactionType.CLIENT_TO_BGL.getValue(), actualTransactionRequest.transactionType());
+    assertEquals(expectedAccount, actualTransactionRequest.debtor().account().accountId());
+    assertEquals(expectedAmount, new BigDecimal(actualTransactionRequest.transaction().amount()));
+  }
+
+  @Test
+  void buildBglToBuyerSolcaAndTaxesTransactionRequest_itShouldBuildRequest() {
+    var creditorResponse = new DistributorCreditResponse(
+      Data.builder()
+        .disbursementAmount(200)
+        .totalInstallmentsAmount(210)
+        .build()
+    );
+
+    var invoiceFinanceMessage = FinanceAckMessage.builder()
+      .buyerName("SUPER MAXI")
+      .theirRef("001-001-000001")
+      .financeDealAmount("20000") // TI Sends this in cents
+      .paymentDetails(FinancePaymentDetails.builder()
+        .currency("USD")
+        .build())
+      .build();
+
+    var buyerAccountParser = new EncodedAccountParser("AH0129487195");
+
+    var actualTransactionRequest = invoiceFinancingService.buildBglToBuyerSolcaAndTaxesTransactionRequest(
+      creditorResponse, invoiceFinanceMessage, buyerAccountParser);
+
+    var expectedAccount = "0129487195";
+    var expectedAmount = new BigDecimal("10.00");
+    assertNotNull(actualTransactionRequest);
+    assertNotNull(actualTransactionRequest.transaction());
+    assertEquals(TransactionType.BGL_TO_CLIENT.getValue(), actualTransactionRequest.transactionType());
+    assertEquals(expectedAccount, actualTransactionRequest.creditor().account().accountId());
+    assertEquals(expectedAmount, new BigDecimal(actualTransactionRequest.transaction().amount()));
   }
 
   @Test
