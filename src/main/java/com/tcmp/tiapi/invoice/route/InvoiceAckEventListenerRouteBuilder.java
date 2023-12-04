@@ -20,24 +20,25 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
   @Override
   public void configure() {
     Namespaces ns = new Namespaces("ns2", TINamespace.CONTROL);
-    ValueBuilder operationXpath = xpath("//ns2:ServiceRequest/ns2:RequestHeader/ns2:Operation", String.class, ns);
+    ValueBuilder operationXpath =
+        xpath("//ns2:ServiceRequest/ns2:RequestHeader/ns2:Operation", String.class, ns);
 
     // For now, don't handle errors
 
-    from(uriFrom).routeId("invoiceAckEventResult")
-      .unmarshal(jaxbDataFormatAckEventRequest)
-      .choice()
+    from(uriFrom)
+        .routeId("invoiceAckEventResult")
+        .unmarshal(jaxbDataFormatAckEventRequest)
+        .choice()
         .when(operationXpath.isEqualTo(TIOperation.DUE_INVOICE_VALUE))
-          .to(toSettleFlow)
-
+        .to(toSettleFlow)
         .when(operationXpath.isEqualTo(TIOperation.FINANCE_ACK_INVOICE_VALUE))
-          .to(toFinanceFlow)
-
+        .to(toFinanceFlow)
         .otherwise()
-          .process().body(AckServiceRequest.class, this::logUnhandledOperation)
+        .process()
+        .body(AckServiceRequest.class, this::logUnhandledOperation)
         .endChoice()
-      .endChoice()
-      .end();
+        .endChoice()
+        .end();
   }
 
   private void logUnhandledOperation(AckServiceRequest<?> request) {

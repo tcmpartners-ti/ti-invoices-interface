@@ -27,18 +27,25 @@ public class SellerController {
   @GetMapping(path = "{sellerMnemonic}/invoices", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get seller's invoices by its mnemonic (ruc).")
   @Parameter(
-    name = "status",
-    description = "Invoice status to filter by. If not set, invoices with every status will be returned. Possible values: O,L,P,D,E,C.",
-    example = "O",
-    in = ParameterIn.QUERY
-  )
-  @Parameter(name = "page", description = "Page (0 based). Default: 0.", in = ParameterIn.QUERY, example = "0")
-  @Parameter(name = "size", description = "Page size (items per page). Default: 10.", in = ParameterIn.QUERY, example = "10")
+      name = "status",
+      description =
+          "Invoice status to filter by. If not set, invoices with every status will be returned. Possible values: O,L,P,D,E,C.",
+      example = "O",
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "page",
+      description = "Page (0 based). Default: 0.",
+      in = ParameterIn.QUERY,
+      example = "0")
+  @Parameter(
+      name = "size",
+      description = "Page size (items per page). Default: 10.",
+      in = ParameterIn.QUERY,
+      example = "10")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(
-    @PathVariable String sellerMnemonic,
-    @Parameter(hidden = true) @Valid SearchSellerInvoicesParams searchParams,
-    @Parameter(hidden = true) @Valid PageParams pageParams
-  ) {
+      @PathVariable String sellerMnemonic,
+      @Parameter(hidden = true) @Valid SearchSellerInvoicesParams searchParams,
+      @Parameter(hidden = true) @Valid PageParams pageParams) {
     return sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams);
   }
 }

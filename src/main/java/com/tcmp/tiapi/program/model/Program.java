@@ -2,10 +2,9 @@ package com.tcmp.tiapi.program.model;
 
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Table(name = "SCFPROGRAM")

@@ -31,17 +31,16 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-    @NonNull HttpServletRequest request,
-    @NonNull HttpServletResponse response,
-    @NonNull FilterChain filterChain
-  )
-    throws ServletException, IOException {
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
+      throws ServletException, IOException {
 
     boolean isFirstRequest = !isAsyncDispatch(request);
     HttpServletRequest requestWrapper = request;
 
     if (isFirstRequest && (!(request instanceof ContentCachingRequestWrapper))) {
-        requestWrapper = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_LENGTH);
+      requestWrapper = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_LENGTH);
     }
 
     if (isFirstRequest) {
@@ -61,7 +60,8 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
     startTime = new AtomicLong(System.currentTimeMillis());
   }
 
-  private void afterRequest(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
+  private void afterRequest(
+      @NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
     try {
       RequestTraceLog requestTraceLog = buildRequestTraceLog(request, response);
       log.info("{}", objectMapper.writeValueAsString(requestTraceLog));
@@ -71,25 +71,27 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
     }
   }
 
-  public RequestTraceLog buildRequestTraceLog(HttpServletRequest request, HttpServletResponse response) {
+  public RequestTraceLog buildRequestTraceLog(
+      HttpServletRequest request, HttpServletResponse response) {
     long responseTime = System.currentTimeMillis() - startTime.get();
     String messagePayload = getMessagePayload(request);
     String requestBody = messagePayload.replaceAll("[\r\n ]", "");
 
     return RequestTraceLog.builder()
-      .time(Instant.now().toString())
-      .status(response.getStatus())
-      .requesterIp(request.getRemoteAddr())
-      .requestUri(request.getRequestURI())
-      .requestMethod(request.getMethod())
-      .requestHeaders(extractRequestHeaders(request))
-      .requestBody(requestBody)
-      .responseTime("%d ms".formatted(responseTime))
-      .build();
+        .time(Instant.now().toString())
+        .status(response.getStatus())
+        .requesterIp(request.getRemoteAddr())
+        .requestUri(request.getRequestURI())
+        .requestMethod(request.getMethod())
+        .requestHeaders(extractRequestHeaders(request))
+        .requestBody(requestBody)
+        .responseTime("%d ms".formatted(responseTime))
+        .build();
   }
 
   protected String getMessagePayload(HttpServletRequest request) {
-    ContentCachingRequestWrapper wrapper = WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
+    ContentCachingRequestWrapper wrapper =
+        WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
     if (wrapper == null) return "";
 
     byte[] buf = wrapper.getContentAsByteArray();

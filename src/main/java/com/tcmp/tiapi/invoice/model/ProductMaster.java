@@ -2,9 +2,8 @@ package com.tcmp.tiapi.invoice.model;
 
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
 @Table(name = "MASTER")

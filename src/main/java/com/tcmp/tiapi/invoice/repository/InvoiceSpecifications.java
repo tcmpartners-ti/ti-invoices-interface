@@ -14,9 +14,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InvoiceSpecifications {
   public static Specification<InvoiceMaster> filterBySellerMnemonicAndStatus(
-    @Nonnull String sellerMnemonic,
-    @Nullable String status
-  ) {
+      @Nonnull String sellerMnemonic, @Nullable String status) {
     return (root, query, criteriaBuilder) -> {
       List<Predicate> predicates = new ArrayList<>();
 

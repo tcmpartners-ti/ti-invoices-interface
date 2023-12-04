@@ -10,21 +10,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(name = "ServiceRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso({
-  CreateInvoiceEventMessage.class,
-  FinanceBuyerCentricInvoiceEventMessage.class
-})
+@XmlSeeAlso({CreateInvoiceEventMessage.class, FinanceBuyerCentricInvoiceEventMessage.class})
 public class ServiceRequest<T> {
   // Missing namespaces
   @XmlAttribute(namespace = TINamespace.SCHEMA)
   private String schemaNamespace;
+
   @XmlAttribute(name = "xmlns", namespace = TINamespace.CONTROL)
   private String controlNamespace;
 
@@ -33,15 +30,13 @@ public class ServiceRequest<T> {
 
   @XmlElements({
     @XmlElement(
-      name = TIOperation.CREATE_INVOICE_VALUE,
-      type = CreateInvoiceEventMessage.class,
-      namespace = TINamespace.MESSAGES
-    ),
+        name = TIOperation.CREATE_INVOICE_VALUE,
+        type = CreateInvoiceEventMessage.class,
+        namespace = TINamespace.MESSAGES),
     @XmlElement(
-      name = TIOperation.FINANCE_INVOICE_VALUE,
-      type = FinanceBuyerCentricInvoiceEventMessage.class,
-      namespace = TINamespace.MESSAGES
-    )
+        name = TIOperation.FINANCE_INVOICE_VALUE,
+        type = FinanceBuyerCentricInvoiceEventMessage.class,
+        namespace = TINamespace.MESSAGES)
   })
   private T body;
 }

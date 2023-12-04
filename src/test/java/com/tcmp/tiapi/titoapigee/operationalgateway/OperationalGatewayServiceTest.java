@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.titoapigee.operationalgateway;
 
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Channel;
@@ -8,16 +10,13 @@ import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.NotificationsRe
 import com.tcmp.tiapi.titoapigee.operationalgateway.dto.response.Recipient;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OperationalGatewayServiceTest {

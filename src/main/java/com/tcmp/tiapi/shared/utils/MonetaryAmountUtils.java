@@ -1,10 +1,9 @@
 package com.tcmp.tiapi.shared.utils;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MonetaryAmountUtils {

@@ -1,16 +1,15 @@
 package com.tcmp.tiapi.messaging;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TIServiceRequestWrapperTest {
   TIServiceRequestWrapper testedServiceRequestWrapper;

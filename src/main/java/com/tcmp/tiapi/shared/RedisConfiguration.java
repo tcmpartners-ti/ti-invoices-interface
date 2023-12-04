@@ -7,5 +7,4 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 @Configuration
 @Profile("!test")
 @EnableRedisRepositories(basePackages = {"com.tcmp.tiapi.invoice.repository.redis"})
-public class RedisConfiguration {
-}
+public class RedisConfiguration {}

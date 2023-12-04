@@ -1,8 +1,7 @@
 package com.tcmp.tiapi.titoapigee.paymentexecution.dto.request;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
+import lombok.Builder;
 
 @Builder
 public record TransactionRequest(

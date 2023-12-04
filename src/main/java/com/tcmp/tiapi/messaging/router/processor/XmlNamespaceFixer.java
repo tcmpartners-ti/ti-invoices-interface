@@ -3,8 +3,8 @@ package com.tcmp.tiapi.messaging.router.processor;
 import com.tcmp.tiapi.messaging.config.TIMessagingConfiguration;
 
 /**
- * This class is used to fix a problem produced when adding the default namespace in the ti ServiceRequest
- * XML.
+ * This class is used to fix a problem produced when adding the default namespace in the ti
+ * ServiceRequest XML.
  */
 public class XmlNamespaceFixer {
   public String fixNamespaces(String xmlBody) {

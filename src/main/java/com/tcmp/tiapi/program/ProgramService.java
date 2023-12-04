@@ -30,28 +30,33 @@ public class ProgramService {
     return programMapper.mapEntityToDTO(program);
   }
 
-  public PaginatedResult<CounterPartyDTO> getProgramSellersById(String programId, PageParams pageParams) {
+  public PaginatedResult<CounterPartyDTO> getProgramSellersById(
+      String programId, PageParams pageParams) {
     Program program = findProgramByIdOrThrowNotFoundException(programId);
 
-    Page<CounterParty> sellerCounterPartiesPage = counterPartyRepository.findByProgrammePkAndRole(
-      program.getPk(),
-      CounterPartyRole.SELLER.getValue(),
-      PageRequest.of(pageParams.getPage(), pageParams.getSize())
-    );
+    Page<CounterParty> sellerCounterPartiesPage =
+        counterPartyRepository.findByProgrammePkAndRole(
+            program.getPk(),
+            CounterPartyRole.SELLER.getValue(),
+            PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
     return PaginatedResult.<CounterPartyDTO>builder()
-      .data(counterPartyMapper.mapEntitiesToDTOs(sellerCounterPartiesPage.getContent()))
-      .meta(PaginatedResultMeta.builder()
-        .isLastPage(sellerCounterPartiesPage.isLast())
-        .totalItems(sellerCounterPartiesPage.getTotalElements())
-        .totalPages(sellerCounterPartiesPage.getTotalPages())
-        .build())
-      .build();
+        .data(counterPartyMapper.mapEntitiesToDTOs(sellerCounterPartiesPage.getContent()))
+        .meta(
+            PaginatedResultMeta.builder()
+                .isLastPage(sellerCounterPartiesPage.isLast())
+                .totalItems(sellerCounterPartiesPage.getTotalElements())
+                .totalPages(sellerCounterPartiesPage.getTotalPages())
+                .build())
+        .build();
   }
 
   private Program findProgramByIdOrThrowNotFoundException(String programId) {
-    return programRepository.findById(programId)
-      .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find a program with id %s.", programId)));
+    return programRepository
+        .findById(programId)
+        .orElseThrow(
+            () ->
+                new NotFoundHttpException(
+                    String.format("Could not find a program with id %s.", programId)));
   }
 }

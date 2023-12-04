@@ -1,8 +1,7 @@
 package com.tcmp.tiapi.titoapigee.operationalgateway.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
+import lombok.Builder;
 
 @Builder
 public record InvoiceEmailInfo(

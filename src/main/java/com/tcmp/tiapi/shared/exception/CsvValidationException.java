@@ -1,9 +1,8 @@
 package com.tcmp.tiapi.shared.exception;
 
+import java.util.List;
 import lombok.Getter;
 import org.springframework.validation.FieldError;
-
-import java.util.List;
 
 @Getter
 public class CsvValidationException extends RuntimeException {

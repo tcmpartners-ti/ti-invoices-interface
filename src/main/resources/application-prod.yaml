@@ -69,7 +69,7 @@ invoice:
     ack-event-listener:
       from: "activemq:queue:${ti.ticc-queue.sub.name}"
       to-finance: "direct:startFinanceFlow"
-      to-settle:  "direct:startSettleFlow"
+      to-settle: "direct:startSettleFlow"
 
     finance:
       from: "direct:financeInvoiceInTI"

@@ -8,12 +8,11 @@ import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
 import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-
-import java.util.UUID;
 
 @RequiredArgsConstructor
 public class FinanceInvoiceRouteBuilder extends RouteBuilder {

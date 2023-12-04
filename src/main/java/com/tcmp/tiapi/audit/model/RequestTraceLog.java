@@ -6,19 +6,17 @@ import lombok.Builder;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record RequestTraceLog(
-  String time,
-  String guid,
-  String channel,
-  String medium,
-  String app,
-  String session,
-  int status,
-  String requesterIp,
-  String requestUri,
-  String requestMethod,
-  String requestBody,
-  String requestHeaders,
-  String responseBody,
-  String responseTime
-) {
-}
+    String time,
+    String guid,
+    String channel,
+    String medium,
+    String app,
+    String session,
+    int status,
+    String requesterIp,
+    String requestUri,
+    String requestMethod,
+    String requestBody,
+    String requestHeaders,
+    String responseBody,
+    String responseTime) {}

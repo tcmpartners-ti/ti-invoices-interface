@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-
 @XmlType
 @XmlRootElement(name = "Details")
 @XmlAccessorType(XmlAccessType.FIELD)

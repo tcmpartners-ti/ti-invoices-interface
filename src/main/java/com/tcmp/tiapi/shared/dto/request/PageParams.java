@@ -1,11 +1,11 @@
 package com.tcmp.tiapi.shared.dto.request;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
-
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 
 @Data
 public class PageParams {

@@ -1,6 +1,5 @@
 package com.tcmp.tiapi.messaging.model.requests;
 
-
 import com.tcmp.tiapi.messaging.model.TINamespace;
 import jakarta.xml.bind.annotation.*;
 import lombok.AllArgsConstructor;
@@ -47,5 +46,4 @@ public class AckRequestHeader {
 
   @XmlElement(name = "CreationDate", namespace = TINamespace.CONTROL)
   private String creationDate;
-
 }

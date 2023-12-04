@@ -1,11 +1,10 @@
 package com.tcmp.tiapi.customer.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Where;
-
 import java.io.Serial;
 import java.io.Serializable;
+import lombok.*;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "SX20LF")

@@ -23,13 +23,12 @@ class CustomerRepositoryTest {
   void existsByIdMnemonic_itShouldCheckIfCustomerExistsByMnemonic() {
     String mnemonic = "1733466420001";
 
-    testedCustomerRepository.save(Customer.builder()
-      .id(CustomerId.builder()
-        .sourceBankingBusinessCode("SBB123")
-        .mnemonic(mnemonic).build())
-      .fullName("Customer 123")
-      // Other fields ...
-      .build());
+    testedCustomerRepository.save(
+        Customer.builder()
+            .id(CustomerId.builder().sourceBankingBusinessCode("SBB123").mnemonic(mnemonic).build())
+            .fullName("Customer 123")
+            // Other fields ...
+            .build());
 
     boolean actualExists = testedCustomerRepository.existsByIdMnemonic(mnemonic);
 

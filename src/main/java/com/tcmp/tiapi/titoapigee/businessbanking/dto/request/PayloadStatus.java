@@ -9,6 +9,5 @@ public enum PayloadStatus {
   SUCCEEDED("SUCCEEDED"),
   FAILED("FAILED");
 
-
   private final String value;
 }

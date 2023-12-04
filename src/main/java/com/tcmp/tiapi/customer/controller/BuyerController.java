@@ -26,11 +26,13 @@ public class BuyerController {
   @GetMapping(path = "{buyerMnemonic}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get the buyer's (anchor's) programs by its mnemonic.")
   @Parameter(name = "page", description = "Page (0 based).", in = ParameterIn.QUERY, example = "0")
-  @Parameter(name = "size", description = "Page size (items per page).", in = ParameterIn.QUERY, example = "10")
+  @Parameter(
+      name = "size",
+      description = "Page size (items per page).",
+      in = ParameterIn.QUERY,
+      example = "10")
   public PaginatedResult<ProgramDTO> getBuyerProgramsByMnemonic(
-    @Parameter(hidden = true) @Valid PageParams pageParams,
-    @PathVariable String buyerMnemonic
-  ) {
+      @Parameter(hidden = true) @Valid PageParams pageParams, @PathVariable String buyerMnemonic) {
     return buyerService.getBuyerProgramsByMnemonic(buyerMnemonic, pageParams);
   }
 }

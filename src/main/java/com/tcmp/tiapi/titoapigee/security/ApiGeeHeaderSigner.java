@@ -20,7 +20,8 @@ public class ApiGeeHeaderSigner {
   // Data that varies per request
   protected String guid;
 
-  public ApiGeeHeaderSigner(ObjectMapper objectMapper, String appId, String apiEncryptionKey, String apiSecret) {
+  public ApiGeeHeaderSigner(
+      ObjectMapper objectMapper, String appId, String apiEncryptionKey, String apiSecret) {
     this.objectMapper = objectMapper;
     this.appId = appId;
     this.apiEncryptionKey = apiEncryptionKey;
@@ -34,7 +35,8 @@ public class ApiGeeHeaderSigner {
     return Base64.encodeBase64String(headerPayload.getBytes());
   }
 
-  protected String buildSignatureHeader(ApiGeeBaseRequest<?> baseRequest) throws JsonProcessingException {
+  protected String buildSignatureHeader(ApiGeeBaseRequest<?> baseRequest)
+      throws JsonProcessingException {
     Object requestBodyData = baseRequest.data();
     String dataJson = objectMapper.writeValueAsString(requestBodyData);
     String signatureContent = getSignaturePayload(dataJson);

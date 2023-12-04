@@ -35,44 +35,47 @@ public class InvoiceController {
 
   @GetMapping(path = "search", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Search an invoice by its programme, seller and number.")
-  @Parameter(name = "programme", description = "Indicates the credit line to which the invoice relates.", in = ParameterIn.QUERY)
+  @Parameter(
+      name = "programme",
+      description = "Indicates the credit line to which the invoice relates.",
+      in = ParameterIn.QUERY)
   @Parameter(name = "seller", description = "Seller mnemonic (RUC).", in = ParameterIn.QUERY)
   @Parameter(name = "invoice", description = "Invoice reference number.", in = ParameterIn.QUERY)
   public InvoiceDTO searchInvoice(
-    @Valid
-    @Parameter(hidden = true)
-    InvoiceSearchParams searchParams
-  ) {
+      @Valid @Parameter(hidden = true) InvoiceSearchParams searchParams) {
     return invoiceService.searchInvoice(searchParams);
   }
 
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create a single invoice in Trade Innovation.")
   public InvoiceCreatedDTO createInvoice(@Valid @RequestBody InvoiceCreationDTO invoiceDTO) {
     invoiceService.createSingleInvoiceInTi(invoiceDTO);
 
-    return InvoiceCreatedDTO.builder()
-      .message("Invoice sent to be created.")
-      .build();
+    return InvoiceCreatedDTO.builder().message("Invoice sent to be created.").build();
   }
 
-  @PostMapping(path = "bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(
+      path = "bulk",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices in Trade Innovation.")
   public InvoicesCreatedDTO bulkCreateInvoices(@Valid InvoiceBulkCreationForm form) {
     invoiceService.createMultipleInvoicesInTi(form.invoicesFile(), form.batchId());
 
-    return InvoicesCreatedDTO.builder()
-      .message("Invoices sent to be created.")
-      .build();
+    return InvoicesCreatedDTO.builder().message("Invoices sent to be created.").build();
   }
 
-  @PostMapping(path = "finance", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(
+      path = "finance",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Finance invoice in Trade Innovation.")
-  public InvoiceFinancedDTO financeInvoice(@Valid @RequestBody InvoiceFinancingDTO invoiceFinancingDTO) {
+  public InvoiceFinancedDTO financeInvoice(
+      @Valid @RequestBody InvoiceFinancingDTO invoiceFinancingDTO) {
     invoiceService.financeInvoice(invoiceFinancingDTO);
 
-    return InvoiceFinancedDTO.builder()
-      .message("Invoice financing request sent.")
-      .build();
+    return InvoiceFinancedDTO.builder().message("Invoice financing request sent.").build();
   }
 }

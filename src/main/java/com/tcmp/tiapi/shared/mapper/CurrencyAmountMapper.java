@@ -3,12 +3,11 @@ package com.tcmp.tiapi.shared.mapper;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.shared.utils.StringMappingUtils;
+import java.math.BigDecimal;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
-
-import java.math.BigDecimal;
 
 @Mapper(
   componentModel = MappingConstants.ComponentModel.SPRING,

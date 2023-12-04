@@ -17,8 +17,7 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.support.builder.Namespaces;
 
 @RequiredArgsConstructor
-
-public class NotificationInvoiceCreationRouteBuilder  extends RouteBuilder {
+public class NotificationInvoiceCreationRouteBuilder extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormat;
   private final InvoiceNotificationCreationService invoiceNotificationCreationService;
   private final OperationalGatewayService operationalGatewayService;
@@ -28,32 +27,40 @@ public class NotificationInvoiceCreationRouteBuilder  extends RouteBuilder {
   @Override
   public void configure() {
     Namespaces ns = new Namespaces("ns2", TINamespace.CONTROL);
-    ValueBuilder operationXpath = xpath("//ns2:ServiceRequest/ns2:RequestHeader/ns2:Operation", String.class, ns);
+    ValueBuilder operationXpath =
+        xpath("//ns2:ServiceRequest/ns2:RequestHeader/ns2:Operation", String.class, ns);
 
-    from(uriFrom).routeId("NotificationInvoiceCreationResult")
-      .unmarshal(jaxbDataFormat)
-      .choice()
-         .when(operationXpath.isEqualTo(TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_VALUE))
-            .log("Started invoice notification creation flow.")
-            .process().body(AckServiceRequest.class, this::startInvoiceNotificationFlow)
-            .log("Invoice notification creation flow completed successfully.")
-         .endChoice()
-         .otherwise()
-            .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
-            .to("log:body")
-         .endChoice()
-      .endChoice()
-      .end();
+    from(uriFrom)
+        .routeId("NotificationInvoiceCreationResult")
+        .unmarshal(jaxbDataFormat)
+        .choice()
+        .when(operationXpath.isEqualTo(TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_VALUE))
+        .log("Started invoice notification creation flow.")
+        .process()
+        .body(AckServiceRequest.class, this::startInvoiceNotificationFlow)
+        .log("Invoice notification creation flow completed successfully.")
+        .endChoice()
+        .otherwise()
+        .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
+        .to("log:body")
+        .endChoice()
+        .endChoice()
+        .end();
   }
 
-  private void startInvoiceNotificationFlow(AckServiceRequest<NotificationInvoiceCreationMessage> serviceRequest) {
-    if (serviceRequest == null) throw new UnrecoverableApiGeeRequestException("Message with no body received.");
-    NotificationInvoiceCreationMessage invoiceNotificationCreationMessage = serviceRequest.getBody();
+  private void startInvoiceNotificationFlow(
+      AckServiceRequest<NotificationInvoiceCreationMessage> serviceRequest) {
+    if (serviceRequest == null)
+      throw new UnrecoverableApiGeeRequestException("Message with no body received.");
+    NotificationInvoiceCreationMessage invoiceNotificationCreationMessage =
+        serviceRequest.getBody();
 
-    Customer seller = invoiceNotificationCreationService.findCustomerByMnemonic(invoiceNotificationCreationMessage.getSellerIdentifier());
+    Customer seller =
+        invoiceNotificationCreationService.findCustomerByMnemonic(
+            invoiceNotificationCreationMessage.getSellerIdentifier());
 
     operationalGatewayService.sendNotificationRequest(
-      invoiceNotificationCreationService.buildInvoiceNotificationCreationEmailInfo(invoiceNotificationCreationMessage, seller, InvoiceEmailEvent.POSTED));
+        invoiceNotificationCreationService.buildInvoiceNotificationCreationEmailInfo(
+            invoiceNotificationCreationMessage, seller, InvoiceEmailEvent.POSTED));
   }
-
 }

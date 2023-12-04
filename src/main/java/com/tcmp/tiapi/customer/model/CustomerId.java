@@ -16,8 +16,7 @@ import java.util.Objects;
 @Setter
 @Embeddable
 public class CustomerId implements Serializable {
-  @Serial
-  private static final long serialVersionUID = 7030907852707213599L;
+  @Serial private static final long serialVersionUID = 7030907852707213599L;
 
   @Column(name = "GFCUS1_SBB", nullable = false, length = 8)
   private String sourceBankingBusinessCode;
@@ -31,7 +30,7 @@ public class CustomerId implements Serializable {
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     CustomerId entity = (CustomerId) o;
     return Objects.equals(this.mnemonic, entity.mnemonic)
-      && Objects.equals(this.sourceBankingBusinessCode, entity.sourceBankingBusinessCode);
+        && Objects.equals(this.sourceBankingBusinessCode, entity.sourceBankingBusinessCode);
   }
 
   @Override

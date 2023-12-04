@@ -6,12 +6,11 @@ import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
 import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import java.util.Map;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Map;
 
 @Configuration
 public class TIMessagingConfiguration {

@@ -20,7 +20,9 @@ public class CounterPartyDTO {
   @Schema(description = "Counter party branch code.", maxLength = 8)
   private String branch;
 
-  @Schema(description = "Counter party status. B = Blocked; R = Referred; A = Active", maxLength = 1)
+  @Schema(
+      description = "Counter party status. B = Blocked; R = Referred; A = Active",
+      maxLength = 1)
   private String status;
 
   @Schema(description = "Invoice limit amount and currency code.")

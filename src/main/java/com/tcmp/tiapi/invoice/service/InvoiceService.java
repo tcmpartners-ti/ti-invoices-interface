@@ -37,50 +37,52 @@ public class InvoiceService {
   private final InvoiceMapper invoiceMapper;
 
   public InvoiceDTO getInvoiceById(Long invoiceId) {
-    InvoiceMaster invoice = invoiceRepository.findById(invoiceId)
-      .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find invoice with id %s.", invoiceId)));
+    InvoiceMaster invoice =
+        invoiceRepository
+            .findById(invoiceId)
+            .orElseThrow(
+                () ->
+                    new NotFoundHttpException(
+                        String.format("Could not find invoice with id %s.", invoiceId)));
 
     return invoiceMapper.mapEntityToDTO(invoice);
   }
 
   public InvoiceDTO searchInvoice(InvoiceSearchParams searchParams) {
-    InvoiceMaster invoice = invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
-        searchParams.programme(),
-        searchParams.seller(),
-        searchParams.invoice(),
-        true
-      )
-      .orElseThrow(() -> new NotFoundHttpException(
-        String.format("Could not find an active invoice %s for the given program and seller.", searchParams.invoice())));
+    InvoiceMaster invoice =
+        invoiceRepository
+            .findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
+                searchParams.programme(), searchParams.seller(), searchParams.invoice(), true)
+            .orElseThrow(
+                () ->
+                    new NotFoundHttpException(
+                        String.format(
+                            "Could not find an active invoice %s for the given program and seller.",
+                            searchParams.invoice())));
 
     return invoiceMapper.mapEntityToDTO(invoice);
   }
 
   public void createSingleInvoiceInTi(InvoiceCreationDTO invoiceDTO) {
     if (!areBuyerMnemonicFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException("The 'buyer' fields do not match.", List.of(
-        "context.customer",
-        "anchorParty",
-        "buyer"
-      ));
+      throw new FieldsInconsistenciesException(
+          "The 'buyer' fields do not match.", List.of("context.customer", "anchorParty", "buyer"));
     }
 
     if (!areInvoiceReferenceFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException("The 'invoice number' fields do not match.", List.of(
-        "context.theirReference",
-        "invoiceNumber"
-      ));
+      throw new FieldsInconsistenciesException(
+          "The 'invoice number' fields do not match.",
+          List.of("context.theirReference", "invoiceNumber"));
     }
 
     if (!areInvoiceMonetaryFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException("The 'amount and currency' fields do not match.", List.of(
-        "faceValue",
-        "outstandingAmount"
-      ));
+      throw new FieldsInconsistenciesException(
+          "The 'amount and currency' fields do not match.",
+          List.of("faceValue", "outstandingAmount"));
     }
 
-    CreateInvoiceEventMessage createInvoiceEventMessage = invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
+    CreateInvoiceEventMessage createInvoiceEventMessage =
+        invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
 
     producerTemplate.sendBody(invoiceConfiguration.getUriCreateFrom(), createInvoiceEventMessage);
   }
@@ -105,22 +107,20 @@ public class InvoiceService {
     CurrencyAmountDTO outstandingValue = invoiceDTO.getOutstandingAmount();
 
     return faceValue.getAmount().compareTo(outstandingValue.getAmount()) == 0
-           && faceValue.getCurrency().equals(outstandingValue.getCurrency());
+        && faceValue.getCurrency().equals(outstandingValue.getCurrency());
   }
 
   public void createMultipleInvoicesInTi(MultipartFile invoicesFile, String batchId) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
-    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
+    try (BufferedReader bufferedReader =
+        new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
       log.info("Sending invoices to TI.");
 
       producerTemplate.sendBodyAndHeaders(
-        invoiceConfiguration.getUriBulkCreateFrom(),
-        bufferedReader,
-        Map.ofEntries(
-          Map.entry("batchId", batchId)
-        )
-      );
+          invoiceConfiguration.getUriBulkCreateFrom(),
+          bufferedReader,
+          Map.ofEntries(Map.entry("batchId", batchId)));
     } catch (IOException e) {
       log.error("Invalid file uploaded");
       throw new InvalidFileHttpException("Could not read the uploaded file");
@@ -128,11 +128,9 @@ public class InvoiceService {
   }
 
   public void financeInvoice(InvoiceFinancingDTO invoiceFinancingDTO) {
-    FinanceBuyerCentricInvoiceEventMessage financeInvoiceMessage = invoiceMapper.mapFinancingDTOToFTIMessage(invoiceFinancingDTO);
+    FinanceBuyerCentricInvoiceEventMessage financeInvoiceMessage =
+        invoiceMapper.mapFinancingDTOToFTIMessage(invoiceFinancingDTO);
 
-    producerTemplate.sendBody(
-      invoiceConfiguration.getUriFinanceFrom(),
-      financeInvoiceMessage
-    );
+    producerTemplate.sendBody(invoiceConfiguration.getUriFinanceFrom(), financeInvoiceMessage);
   }
 }

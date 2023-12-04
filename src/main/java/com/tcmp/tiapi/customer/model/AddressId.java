@@ -40,9 +40,9 @@ public class AddressId implements Serializable {
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     AddressId entity = (AddressId) o;
     return Objects.equals(this.customerMnemonic, entity.customerMnemonic)
-           && Objects.equals(this.sourceBankingBusinessCode, entity.sourceBankingBusinessCode)
-           && Objects.equals(this.type, entity.type)
-           && Objects.equals(this.sequence, entity.sequence);
+        && Objects.equals(this.sourceBankingBusinessCode, entity.sourceBankingBusinessCode)
+        && Objects.equals(this.type, entity.type)
+        && Objects.equals(this.sequence, entity.sequence);
   }
 
   @Override

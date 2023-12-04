@@ -4,8 +4,4 @@ import lombok.Builder;
 
 @Builder
 public record OperationalGatewayRequestPayload(
-  String status,
-  PayloadInvoice invoice,
-  PayloadDetails details
-) {
-}
+    String status, PayloadInvoice invoice, PayloadDetails details) {}

@@ -6,9 +6,4 @@ import java.util.List;
 
 @Builder
 public record NotificationsRequest(
-  Flow flow,
-  Requester requester,
-  List<Recipient> additionalRecipient,
-  Template template
-) {
-}
+    Flow flow, Requester requester, List<Recipient> additionalRecipient, Template template) {}

@@ -2,10 +2,9 @@ package com.tcmp.tiapi.customer.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.*;
 
 @Table(name = "SCFCPARTY")
 @Entity

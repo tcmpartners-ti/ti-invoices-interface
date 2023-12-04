@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @XmlRootElement(name = "ResponseHeader", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data

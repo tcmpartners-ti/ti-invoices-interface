@@ -1,8 +1,7 @@
 package com.tcmp.tiapi.titoapigee.paymentexecution.dto.response;
 
-import lombok.Builder;
-
 import java.io.Serializable;
+import lombok.Builder;
 
 @Builder
 public record TransferResponseError(

@@ -6,21 +6,20 @@ import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import feign.FeignException;
 import feign.Response;
 import feign.codec.Decoder;
-import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Base64;
-import org.springframework.http.HttpStatus;
-
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Base64;
+import org.springframework.http.HttpStatus;
 
 @Slf4j
 public class ApiGeeResponseBodyDecoder implements Decoder {
@@ -31,7 +30,8 @@ public class ApiGeeResponseBodyDecoder implements Decoder {
   private final String apiEncryptionKey;
   private final String apiSecret;
 
-  public ApiGeeResponseBodyDecoder(ObjectMapper objectMapper, String apiEncryptionKey, String apiSecret) {
+  public ApiGeeResponseBodyDecoder(
+      ObjectMapper objectMapper, String apiEncryptionKey, String apiSecret) {
     this.objectMapper = objectMapper;
     this.apiEncryptionKey = apiEncryptionKey;
     this.apiSecret = apiSecret;
@@ -46,9 +46,7 @@ public class ApiGeeResponseBodyDecoder implements Decoder {
 
     // Response body is only encrypted when status is OK.
     if (response.status() == HttpStatus.CREATED.value()) {
-      responseBody = decryptWithAES(responseBody)
-        .replace("\\", "")
-        .replaceAll("^\"|^\"$", "");
+      responseBody = decryptWithAES(responseBody).replace("\\", "").replaceAll("^\"|^\"$", "");
     }
 
     return objectMapper.readValue(responseBody, DistributorCreditResponse.class);
@@ -58,7 +56,8 @@ public class ApiGeeResponseBodyDecoder implements Decoder {
     try {
       byte[] encryptedBytes = Base64.decode(base64Encoded);
 
-      SecretKeySpec secretKeySpec = new SecretKeySpec(apiEncryptionKey.getBytes(StandardCharsets.UTF_8), AES_ALGORITHM);
+      SecretKeySpec secretKeySpec =
+          new SecretKeySpec(apiEncryptionKey.getBytes(StandardCharsets.UTF_8), AES_ALGORITHM);
       byte[] iv = apiSecret.getBytes(StandardCharsets.UTF_8);
       Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION, "BC");
       cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(iv));
@@ -66,9 +65,13 @@ public class ApiGeeResponseBodyDecoder implements Decoder {
       byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
       return new String(decryptedBytes, StandardCharsets.UTF_8);
 
-    } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException |
-             InvalidAlgorithmParameterException | InvalidKeyException | IllegalBlockSizeException |
-             BadPaddingException e) {
+    } catch (NoSuchAlgorithmException
+        | NoSuchProviderException
+        | NoSuchPaddingException
+        | InvalidAlgorithmParameterException
+        | InvalidKeyException
+        | IllegalBlockSizeException
+        | BadPaddingException e) {
       throw new UnrecoverableApiGeeRequestException("Could not decrypt response body.");
     }
   }

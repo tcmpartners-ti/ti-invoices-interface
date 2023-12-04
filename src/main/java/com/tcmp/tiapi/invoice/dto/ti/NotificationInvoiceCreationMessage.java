@@ -151,5 +151,4 @@ public class NotificationInvoiceCreationMessage {
 
   @XmlElement(name = "SenderToReceiverInfo", namespace = TINamespace.CONTROL)
   private String senderToReceiverInfo;
-
 }

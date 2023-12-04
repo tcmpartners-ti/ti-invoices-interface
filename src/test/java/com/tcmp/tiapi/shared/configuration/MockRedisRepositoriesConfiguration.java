@@ -1,11 +1,11 @@
 package com.tcmp.tiapi.shared.configuration;
 
+import static org.mockito.Mockito.*;
+
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-import static org.mockito.Mockito.*;
 
 @Configuration
 @Profile("test")

@@ -16,7 +16,8 @@ public class EncodedAccountParser {
    * @param encodedAccount The customer account that has the format {@code ^(AH|CC)\d{10}$}.
    */
   public EncodedAccountParser(String encodedAccount) {
-    if (encodedAccount == null || encodedAccount.trim().length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
+    if (encodedAccount == null
+        || encodedAccount.trim().length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
       throw new IllegalArgumentException("Invalid account.");
     }
 

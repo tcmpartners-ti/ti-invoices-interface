@@ -1,6 +1,3 @@
 package com.tcmp.tiapi.titoapigee.paymentexecution.dto.request;
 
-public record Account(
-  String accountId
-) {
-}
+public record Account(String accountId) {}

@@ -1,5 +1,8 @@
 package com.tcmp.tiapi.invoice.route;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
 import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbersContainer;
@@ -9,6 +12,8 @@ import com.tcmp.tiapi.messaging.model.TIOperation;
 import com.tcmp.tiapi.messaging.model.TIService;
 import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
 import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
+import java.io.IOException;
+import java.util.List;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RoutesBuilder;
@@ -18,12 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.IOException;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class FinanceInvoiceRouteBuilderTest extends CamelTestSupport {

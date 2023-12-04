@@ -7,15 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 public class ResponseBodyDecryptionConfiguration {
-  @Value("${bp.api-gee.credentials.api-key}") private String apiKey;
-  @Value("${bp.api-gee.credentials.api-secret}") private String apiSecret;
+  @Value("${bp.api-gee.credentials.api-key}")
+  private String apiKey;
+
+  @Value("${bp.api-gee.credentials.api-secret}")
+  private String apiSecret;
 
   @Bean
   public Decoder bodyDecoder(ObjectMapper objectMapper) {
-    return new ApiGeeResponseBodyDecoder(
-      objectMapper,
-      apiKey,
-      apiSecret
-    );
+    return new ApiGeeResponseBodyDecoder(objectMapper, apiKey, apiSecret);
   }
 }

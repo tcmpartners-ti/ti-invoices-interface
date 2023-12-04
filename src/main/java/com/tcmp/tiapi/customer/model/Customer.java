@@ -2,9 +2,8 @@ package com.tcmp.tiapi.customer.model;
 
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
+import lombok.*;
 
 @Entity
 @Table(name = "GFPF")

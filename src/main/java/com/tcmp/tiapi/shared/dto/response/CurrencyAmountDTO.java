@@ -3,12 +3,11 @@ package com.tcmp.tiapi.shared.dto.response;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Data
 @Builder

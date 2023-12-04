@@ -14,9 +14,7 @@ public class DatabaseBooleanConverter implements AttributeConverter<Boolean, Str
     return attribute ? TRUE_VALUE : FALSE_VALUE;
   }
 
-  /**
-   * This yoda expression helps to avoid NullPointerExceptions.
-   */
+  /** This yoda expression helps to avoid NullPointerExceptions. */
   @Override
   public Boolean convertToEntityAttribute(String value) {
     return TRUE_VALUE.equalsIgnoreCase(value);

@@ -33,44 +33,41 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
   @Override
   public void configure() {
     Namespaces ns = new Namespaces("ns2", TINamespace.CONTROL);
-    ValueBuilder operationXpath = xpath("//ns2:ServiceResponse/ns2:ResponseHeader/ns2:Operation", String.class, ns);
+    ValueBuilder operationXpath =
+        xpath("//ns2:ServiceResponse/ns2:ResponseHeader/ns2:Operation", String.class, ns);
 
     onException(UnrecoverableApiGeeRequestException.class)
-      .log(LoggingLevel.ERROR, "Could not notify invoice creation.")
-      .handled(true)
-      .end();
+        .log(LoggingLevel.ERROR, "Could not notify invoice creation.")
+        .handled(true)
+        .end();
 
     onException(RecoverableApiGeeRequestException.class)
-      .log("Retrying to notify invoice event...")
-      .maximumRedeliveries(maxRetries)
-      .redeliveryDelay(retryDelayInMs)
-      .to(uriTo)
-      .handled(true)
-      .end();
+        .log("Retrying to notify invoice event...")
+        .maximumRedeliveries(maxRetries)
+        .redeliveryDelay(retryDelayInMs)
+        .to(uriTo)
+        .handled(true)
+        .end();
 
-    from(uriFrom).routeId("invoiceEventResult")
-      .unmarshal(jaxbDataFormat)
-      .to(uriTo)
-      .end();
+    from(uriFrom).routeId("invoiceEventResult").unmarshal(jaxbDataFormat).to(uriTo).end();
 
-    from(uriTo).routeId("apiGeeInvoiceCreationNotifier")
-      .choice()
+    from(uriTo)
+        .routeId("apiGeeInvoiceCreationNotifier")
+        .choice()
         .when(operationXpath.isEqualTo(TIOperation.CREATE_INVOICE_VALUE))
-          .process().body(ServiceResponse.class, this::notifyFailedInvoiceCreation)
-          .log("Invoice creation event notified.")
-
+        .process()
+        .body(ServiceResponse.class, this::notifyFailedInvoiceCreation)
+        .log("Invoice creation event notified.")
         .when(operationXpath.isEqualTo(TIOperation.FINANCE_INVOICE_VALUE))
-          .process().body(ServiceResponse.class, this::notifyFailedInvoiceFinancing)
-          .log("Invoice financing event notified.")
-
+        .process()
+        .body(ServiceResponse.class, this::notifyFailedInvoiceFinancing)
+        .log("Invoice financing event notified.")
         .otherwise()
-          .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
-          .to("log:body")
-
-      .endChoice()
-      .end();
+        .log(LoggingLevel.ERROR, "Unknown Trade Innovation operation.")
+        .to("log:body")
+        .endChoice()
+        .end();
   }
-
 
   private void notifyFailedInvoiceCreation(ServiceResponse response) {
     if (response == null) {
@@ -88,9 +85,11 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
     }
 
     try {
-      InvoiceEventInfo invoice = invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
+      InvoiceEventInfo invoice =
+          invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
 
-      businessBankingService.notifyInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_CREATED, response, invoice);
+      businessBankingService.notifyInvoiceEventResult(
+          OperationalGatewayProcessCode.INVOICE_CREATED, response, invoice);
       invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
     } catch (EntityNotFoundException e) {
       throw new UnrecoverableApiGeeRequestException(e.getMessage());
@@ -113,9 +112,11 @@ public class InvoiceEventListenerRouteBuilder extends RouteBuilder {
     }
 
     try {
-      InvoiceEventInfo invoice = invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
+      InvoiceEventInfo invoice =
+          invoiceEventService.findInvoiceEventInfoByUuid(invoiceUuidFromCorrelationId);
 
-      businessBankingService.notifyInvoiceEventResult(OperationalGatewayProcessCode.INVOICE_FINANCING, response, invoice);
+      businessBankingService.notifyInvoiceEventResult(
+          OperationalGatewayProcessCode.INVOICE_FINANCING, response, invoice);
       invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
     } catch (EntityNotFoundException e) {
       throw new UnrecoverableApiGeeRequestException(e.getMessage());

@@ -8,14 +8,13 @@ import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,25 +24,27 @@ public class CorporateLoanService {
   private final CorporateLoanClient corporateLoanClient;
   private final HeaderSigner encryptedBodyRequestHeaderSigner;
 
-  @Value("${bp.api-gee.services.corporate-loan.user}") private String userHeader;
-
+  @Value("${bp.api-gee.services.corporate-loan.user}")
+  private String userHeader;
 
   public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest) {
     return createCredit(distributorCreditRequest, false);
   }
 
   /**
-   * This method creates a credit in GAF. If there's  an error, throws an exception.
+   * This method creates a credit in GAF. If there's an error, throws an exception.
    *
    * @param distributorCreditRequest The request body.
-   * @param isSimulation Used to tell GAF if the operation should impact as a real operation or not. Used when we want
-   *                     to ask GAF the values for the seller taxes and solca.
+   * @param isSimulation Used to tell GAF if the operation should impact as a real operation or not.
+   *     Used when we want to ask GAF the values for the seller taxes and solca.
    * @return The operation result.
    */
-  public DistributorCreditResponse createCredit(DistributorCreditRequest distributorCreditRequest, boolean isSimulation) {
-    ApiGeeBaseRequest<DistributorCreditRequest> request = ApiGeeBaseRequest.<DistributorCreditRequest>builder()
-      .data(distributorCreditRequest)
-      .build();
+  public DistributorCreditResponse createCredit(
+      DistributorCreditRequest distributorCreditRequest, boolean isSimulation) {
+    ApiGeeBaseRequest<DistributorCreditRequest> request =
+        ApiGeeBaseRequest.<DistributorCreditRequest>builder()
+            .data(distributorCreditRequest)
+            .build();
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(request);
     // Add missing headers for this service
@@ -54,28 +55,27 @@ public class CorporateLoanService {
     try {
       DistributorCreditResponse response = corporateLoanClient.createCredit(headers, request);
       log.info(
-        "Credit created. Amount $ {}. Disbursement Amount $ {}.",
-        distributorCreditRequest.amount(),
-        response.data().disbursementAmount()
-      );
+          "Credit created. Amount $ {}. Disbursement Amount $ {}.",
+          distributorCreditRequest.amount(),
+          response.data().disbursementAmount());
 
       tryRequestAndResponseLogging(request, response);
 
       return response;
     } catch (FeignException e) {
-      e.responseBody().ifPresent(errorBytes -> {
-        String error = new String(errorBytes.array(), StandardCharsets.UTF_8);
-        log.error("Body={}", error);
-      });
+      e.responseBody()
+          .ifPresent(
+              errorBytes -> {
+                String error = new String(errorBytes.array(), StandardCharsets.UTF_8);
+                log.error("Body={}", error);
+              });
 
       throw new CreditCreationException("Credit creation failed.");
     }
   }
 
   private String buildOperationId() {
-    return UUID.randomUUID().toString()
-      .replace("-", "")
-      .substring(0, 20);
+    return UUID.randomUUID().toString().replace("-", "").substring(0, 20);
   }
 
   private void tryRequestAndResponseLogging(ApiGeeBaseRequest<?> request, Object response) {

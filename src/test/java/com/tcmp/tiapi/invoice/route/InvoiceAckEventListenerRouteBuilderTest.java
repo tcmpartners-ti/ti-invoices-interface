@@ -21,8 +21,9 @@ class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
   private static final String URI_TO_FINANCE = "mock:startFinanceFlow";
   private static final String URI_TO_SETTLE = "mock:startSettleFlow";
 
+  @EndpointInject(URI_FROM)
+  ProducerTemplate from;
 
-  @EndpointInject(URI_FROM) ProducerTemplate from;
   @EndpointInject(URI_TO_SETTLE)
   private MockEndpoint mockToSettleFlow;
 
@@ -34,15 +35,10 @@ class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
     JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
 
     return new InvoiceAckEventListenerRouteBuilder(
-      new JaxbDataFormat(jaxbContext),
-
-      URI_FROM,
-      URI_TO_FINANCE,
-      URI_TO_SETTLE
-    );
+        new JaxbDataFormat(jaxbContext), URI_FROM, URI_TO_FINANCE, URI_TO_SETTLE);
   }
 
-   @Test
+  @Test
   void itShouldRouteToSettleFlow() throws Exception {
 
     mockToSettleFlow.expectedMessageCount(1);
@@ -72,7 +68,7 @@ class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
   }
 
   @Test
-  void  itShouldRouteToUnhandledOperation() throws Exception {
+  void itShouldRouteToUnhandledOperation() throws Exception {
 
     mockToSettleFlow.expectedMessageCount(0);
     mockToFinanceFlow.expectedMessageCount(0);
@@ -137,6 +133,7 @@ class InvoiceAckEventListenerRouteBuilderTest extends CamelTestSupport {
       <NotesForCustomer xsi:nil="true"/>
       <NotesForBuyer xsi:nil="true"/>
       </tfinvset></ServiceRequest>
-      """.formatted(operation);
+      """
+        .formatted(operation);
   }
 }

@@ -13,8 +13,7 @@ public class FieldsInconsistenciesException extends RuntimeException {
 
   public FieldsInconsistenciesException(String message, List<String> fields) {
     super(message);
-    this.errorDetails = fields.stream()
-      .map(f -> new ErrorDetails(f, FIELDS_INCONSISTENCIES_MESSAGE))
-      .toList();
+    this.errorDetails =
+        fields.stream().map(f -> new ErrorDetails(f, FIELDS_INCONSISTENCIES_MESSAGE)).toList();
   }
 }
