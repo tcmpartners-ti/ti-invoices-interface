@@ -27,7 +27,7 @@ ti.queue:
 bp.api-gee.url:
   dev: "https://api-dev.pichincha.com"
   test: "https://api-test.pichincha.com"
-  prod: "https://bancopichincha-prod.pichincha.com"
+  prod: "https://api.pichincha.com"
 
 springdoc:
   api-docs:
