@@ -44,8 +44,8 @@ public class ApiGeeConfiguration {
 
   private String getPublicIp() {
     try {
-      InetAddress direccionIP = InetAddress.getLocalHost();
-      return direccionIP.getHostAddress();
+      InetAddress ipAddress = InetAddress.getLocalHost();
+      return ipAddress.getHostAddress();
     } catch (java.net.UnknownHostException e) {
       log.info("Could not determine the public IP address.");
       return DEFAULT_DEVICE_IP;
