@@ -31,6 +31,10 @@ public class CorporateLoanService {
     return createCredit(distributorCreditRequest, false);
   }
 
+  public DistributorCreditResponse simulateCredit(DistributorCreditRequest distributorCreditRequest) {
+    return createCredit(distributorCreditRequest, true);
+  }
+
   /**
    * This method creates a credit in GAF. If there's an error, throws an exception.
    *
@@ -39,7 +43,7 @@ public class CorporateLoanService {
    *     Used when we want to ask GAF the values for the seller taxes and solca.
    * @return The operation result.
    */
-  public DistributorCreditResponse createCredit(
+  private DistributorCreditResponse createCredit(
       DistributorCreditRequest distributorCreditRequest, boolean isSimulation) {
     ApiGeeBaseRequest<DistributorCreditRequest> request =
         ApiGeeBaseRequest.<DistributorCreditRequest>builder()
@@ -59,7 +63,7 @@ public class CorporateLoanService {
           distributorCreditRequest.amount(),
           response.data().disbursementAmount());
 
-      tryRequestAndResponseLogging(request, response);
+      tryRequestAndResponseLogging(headers, request, response);
 
       return response;
     } catch (FeignException e) {
@@ -78,8 +82,9 @@ public class CorporateLoanService {
     return UUID.randomUUID().toString().replace("-", "").substring(0, 20);
   }
 
-  private void tryRequestAndResponseLogging(ApiGeeBaseRequest<?> request, Object response) {
+  private void tryRequestAndResponseLogging(Map<String, String> headers, ApiGeeBaseRequest<?> request, Object response) {
     try {
+      log.info("Headers={}", objectMapper.writeValueAsString(headers));
       log.info("Request={}", objectMapper.writeValueAsString(request));
       log.info("Response={}", objectMapper.writeValueAsString(response));
     } catch (JsonProcessingException e) {

@@ -55,6 +55,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
         .end();
   }
 
+  // Todo: Manejar errores de envío de correos.
   private void startInvoiceFinancingFlow(AckServiceRequest<FinanceAckMessage> serviceRequest) {
     if (serviceRequest == null)
       throw new UnrecoverableApiGeeRequestException("Message with no body received.");
@@ -173,7 +174,7 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
       throws CreditCreationException, PaymentExecutionException {
     log.info("Starting credit simulation.");
     DistributorCreditResponse sellerCreditSimulationResponse =
-        corporateLoanService.createCredit(
+        corporateLoanService.simulateCredit(
             invoiceFinancingService.buildDistributorCreditRequest(
                 financeMessage, programExtension, buyer, buyerAccountParser, true));
     Error creditError = sellerCreditSimulationResponse.data().error();
@@ -185,14 +186,14 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
       throw new CreditCreationException(creditErrorMessage);
     }
 
-    log.info("Starting buyer to seller taxes and solca transaction.");
-    boolean buyerToSellerTransactionSuccessful =
+    log.info("Starting seller to buyer taxes and solca transaction.");
+    boolean isSellerToBuyerTransactionOk =
         transferSolcaAndTaxesAmountFromSellerToBuyer(
             sellerCreditSimulationResponse,
             financeMessage,
             sellerAccountParser,
             buyerAccountParser);
-    if (!buyerToSellerTransactionSuccessful) {
+    if (!isSellerToBuyerTransactionOk) {
       String transferError = "Could not transfer solca plus taxes amount from seller to buyer.";
       throw new PaymentExecutionException(
           TransferResponseError.builder().title(transferError).build());
