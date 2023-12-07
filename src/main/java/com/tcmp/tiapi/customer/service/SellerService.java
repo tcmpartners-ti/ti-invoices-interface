@@ -39,18 +39,6 @@ public class SellerService {
                 sellerMnemonic, searchParams.status()),
             PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
-    if (sellerInvoicesPage.getTotalElements() == 0) {
-      StringBuilder errorMessage = new StringBuilder("Could not find invoices ");
-
-      if (searchParams.status() != null) {
-        errorMessage.append("with status '%s' ".formatted(searchParams.status()));
-      }
-
-      errorMessage.append("for seller %s.".formatted(sellerMnemonic));
-
-      throw new NotFoundHttpException(errorMessage.toString());
-    }
-
     List<InvoiceDTO> invoicesDTOs =
         invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent());
 
