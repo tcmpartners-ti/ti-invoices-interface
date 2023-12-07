@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.customer.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -34,59 +33,51 @@ class SellerServiceTest {
 
   @BeforeEach
   public void setup() {
-    sellerService = new SellerService(
-      customerRepository,
-      invoiceRepository,
-      invoiceMapper
-    );
+    sellerService = new SellerService(customerRepository, invoiceRepository, invoiceMapper);
   }
 
   @Test
   void getSellerInvoices_itShouldThrowExceptionIfNoInvoicesAreFound() {
     String sellerMnemonic = "1722466421001";
-    SearchSellerInvoicesParams searchParams = SearchSellerInvoicesParams.builder()
-      .status("O")
-      .build();
+    SearchSellerInvoicesParams searchParams =
+        SearchSellerInvoicesParams.builder().status("O").build();
     PageParams pageParams = new PageParams();
 
-    when(customerRepository.existsByIdMnemonic(sellerMnemonic))
-      .thenReturn(false);
+    when(customerRepository.existsByIdMnemonic(sellerMnemonic)).thenReturn(false);
 
-    assertThrows(NotFoundHttpException.class, () ->
-      sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams));
+    assertThrows(
+        NotFoundHttpException.class,
+        () -> sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams));
   }
 
   @Test
-  void getSellerInvoices_itShouldThrowExceptionIfNoInvoicesAreFoundForStatus() {
+  void getSellerInvoices_itShouldReturnEmptyListIfNoInvoicesAreFoundForStatus() {
     String sellerMnemonic = "1722466421001";
-    SearchSellerInvoicesParams searchParams = SearchSellerInvoicesParams.builder()
-      .status("O")
-      .build();
+    SearchSellerInvoicesParams searchParams =
+        SearchSellerInvoicesParams.builder().status("O").build();
     PageParams pageParams = new PageParams();
 
-    when(customerRepository.existsByIdMnemonic(sellerMnemonic))
-      .thenReturn(true);
+    when(customerRepository.existsByIdMnemonic(sellerMnemonic)).thenReturn(true);
     when(invoiceRepository.findAll(any(Specification.class), any(Pageable.class)))
-      .thenReturn(new PageImpl<>(List.of()));
+        .thenReturn(new PageImpl<>(List.of()));
 
-    assertThrows(NotFoundHttpException.class, () ->
-      sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams));
+    var actualInvoicesPage =
+        sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams);
+
+    var expectedInvoicesPageSize = 0;
+
+    assertEquals(expectedInvoicesPageSize, actualInvoicesPage.getData().size());
   }
 
   @Test
   void getSellerInvoices_itShouldReturnSellerInvoices() {
-    when(customerRepository.existsByIdMnemonic(anyString()))
-      .thenReturn(true);
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
     when(invoiceRepository.findAll(any(Specification.class), any(Pageable.class)))
-      .thenReturn(new PageImpl<>(List.of(InvoiceMaster.builder().build())));
+        .thenReturn(new PageImpl<>(List.of(InvoiceMaster.builder().build())));
 
-    var invoicesPage = sellerService.getSellerInvoices(
-      "",
-      SearchSellerInvoicesParams.builder()
-        .status("O")
-        .build(),
-      new PageParams()
-    );
+    var invoicesPage =
+        sellerService.getSellerInvoices(
+            "", SearchSellerInvoicesParams.builder().status("O").build(), new PageParams());
 
     assertNotNull(invoicesPage);
     verify(invoiceMapper).mapEntitiesToDTOs(any());

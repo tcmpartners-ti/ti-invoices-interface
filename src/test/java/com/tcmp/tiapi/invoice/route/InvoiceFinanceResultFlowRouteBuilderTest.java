@@ -55,65 +55,72 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
   @Captor ArgumentCaptor<InvoiceEmailEvent> emailEventArgumentCaptor;
   @Captor ArgumentCaptor<BigDecimal> amountArgumentCaptor;
   @Captor ArgumentCaptor<OperationalGatewayProcessCode> operationalGatewayProcessCodeArgumentCaptor;
-  @Captor ArgumentCaptor<OperationalGatewayRequestPayload> operationalGatewayRequestPayloadArgumentCaptor;
 
-  @EndpointInject(URI_FROM) ProducerTemplate from;
+  @Captor
+  ArgumentCaptor<OperationalGatewayRequestPayload> operationalGatewayRequestPayloadArgumentCaptor;
+
+  @EndpointInject(URI_FROM)
+  ProducerTemplate from;
 
   @Override
   protected RoutesBuilder createRouteBuilder() {
     return new InvoiceFinanceResultFlowRouteBuilder(
-      invoiceFinancingService,
-      corporateLoanService,
-      paymentExecutionService,
-      operationalGatewayService,
-      businessBankingService,
-
-      URI_FROM
-    );
+        invoiceFinancingService,
+        corporateLoanService,
+        paymentExecutionService,
+        operationalGatewayService,
+        businessBankingService,
+        URI_FROM);
   }
 
   @Test
   void itShouldSendBothNotificationsToSellerIfSuccessful() {
-    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
-      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
-      .buyerIdentifier("B123")
-      .sellerIdentifier("S123")
-      .financeDealAmount("10000")
-      .build();
+    FinanceAckMessage invoiceFinanceMessage =
+        FinanceAckMessage.builder()
+            .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+            .buyerIdentifier("B123")
+            .sellerIdentifier("S123")
+            .financeDealAmount("10000")
+            .build();
 
     when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
-      .thenReturn(Customer.builder().build()) // Buyer
-      .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
+        .thenReturn(Customer.builder().build()) // Buyer
+        .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
     when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
-      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+        .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
-      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+        .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
     when(invoiceFinancingService.findInvoiceByMasterReference(any()))
-      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+        .thenReturn(InvoiceMaster.builder().batchId("b123").build());
 
     when(corporateLoanService.createCredit(any()))
-      .thenReturn(new DistributorCreditResponse(Data.builder()
-        .disbursementAmount(100)
-        .error(Error.empty())
-        .build()));
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().disbursementAmount(100).error(Error.empty()).build()));
+    when(corporateLoanService.simulateCredit(any()))
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder()
+                    .disbursementAmount(100)
+                    .totalInstallmentsAmount(110)
+                    .error(Error.empty())
+                    .build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
-      .thenReturn(InvoiceEmailInfo.builder().build());
+        .thenReturn(InvoiceEmailInfo.builder().build());
     when(paymentExecutionService.makeTransactionRequest(any()))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")));
+        .thenReturn(new BusinessAccountTransfersResponse(new TransferResponseData("OK", "", "")))
+        .thenReturn(new BusinessAccountTransfersResponse(new TransferResponseData("OK", "", "")));
 
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
-    verify(invoiceFinancingService, times(2)).buildInvoiceFinancingEmailInfo(
-      emailEventArgumentCaptor.capture(),
-      any(FinanceAckMessage.class),
-      customerArgumentCaptor.capture(),
-      amountArgumentCaptor.capture()
-    );
+    verify(invoiceFinancingService, times(2))
+        .buildInvoiceFinancingEmailInfo(
+            emailEventArgumentCaptor.capture(),
+            any(FinanceAckMessage.class),
+            customerArgumentCaptor.capture(),
+            amountArgumentCaptor.capture());
     verify(operationalGatewayService, times(2))
-      .sendNotificationRequest(any(InvoiceEmailInfo.class));
+        .sendNotificationRequest(any(InvoiceEmailInfo.class));
 
     var customers = customerArgumentCaptor.getAllValues();
     var emailEvents = emailEventArgumentCaptor.getAllValues();
@@ -132,127 +139,114 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
 
   @Test
   void itShouldSendOneNotificationIfTransactionFailed() {
-    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
-      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
-      .buyerIdentifier("B123")
-      .sellerIdentifier("S123")
-      .financeDealAmount("10000")
-      .build();
+    FinanceAckMessage invoiceFinanceMessage =
+        FinanceAckMessage.builder()
+            .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+            .buyerIdentifier("B123")
+            .sellerIdentifier("S123")
+            .financeDealAmount("10000")
+            .build();
 
     when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
-      .thenReturn(Customer.builder().build()) // Buyer
-      .thenReturn(Customer.builder().build()); // Seller
+        .thenReturn(Customer.builder().build()) // Buyer
+        .thenReturn(Customer.builder().build()); // Seller
     when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
-      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+        .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
-      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+        .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
     when(invoiceFinancingService.findInvoiceByMasterReference(any()))
-      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+        .thenReturn(InvoiceMaster.builder().batchId("b123").build());
 
     when(corporateLoanService.createCredit(any()))
-      .thenReturn(new DistributorCreditResponse(Data.builder()
-        .disbursementAmount(100)
-        .error(Error.empty())
-        .build()));
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().disbursementAmount(100).error(Error.empty()).build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
-      .thenReturn(InvoiceEmailInfo.builder().build());
+        .thenReturn(InvoiceEmailInfo.builder().build());
     when(paymentExecutionService.makeTransactionRequest(any()))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("FAILED", "", "")));
+        .thenReturn(new BusinessAccountTransfersResponse(new TransferResponseData("OK", "", "")))
+        .thenReturn(
+            new BusinessAccountTransfersResponse(new TransferResponseData("FAILED", "", "")));
 
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
     verify(operationalGatewayService, times(1))
-      .sendNotificationRequest(any(InvoiceEmailInfo.class));
+        .sendNotificationRequest(any(InvoiceEmailInfo.class));
   }
 
   @Test
   void itShouldSendNotifyOperationalGwIfCreditFailed() {
-    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
-      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
-      .buyerIdentifier("B123")
-      .sellerIdentifier("S123")
-      .financeDealAmount("10000")
-      .build();
+    FinanceAckMessage invoiceFinanceMessage =
+        FinanceAckMessage.builder()
+            .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+            .buyerIdentifier("B123")
+            .sellerIdentifier("S123")
+            .financeDealAmount("10000")
+            .build();
 
     when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
-      .thenReturn(Customer.builder().build()) // Buyer
-      .thenReturn(Customer.builder().build()); // Seller
+        .thenReturn(Customer.builder().build()) // Buyer
+        .thenReturn(Customer.builder().build()); // Seller
     when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
-      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+        .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
-      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+        .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
     when(invoiceFinancingService.findInvoiceByMasterReference(any()))
-      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+        .thenReturn(InvoiceMaster.builder().batchId("b123").build());
 
     when(corporateLoanService.createCredit(any()))
-      .thenThrow(new CreditCreationException("Error"))
-      .thenReturn(new DistributorCreditResponse(Data.builder()
-        .error(new Error("001", "Error", "ERROR"))
-        .build()));
+        .thenThrow(new CreditCreationException("Error"))
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().error(new Error("001", "Error", "ERROR")).build()));
 
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
-    verify(operationalGatewayService, times(2))
-      .sendNotificationRequest(any());
-    verify(businessBankingService, times(2))
-      .notifyEvent(any(), any());
+    verify(operationalGatewayService, times(2)).sendNotificationRequest(any());
+    verify(businessBankingService, times(2)).notifyEvent(any(), any());
   }
 
   @Test
   void itShouldSendNotificationIfCreditSimulationFails() {
-    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
-      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
-      .buyerIdentifier("B123")
-      .sellerIdentifier("S123")
-      .financeDealAmount("10000")
-      .build();
+    FinanceAckMessage invoiceFinanceMessage =
+        FinanceAckMessage.builder()
+            .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+            .buyerIdentifier("B123")
+            .sellerIdentifier("S123")
+            .financeDealAmount("10000")
+            .build();
 
     when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
-      .thenReturn(Customer.builder().build()) // Buyer
-      .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
+        .thenReturn(Customer.builder().build()) // Buyer
+        .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
     when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
-      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+        .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
-      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+        .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
     when(invoiceFinancingService.findInvoiceByMasterReference(any()))
-      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+        .thenReturn(InvoiceMaster.builder().batchId("b123").build());
 
     when(corporateLoanService.createCredit(any()))
-      .thenReturn(new DistributorCreditResponse(Data.builder()
-        .disbursementAmount(100)
-        .error(Error.empty())
-        .build()))
-      .thenReturn(new DistributorCreditResponse(Data.
-        builder()
-        .error(new Error("01", "Something went wrong", ""))
-        .build()));
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().error(new Error("01", "Something went wrong", "")).build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
-      .thenReturn(InvoiceEmailInfo.builder().build());
-    when(paymentExecutionService.makeTransactionRequest(any()))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")));
+        .thenReturn(InvoiceEmailInfo.builder().build());
 
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
-    verify(invoiceFinancingService).buildInvoiceFinancingEmailInfo(
-      emailEventArgumentCaptor.capture(),
-      any(FinanceAckMessage.class),
-      customerArgumentCaptor.capture(),
-      amountArgumentCaptor.capture()
-    );
-    verify(operationalGatewayService)
-      .sendNotificationRequest(any(InvoiceEmailInfo.class));
+    verify(invoiceFinancingService)
+        .buildInvoiceFinancingEmailInfo(
+            emailEventArgumentCaptor.capture(),
+            any(FinanceAckMessage.class),
+            customerArgumentCaptor.capture(),
+            amountArgumentCaptor.capture());
+    verify(operationalGatewayService).sendNotificationRequest(any(InvoiceEmailInfo.class));
     verify(businessBankingService)
-      .notifyEvent(
-        operationalGatewayProcessCodeArgumentCaptor.capture(),
-        operationalGatewayRequestPayloadArgumentCaptor.capture()
-      );
+        .notifyEvent(
+            operationalGatewayProcessCodeArgumentCaptor.capture(),
+            operationalGatewayRequestPayloadArgumentCaptor.capture());
 
     var customers = customerArgumentCaptor.getAllValues();
     var emailEvents = emailEventArgumentCaptor.getAllValues();
@@ -264,67 +258,74 @@ class InvoiceFinanceResultFlowRouteBuilderTest extends CamelTestSupport {
     assertEquals(InvoiceEmailEvent.FINANCED, emailEvents.get(0));
     assertEquals(expectedAmount, amounts.get(0));
 
-    assertEquals(PayloadStatus.FAILED.getValue(), operationalGatewayRequestPayloadArgumentCaptor.getValue().status());
-
+    assertEquals(
+        PayloadStatus.FAILED.getValue(),
+        operationalGatewayRequestPayloadArgumentCaptor.getValue().status());
   }
 
   @Test
   void itShouldSendNotificationIfTransactionFromSellerToBuyerFails() {
-    FinanceAckMessage invoiceFinanceMessage = FinanceAckMessage.builder()
-      .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
-      .buyerIdentifier("B123")
-      .sellerIdentifier("S123")
-      .financeDealAmount("10000")
-      .build();
+    FinanceAckMessage invoiceFinanceMessage =
+        FinanceAckMessage.builder()
+            .invoiceArray(List.of(Invoice.builder().invoiceReference("01-001").build()))
+            .buyerIdentifier("B123")
+            .sellerIdentifier("S123")
+            .financeDealAmount("10000")
+            .build();
 
     when(invoiceFinancingService.findCustomerByMnemonic(anyString()))
-      .thenReturn(Customer.builder().build()) // Buyer
-      .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
+        .thenReturn(Customer.builder().build()) // Buyer
+        .thenReturn(Customer.builder().fullName("Seller").build()); // Seller
     when(invoiceFinancingService.findProductMasterExtensionByMasterReference(anyString()))
-      .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
+        .thenReturn(ProductMasterExtension.builder().financeAccount("CC0974631820").build());
     when(invoiceFinancingService.findAccountByCustomerMnemonic(anyString()))
-      .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
+        .thenReturn(Account.builder().externalAccountNumber("AH0974631821").build());
     when(invoiceFinancingService.findInvoiceByMasterReference(any()))
-      .thenReturn(InvoiceMaster.builder().batchId("b123").build());
+        .thenReturn(InvoiceMaster.builder().batchId("b123").build());
 
     when(corporateLoanService.createCredit(any()))
-      .thenReturn(new DistributorCreditResponse(Data.builder()
-        .disbursementAmount(100)
-        .error(Error.empty())
-        .build()));
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().disbursementAmount(100).error(Error.empty()).build()));
+    when(corporateLoanService.simulateCredit(any()))
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder()
+                    .disbursementAmount(100)
+                    .totalInstallmentsAmount(110)
+                    .error(Error.empty())
+                    .build()));
     when(invoiceFinancingService.buildInvoiceFinancingEmailInfo(any(), any(), any(), any()))
-      .thenReturn(InvoiceEmailInfo.builder().build());
+        .thenReturn(InvoiceEmailInfo.builder().build());
     when(paymentExecutionService.makeTransactionRequest(any()))
-      // Buyer to Seller Transaction (Invoice amount)
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")))
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("OK", "", "")))
-      // Seller to Buyer (solca and taxes)
-      .thenReturn(new BusinessAccountTransfersResponse(
-        new TransferResponseData("FAILED", "", "")));
+        // Buyer to Seller Transaction (Invoice amount)
+        .thenReturn(new BusinessAccountTransfersResponse(new TransferResponseData("OK", "", "")))
+        .thenReturn(new BusinessAccountTransfersResponse(new TransferResponseData("OK", "", "")))
+        // Seller to Buyer (solca and taxes)
+        .thenReturn(
+            new BusinessAccountTransfersResponse(new TransferResponseData("FAILED", "", "")));
 
     from.sendBody(new AckServiceRequest<>(null, invoiceFinanceMessage));
 
-    verify(invoiceFinancingService).buildInvoiceFinancingEmailInfo(
-      emailEventArgumentCaptor.capture(),
-      any(FinanceAckMessage.class),
-      customerArgumentCaptor.capture(),
-      amountArgumentCaptor.capture()
-    );
-    verify(operationalGatewayService)
-      .sendNotificationRequest(any(InvoiceEmailInfo.class));
+    verify(invoiceFinancingService)
+        .buildInvoiceFinancingEmailInfo(
+            emailEventArgumentCaptor.capture(),
+            any(FinanceAckMessage.class),
+            customerArgumentCaptor.capture(),
+            amountArgumentCaptor.capture());
+    verify(operationalGatewayService).sendNotificationRequest(any(InvoiceEmailInfo.class));
     verify(businessBankingService)
-      .notifyEvent(
-        operationalGatewayProcessCodeArgumentCaptor.capture(),
-        operationalGatewayRequestPayloadArgumentCaptor.capture()
-      );
+        .notifyEvent(
+            operationalGatewayProcessCodeArgumentCaptor.capture(),
+            operationalGatewayRequestPayloadArgumentCaptor.capture());
 
     var expectedAmount = new BigDecimal("100.00");
     assertEquals("Seller", customerArgumentCaptor.getValue().getFullName());
     assertEquals(InvoiceEmailEvent.FINANCED, emailEventArgumentCaptor.getValue());
     assertEquals(expectedAmount, amountArgumentCaptor.getValue());
 
-    assertEquals(PayloadStatus.FAILED.getValue(), operationalGatewayRequestPayloadArgumentCaptor.getValue().status());
+    assertEquals(
+        PayloadStatus.FAILED.getValue(),
+        operationalGatewayRequestPayloadArgumentCaptor.getValue().status());
   }
 }
