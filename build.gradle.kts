@@ -26,6 +26,10 @@ dependencies {
   api("org.codehaus.woodstox:woodstox-core-asl:4.4.1")
   api("org.mapstruct:mapstruct:1.5.5.Final")
   api("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.4")
+  // Retries
+  api("org.springframework.retry:spring-retry:2.0.3")
+  api("org.springframework:spring-aspects:6.0.11")
+
   api("org.springframework.boot:spring-boot-starter-data-jpa:3.1.2")
   api("org.projectlombok:lombok:1.18.28")
   api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
