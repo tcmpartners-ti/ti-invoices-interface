@@ -73,7 +73,8 @@ public class BusinessBankingService {
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
-    tryEventNotification(headers, body);
+    businessBankingClient.notifyEvent(headers, body);
+    log.info("Event notified successfully");
   }
 
   private void tryEventNotification(
