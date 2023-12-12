@@ -2,7 +2,7 @@ package com.tcmp.tiapi.shared.configuration;
 
 import static org.mockito.Mockito.*;
 
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 @Profile("test")
 public class MockRedisRepositoriesConfiguration {
   @Bean
-  public InvoiceCreationEventRepository mockInvoiceCreationEventRepository() {
-    return mock(InvoiceCreationEventRepository.class);
+  public InvoiceEventRepository mockInvoiceCreationEventRepository() {
+    return mock(InvoiceEventRepository.class);
   }
 }

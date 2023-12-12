@@ -5,7 +5,7 @@ import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMess
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceCreationEventRepository;
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InvoiceEventService {
   private final InvoiceRepository invoiceRepository;
-  private final InvoiceCreationEventRepository invoiceCreationEventRepository;
+  private final InvoiceEventRepository invoiceEventRepository;
 
   public InvoiceEventInfo findInvoiceEventInfoByUuid(String invoiceUuid) {
-    return invoiceCreationEventRepository
+    return invoiceEventRepository
         .findById(invoiceUuid)
         .orElseThrow(
             () ->
@@ -35,7 +35,7 @@ public class InvoiceEventService {
             .sellerMnemonic(invoiceEventMessage.getSeller())
             .build();
 
-    invoiceCreationEventRepository.save(invoiceInfo);
+    invoiceEventRepository.save(invoiceInfo);
   }
 
   // Hotfix: find a better and cleaner way of doing this.
@@ -57,7 +57,7 @@ public class InvoiceEventService {
             .sellerMnemonic(invoiceEventMessage.getSeller())
             .build();
 
-    invoiceCreationEventRepository.save(invoiceInfo);
+    invoiceEventRepository.save(invoiceInfo);
   }
 
   // Hotfix: find a better and cleaner way of doing this.
@@ -75,6 +75,6 @@ public class InvoiceEventService {
   }
 
   public void deleteInvoiceByUuid(String invoiceUuid) {
-    invoiceCreationEventRepository.deleteById(invoiceUuid);
+    invoiceEventRepository.deleteById(invoiceUuid);
   }
 }
