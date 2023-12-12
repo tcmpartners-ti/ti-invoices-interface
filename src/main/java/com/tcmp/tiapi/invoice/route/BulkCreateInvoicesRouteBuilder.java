@@ -23,6 +23,7 @@ public class BulkCreateInvoicesRouteBuilder extends RouteBuilder {
     ValueBuilder ignoreCsvHeader = simple("${exchangeProperty.CamelSplitIndex} != 0");
     ValueBuilder ignoreEmptyRows = simple("${body.trim()} != ''");
 
+    // Todo: refactor this route
     from(uriFrom)
         .routeId("bulkCreateInvoicesBulkInTI")
         .threads(THREAD_POOL_SIZE_FOR_BULK_OPERATIONS)

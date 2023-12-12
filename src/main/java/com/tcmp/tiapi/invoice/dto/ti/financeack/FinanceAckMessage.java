@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.invoice.dto.ti.financeack;
 
-import com.tcmp.tiapi.messaging.model.TINamespace;
-import com.tcmp.tiapi.messaging.model.TIOperation;
+import com.tcmp.tiapi.ti.model.TINamespace;
+import com.tcmp.tiapi.ti.model.TIOperation;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

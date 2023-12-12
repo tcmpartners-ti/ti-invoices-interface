@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.invoice.route;
 
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.apache.camel.EndpointInject;

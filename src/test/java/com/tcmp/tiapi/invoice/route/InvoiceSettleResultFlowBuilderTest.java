@@ -11,7 +11,7 @@ import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
-import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;

@@ -6,8 +6,8 @@ import static org.mockito.Mockito.*;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
+import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.exception.RecoverableApiGeeRequestException;

@@ -1,8 +1,8 @@
 package com.tcmp.tiapi.invoice.route;
 
-import com.tcmp.tiapi.messaging.model.TINamespace;
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.model.TINamespace;
+import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ValueBuilder;
@@ -29,6 +29,9 @@ public class InvoiceAckEventListenerRouteBuilder extends RouteBuilder {
         .routeId("invoiceAckEventResult")
         .unmarshal(jaxbDataFormatAckEventRequest)
         .choice()
+        // Todo: remove this (workaround for prod).
+        .when(operationXpath.isEqualTo("TFINVSET"))
+        .to(toSettleFlow)
         .when(operationXpath.isEqualTo(TIOperation.DUE_INVOICE_VALUE))
         .to(toSettleFlow)
         .when(operationXpath.isEqualTo(TIOperation.FINANCE_ACK_INVOICE_VALUE))

@@ -12,7 +12,7 @@ import com.tcmp.tiapi.invoice.dto.ti.financeack.Invoice;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
-import com.tcmp.tiapi.messaging.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;

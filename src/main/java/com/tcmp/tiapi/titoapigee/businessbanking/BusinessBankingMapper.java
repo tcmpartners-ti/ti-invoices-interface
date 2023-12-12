@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.titoapigee.businessbanking;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
-import com.tcmp.tiapi.messaging.model.response.ServiceResponse;
+import com.tcmp.tiapi.ti.model.response.ServiceResponse;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;

@@ -2,12 +2,12 @@ package com.tcmp.tiapi.invoice.route;
 
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
-import com.tcmp.tiapi.messaging.TIServiceRequestWrapper;
-import com.tcmp.tiapi.messaging.model.TIOperation;
-import com.tcmp.tiapi.messaging.model.TIService;
-import com.tcmp.tiapi.messaging.model.requests.ReplyFormat;
-import com.tcmp.tiapi.messaging.model.requests.ServiceRequest;
-import com.tcmp.tiapi.messaging.router.processor.XmlNamespaceFixer;
+import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
+import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.model.TIService;
+import com.tcmp.tiapi.ti.model.requests.ReplyFormat;
+import com.tcmp.tiapi.ti.model.requests.ServiceRequest;
+import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
