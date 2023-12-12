@@ -5,7 +5,6 @@ import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.service.InvoiceNotificationCreationService;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
-import com.tcmp.tiapi.invoice.validation.InvoiceRowValidator;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
@@ -147,11 +146,6 @@ public class InvoiceConfiguration {
         new XmlNamespaceFixer(),
         uriFinanceFrom,
         uriFinanceTo);
-  }
-
-  @Bean
-  public InvoiceRowValidator invoiceRowValidator() {
-    return new InvoiceRowValidator();
   }
 
   @Bean
