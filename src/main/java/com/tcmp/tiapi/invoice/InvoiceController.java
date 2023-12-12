@@ -8,6 +8,7 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
+import com.tcmp.tiapi.invoice.service.InvoiceBatchOperationsService;
 import com.tcmp.tiapi.invoice.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class InvoiceController {
   private final InvoiceService invoiceService;
+  private final InvoiceBatchOperationsService invoiceBatchOperationsService;
 
   @GetMapping(path = "{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its internal id.")
@@ -62,8 +64,7 @@ public class InvoiceController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices in Trade Innovation.")
   public InvoicesCreatedDTO bulkCreateInvoices(@Valid InvoiceBulkCreationForm form) {
-    invoiceService.createMultipleInvoicesInTi(form.invoicesFile(), form.batchId());
-
+    invoiceBatchOperationsService.createMultipleInvoicesInTi(form.invoicesFile(), form.batchId());
     return InvoicesCreatedDTO.builder().message("Invoices sent to be created.").build();
   }
 
