@@ -5,8 +5,6 @@ import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.service.InvoiceNotificationCreationService;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
-import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
-import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
@@ -20,18 +18,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Getter
 public class InvoiceConfiguration {
-  @Value("${invoice.route.create.from}")
-  private String uriCreateFrom;
-
-  @Value("${invoice.route.create.to}")
-  private String uriCreateTo;
-
-  @Value("${invoice.route.create-bulk.from}")
-  private String uriBulkCreateFrom;
-
-  @Value("${invoice.route.create-bulk.to}")
-  private String uriBulkCreateTo;
-
   @Value("${invoice.route.event-listener.max-retries}")
   private Integer maxRetries;
 
@@ -44,12 +30,6 @@ public class InvoiceConfiguration {
   @Value("${invoice.route.event-listener.to}")
   private String uriCreatedEventTo;
 
-  @Value("${invoice.route.finance.from}")
-  private String uriFinanceFrom;
-
-  @Value("${invoice.route.finance.to}")
-  private String uriFinanceTo;
-
   @Value("${invoice.route.ack-event-listener.from}")
   private String uriCreatedAckEventFrom;
 
@@ -61,25 +41,6 @@ public class InvoiceConfiguration {
 
   @Value("${invoice.route.notification-invoice-creation.from}")
   private String uriNotificationInvoiceCreationFrom;
-
-  @Bean
-  public CreateInvoiceRouteBuilder createInvoiceRouter(
-      InvoiceEventService invoiceEventService,
-      JaxbDataFormat jaxbDataFormatServiceRequest,
-      InvoiceMapper invoiceMapper) {
-    return new CreateInvoiceRouteBuilder(
-        invoiceEventService,
-        jaxbDataFormatServiceRequest,
-        new TIServiceRequestWrapper(),
-        new XmlNamespaceFixer(),
-        uriCreateFrom,
-        uriCreateTo);
-  }
-
-  @Bean
-  public BulkCreateInvoicesRouteBuilder bulkCreateInvoicesRouter(InvoiceMapper invoiceMapper) {
-    return new BulkCreateInvoicesRouteBuilder(invoiceMapper, uriBulkCreateFrom, uriBulkCreateTo);
-  }
 
   @Bean
   public InvoiceEventListenerRouteBuilder invoiceEventListenerRouteBuilder(
@@ -134,18 +95,6 @@ public class InvoiceConfiguration {
         operationalGatewayService,
         businessBankingService,
         uriToSettleFlow);
-  }
-
-  @Bean
-  public FinanceInvoiceRouteBuilder financeInvoiceRouteBuilder(
-      InvoiceEventService invoiceEventService, JaxbDataFormat jaxbDataFormatServiceRequest) {
-    return new FinanceInvoiceRouteBuilder(
-        invoiceEventService,
-        new TIServiceRequestWrapper(),
-        jaxbDataFormatServiceRequest,
-        new XmlNamespaceFixer(),
-        uriFinanceFrom,
-        uriFinanceTo);
   }
 
   @Bean

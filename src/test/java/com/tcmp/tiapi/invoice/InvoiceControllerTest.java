@@ -11,6 +11,7 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceBulkCreationForm;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
+import com.tcmp.tiapi.invoice.service.InvoiceBatchOperationsService;
 import com.tcmp.tiapi.invoice.service.InvoiceService;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ class InvoiceControllerTest {
   @Autowired MockMvc mockMvc;
 
   @MockBean private InvoiceService invoiceService;
+  @MockBean private InvoiceBatchOperationsService invoiceBatchOperationsService;
 
   @Test
   void getInvoiceById_itShouldThrowExceptionWhenNotFound() throws Exception {
@@ -155,7 +157,7 @@ class InvoiceControllerTest {
       .andExpect(status().is4xxClientError())
       .andExpect(content().json(expectedResponse, true));
 
-    verify(invoiceService, never()).createMultipleInvoicesInTi(
+    verify(invoiceBatchOperationsService, never()).createMultipleInvoicesInTi(
       any(MultipartFile.class),
       anyString()
     );
@@ -181,7 +183,7 @@ class InvoiceControllerTest {
       .andExpect(status().isOk())
       .andExpect(content().json(expectedResponse, true));
 
-    verify(invoiceService).createMultipleInvoicesInTi(
+    verify(invoiceBatchOperationsService).createMultipleInvoicesInTi(
       any(MultipartFile.class),
       anyString()
     );

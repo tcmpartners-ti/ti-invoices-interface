@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.ti.config;
 
+import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.model.TINamespace;
 import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.ti.model.requests.ServiceRequest;
@@ -31,7 +32,12 @@ public class MessagingConfiguration {
           TINamespace.CUSTOM, CUSTOM_PREFIX);
 
   @Bean
-  JaxbDataFormat jaxbDataFormatServiceRequest() throws JAXBException {
+  public TIServiceRequestWrapper serviceRequestWrapper() {
+    return new TIServiceRequestWrapper();
+  }
+
+  @Bean
+  public JaxbDataFormat jaxbDataFormatServiceRequest() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(ServiceRequest.class);
 
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
@@ -42,13 +48,13 @@ public class MessagingConfiguration {
   }
 
   @Bean
-  JaxbDataFormat jaxbDataFormatServiceResponse() throws JAXBException {
+  public JaxbDataFormat jaxbDataFormatServiceResponse() throws JAXBException {
     JAXBContext jaxbServiceResponseContext = JAXBContext.newInstance(ServiceResponse.class);
     return new JaxbDataFormat(jaxbServiceResponseContext);
   }
 
   @Bean
-  JaxbDataFormat jaxbDataFormatAckEventRequest() throws JAXBException {
+  public JaxbDataFormat jaxbDataFormatAckEventRequest() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
     return new JaxbDataFormat(jaxbContext);
   }

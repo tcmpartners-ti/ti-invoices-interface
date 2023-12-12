@@ -1,29 +1,25 @@
 package com.tcmp.tiapi.invoice.service;
 
-import com.tcmp.tiapi.invoice.InvoiceConfiguration;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
-import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
-import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
-import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Map;
+import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
+import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.model.TIService;
+import com.tcmp.tiapi.ti.model.requests.ReplyFormat;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +27,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class InvoiceService {
   private final ProducerTemplate producerTemplate;
 
-  private final InvoiceConfiguration invoiceConfiguration;
   private final InvoiceRepository invoiceRepository;
+  private final InvoiceEventRepository invoiceEventRepository;
   private final InvoiceMapper invoiceMapper;
+
+  private final TIServiceRequestWrapper serviceRequestWrapper;
+
+  @Value("${ti.route.fti.out.from}")
+  private String uriFromFtiOutgoing;
 
   public InvoiceDTO getInvoiceById(Long invoiceId) {
     InvoiceMaster invoice =
@@ -62,74 +63,64 @@ public class InvoiceService {
     return invoiceMapper.mapEntityToDTO(invoice);
   }
 
-  public void createSingleInvoiceInTi(InvoiceCreationDTO invoiceDTO) {
-    if (!areBuyerMnemonicFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException(
-          "The 'buyer' fields do not match.", List.of("context.customer", "anchorParty", "buyer"));
-    }
+  public void createSingleInvoiceInTi(InvoiceCreationDTO creationDTO) {
+    String invoiceUuid = UUID.randomUUID().toString();
 
-    if (!areInvoiceReferenceFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException(
-          "The 'invoice number' fields do not match.",
-          List.of("context.theirReference", "invoiceNumber"));
-    }
+    invoiceEventRepository.save(
+        InvoiceEventInfo.builder()
+            .id(invoiceUuid)
+            .batchId(null)
+            .reference(creationDTO.getInvoiceNumber())
+            .sellerMnemonic(creationDTO.getSeller())
+            .build());
 
-    if (!areInvoiceMonetaryFieldsEquals(invoiceDTO)) {
-      throw new FieldsInconsistenciesException(
-          "The 'amount and currency' fields do not match.",
-          List.of("faceValue", "outstandingAmount"));
-    }
-
-    CreateInvoiceEventMessage createInvoiceEventMessage =
-        invoiceMapper.mapDTOToFTIMessage(invoiceDTO);
-
-    producerTemplate.sendBody(invoiceConfiguration.getUriCreateFrom(), createInvoiceEventMessage);
+    producerTemplate.sendBody(
+        uriFromFtiOutgoing,
+        serviceRequestWrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.CREATE_INVOICE,
+            ReplyFormat.STATUS,
+            invoiceUuid,
+            invoiceMapper.mapDTOToFTIMessage(creationDTO)));
   }
 
-  private boolean areBuyerMnemonicFieldsEquals(InvoiceCreationDTO invoiceDTO) {
-    String customer = invoiceDTO.getContext().getCustomer();
-    String anchorParty = invoiceDTO.getAnchorParty();
-    String buyerMnemonic = invoiceDTO.getBuyer();
+  public void financeInvoice(InvoiceFinancingDTO financingDTO) {
+    String invoiceUuid = UUID.randomUUID().toString();
 
-    return customer.equals(anchorParty) && anchorParty.equals(buyerMnemonic);
+    InvoiceMaster invoice = findInvoiceFromFinancingInfo(financingDTO);
+    invoiceEventRepository.save(
+        InvoiceEventInfo.builder()
+            .id(invoiceUuid)
+            .batchId(invoice.getBatchId().trim())
+            .reference(financingDTO.getInvoice().getNumber())
+            .sellerMnemonic(financingDTO.getSeller())
+            .build());
+
+    producerTemplate.sendBody(
+        uriFromFtiOutgoing,
+        serviceRequestWrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.FINANCE_INVOICE,
+            ReplyFormat.STATUS,
+            invoiceUuid,
+            invoiceMapper.mapFinancingDTOToFTIMessage(financingDTO)));
   }
 
-  private boolean areInvoiceReferenceFieldsEquals(InvoiceCreationDTO invoiceDTO) {
-    String theirReference = invoiceDTO.getContext().getTheirReference();
-    String invoiceNumber = invoiceDTO.getInvoiceNumber();
-
-    return theirReference.equals(invoiceNumber);
-  }
-
-  private boolean areInvoiceMonetaryFieldsEquals(InvoiceCreationDTO invoiceDTO) {
-    CurrencyAmountDTO faceValue = invoiceDTO.getFaceValue();
-    CurrencyAmountDTO outstandingValue = invoiceDTO.getOutstandingAmount();
-
-    return faceValue.getAmount().compareTo(outstandingValue.getAmount()) == 0
-        && faceValue.getCurrency().equals(outstandingValue.getCurrency());
-  }
-
-  public void createMultipleInvoicesInTi(MultipartFile invoicesFile, String batchId) {
-    if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
-
-    try (BufferedReader bufferedReader =
-        new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
-      log.info("Sending invoices to TI.");
-
-      producerTemplate.sendBodyAndHeaders(
-          invoiceConfiguration.getUriBulkCreateFrom(),
-          bufferedReader,
-          Map.ofEntries(Map.entry("batchId", batchId)));
-    } catch (IOException e) {
-      log.error("Invalid file uploaded");
-      throw new InvalidFileHttpException("Could not read the uploaded file");
-    }
-  }
-
-  public void financeInvoice(InvoiceFinancingDTO invoiceFinancingDTO) {
-    FinanceBuyerCentricInvoiceEventMessage financeInvoiceMessage =
-        invoiceMapper.mapFinancingDTOToFTIMessage(invoiceFinancingDTO);
-
-    producerTemplate.sendBody(invoiceConfiguration.getUriFinanceFrom(), financeInvoiceMessage);
+  /**
+   * This method is required to get the `batchId` for the financing process.
+   *
+   * @param financingDTO Financing request information.
+   * @return InvoiceMaster if found.
+   */
+  private InvoiceMaster findInvoiceFromFinancingInfo(InvoiceFinancingDTO financingDTO) {
+    return invoiceRepository
+        .findByProgramIdAndSellerMnemonicAndReference(
+            financingDTO.getProgramme(),
+            financingDTO.getSeller(),
+            financingDTO.getInvoice().getNumber())
+        .orElseThrow(
+            () ->
+                new NotFoundHttpException(
+                    "Could not find invoice for given programme / buyer / seller relationship."));
   }
 }
