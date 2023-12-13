@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.route;
+package com.tcmp.tiapi.invoice.strategies.ticc;
 
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
@@ -7,9 +7,10 @@ import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
-import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.route.TICCIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadDetails;
@@ -20,8 +21,8 @@ import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
-import com.tcmp.tiapi.titoapigee.exception.UnrecoverableApiGeeRequestException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
@@ -32,34 +33,22 @@ import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.camel.builder.RouteBuilder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+@Component
 @RequiredArgsConstructor
-public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
+@Slf4j
+public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   private final InvoiceFinancingService invoiceFinancingService;
   private final CorporateLoanService corporateLoanService;
   private final PaymentExecutionService paymentExecutionService;
   private final OperationalGatewayService operationalGatewayService;
   private final BusinessBankingService businessBankingService;
 
-  private final String uriFrom;
-
   @Override
-  public void configure() {
-    from(uriFrom)
-        .routeId("invoiceFinanceResultFlow")
-        .log("Started invoice finance flow.")
-        .process()
-        .body(AckServiceRequest.class, this::startInvoiceFinancingFlow)
-        .log("Completed invoice finance flow.")
-        .end();
-  }
-
-  // Todo: Manejar errores de envío de correos.
-  private void startInvoiceFinancingFlow(AckServiceRequest<FinanceAckMessage> serviceRequest) {
-    if (serviceRequest == null)
-      throw new UnrecoverableApiGeeRequestException("Message with no body received.");
-    FinanceAckMessage financeMessage = serviceRequest.getBody();
+  public void handleServiceRequest(AckServiceRequest<?> serviceRequest) {
+    FinanceAckMessage financeMessage = (FinanceAckMessage) serviceRequest.getBody();
     String masterReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
     BigDecimal financeDealAmountInCents = new BigDecimal(financeMessage.getFinanceDealAmount());
     BigDecimal financeDealAmount =
@@ -111,7 +100,11 @@ public class InvoiceFinanceResultFlowRouteBuilder extends RouteBuilder {
     InvoiceEmailInfo financedInvoiceInfo =
         invoiceFinancingService.buildInvoiceFinancingEmailInfo(
             event, financeMessage, seller, financeDealAmount);
-    operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
+    try {
+      operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
+    } catch (OperationalGatewayException e) {
+      log.error(e.getMessage());
+    }
   }
 
   private void createAndTransferCreditAmountFromBuyerToSellerOrThrowException(

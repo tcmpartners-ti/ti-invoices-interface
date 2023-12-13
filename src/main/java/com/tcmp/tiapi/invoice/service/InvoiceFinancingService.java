@@ -95,7 +95,7 @@ public class InvoiceFinancingService {
       ProgramExtension programExtension,
       Customer buyer,
       EncodedAccountParser buyerAccountParser,
-      boolean isSimulation) {
+      boolean isSellerCentered) {
     return DistributorCreditRequest.builder()
         .commercialTrade(new CommercialTrade(buyer.getType().trim()))
         .customer(
@@ -115,9 +115,9 @@ public class InvoiceFinancingService {
         .amount(getFinanceDealAmountFromMessage(invoiceFinanceAck))
         .effectiveDate(invoiceFinanceAck.getStartDate())
         .term(
-            isSimulation
-                ? calculateDaysBetweenStartAndMaturityDays(invoiceFinanceAck)
-                : calculateInvoiceFinancingCreditTerm(invoiceFinanceAck, programExtension))
+            isSellerCentered
+                ? calculateCreditTermForSeller(invoiceFinanceAck)
+                : calculateCreditTermForBuyer(invoiceFinanceAck, programExtension))
         .termPeriodType(new TermPeriodType("D"))
         .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
         .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
@@ -134,13 +134,13 @@ public class InvoiceFinancingService {
         .build();
   }
 
-  private int calculateInvoiceFinancingCreditTerm(
+  private int calculateCreditTermForBuyer(
       FinanceAckMessage invoiceFinanceMessage, ProgramExtension programExtension) {
     int extraFinancingDays = programExtension.getExtraFinancingDays();
-    return extraFinancingDays + calculateDaysBetweenStartAndMaturityDays(invoiceFinanceMessage);
+    return extraFinancingDays + calculateCreditTermForSeller(invoiceFinanceMessage);
   }
 
-  private int calculateDaysBetweenStartAndMaturityDays(FinanceAckMessage invoiceFinanceMessage) {
+  private int calculateCreditTermForSeller(FinanceAckMessage invoiceFinanceMessage) {
     LocalDate startDate = LocalDate.parse(invoiceFinanceMessage.getStartDate());
     LocalDate maturityDate = LocalDate.parse(invoiceFinanceMessage.getMaturityDate());
 

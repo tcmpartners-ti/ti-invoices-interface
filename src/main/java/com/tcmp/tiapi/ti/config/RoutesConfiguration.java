@@ -1,8 +1,10 @@
 package com.tcmp.tiapi.ti.config;
 
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandler;
+import com.tcmp.tiapi.ti.handler.TICCIncomingHandler;
 import com.tcmp.tiapi.ti.route.FTIOutgoingRouteBuilder;
 import com.tcmp.tiapi.ti.route.FTIReplyIncomingRouteBuilder;
+import com.tcmp.tiapi.ti.route.TICCIncomingRouteBuilder;
 import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,9 @@ public class RoutesConfiguration {
   @Value("${ti.route.fti.in-reply.from}")
   private String uriFromFtiReplyIncoming;
 
+  @Value("${ti.route.ticc.in.from}")
+  private String uriFromTiccIncoming;
+
   @Bean
   public FTIOutgoingRouteBuilder ftiOutgoingRouteBuilder(
       JaxbDataFormat jaxbDataFormatServiceRequest) {
@@ -36,5 +41,12 @@ public class RoutesConfiguration {
       FTIReplyIncomingHandler ftiReplyIncomingHandler) {
     return new FTIReplyIncomingRouteBuilder(
         jaxbDataFormatServiceResponse, ftiReplyIncomingHandler, uriFromFtiReplyIncoming);
+  }
+
+  @Bean
+  public TICCIncomingRouteBuilder ticcIncomingRouteBuilder(
+      JaxbDataFormat jaxbDataFormatAckEventRequest, TICCIncomingHandler ticcIncomingHandler) {
+    return new TICCIncomingRouteBuilder(
+        jaxbDataFormatAckEventRequest, ticcIncomingHandler, uriFromTiccIncoming);
   }
 }
