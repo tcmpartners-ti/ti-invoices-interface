@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.strategies.ticc;
+package com.tcmp.tiapi.invoice.strategy.ticc;
 
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;

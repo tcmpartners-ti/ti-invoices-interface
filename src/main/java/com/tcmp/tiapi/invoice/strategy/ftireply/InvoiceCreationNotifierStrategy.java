@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.strategies.ftireply;
+package com.tcmp.tiapi.invoice.strategy.ftireply;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
@@ -17,20 +17,19 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceFinancingNotifierStrategy implements FTIReplyIncomingStrategy {
+public class InvoiceCreationNotifierStrategy implements FTIReplyIncomingStrategy {
   private final InvoiceEventService invoiceEventService;
   private final BusinessBankingService businessBankingService;
   private final BusinessBankingMapper businessBankingMapper;
 
   @Override
   public void handleServiceResponse(ServiceResponse serviceResponse) {
-
     String invoiceUuidFromCorrelationId = serviceResponse.getResponseHeader().getCorrelationId();
 
     String responseStatus = serviceResponse.getResponseHeader().getStatus();
-    boolean financingWasSuccessful = ResponseStatus.SUCCESS.getValue().equals(responseStatus);
-    if (financingWasSuccessful) {
-      log.info("Invoice financed successfully, don't notify.");
+    boolean creationWasSuccessful = ResponseStatus.SUCCESS.getValue().equals(responseStatus);
+    if (creationWasSuccessful) {
+      log.info("Invoice created successfully, don't notify.");
       invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
       return;
     }
@@ -42,7 +41,7 @@ public class InvoiceFinancingNotifierStrategy implements FTIReplyIncomingStrateg
       OperationalGatewayRequestPayload payload =
           businessBankingMapper.mapToRequestPayload(serviceResponse, invoice);
 
-      businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_FINANCING, payload);
+      businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_CREATED, payload);
       invoiceEventService.deleteInvoiceByUuid(invoiceUuidFromCorrelationId);
     } catch (EntityNotFoundException e) {
       log.error(e.getMessage());
