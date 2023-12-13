@@ -42,23 +42,21 @@ bp:
         operation-token: ""
         url: "${bp.api-gee.base-url}/domain/corporate-loan/v1"
 
+ti.route:
+  fti:
+    out:
+      from: "direct:sendToFtiOutgoingQueue"
+      to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
+    in:
+      from: ""
+      to: ""
+    in-reply.from: "activemq:queue:${ti.queue.fti.reply.name}"
+  ticc.in:
+    from: ""
+    to: ""
+
 invoice:
   route:
-    create:
-      from: "direct:createInvoiceInTI"
-      to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
-
-    create-bulk:
-      from: "direct:bulkCreateInvoicesInTi"
-      to: "${invoice.route.create.from}"
-
-    event-listener:
-      max-retries: 2
-      retry-delay: 1 # ms
-
-      from: "activemq:queue:${ti.queue.fti.reply.name}"
-      to: "direct:sendNotificationToApiGee"
-
     ack-event-listener:
       from: "activemq:queue:${ti.queue.ticc.sub.name}"
       to-finance: "direct:startFinanceFlow"
