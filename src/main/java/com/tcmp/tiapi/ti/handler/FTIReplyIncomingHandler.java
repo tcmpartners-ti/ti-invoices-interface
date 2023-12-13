@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.ti.handler;
 
-import com.tcmp.tiapi.invoice.strategies.fti.InvoiceCreationNotifierStrategy;
-import com.tcmp.tiapi.invoice.strategies.fti.InvoiceFinancingNotifierStrategy;
+import com.tcmp.tiapi.invoice.strategies.ftireply.InvoiceCreationNotifierStrategy;
+import com.tcmp.tiapi.invoice.strategies.ftireply.InvoiceFinancingNotifierStrategy;
 import com.tcmp.tiapi.ti.model.TIOperation;
 import com.tcmp.tiapi.ti.route.FTIReplyIncomingStrategy;
 import jakarta.annotation.PostConstruct;

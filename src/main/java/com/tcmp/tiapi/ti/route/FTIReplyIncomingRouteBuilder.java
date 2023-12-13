@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 
+/**
+ * This route receives the "validations" results from operations such as: Invoice creation and
+ * Invoice Financing.
+ */
 @RequiredArgsConstructor
 public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormatServiceResponse;

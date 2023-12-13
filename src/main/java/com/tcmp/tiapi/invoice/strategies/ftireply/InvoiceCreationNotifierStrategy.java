@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.strategies.fti;
+package com.tcmp.tiapi.invoice.strategies.ftireply;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
