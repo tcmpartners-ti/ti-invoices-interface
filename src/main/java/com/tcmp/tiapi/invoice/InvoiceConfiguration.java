@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
 import com.tcmp.tiapi.invoice.route.*;
-import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.service.InvoiceNotificationCreationService;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
@@ -18,18 +17,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Getter
 public class InvoiceConfiguration {
-  @Value("${invoice.route.event-listener.max-retries}")
-  private Integer maxRetries;
-
-  @Value("${invoice.route.event-listener.retry-delay}")
-  private Integer retryDelayInMs;
-
-  @Value("${invoice.route.event-listener.from}")
-  private String uriCreatedEventFrom;
-
-  @Value("${invoice.route.event-listener.to}")
-  private String uriCreatedEventTo;
-
   @Value("${invoice.route.ack-event-listener.from}")
   private String uriCreatedAckEventFrom;
 
@@ -41,21 +28,6 @@ public class InvoiceConfiguration {
 
   @Value("${invoice.route.notification-invoice-creation.from}")
   private String uriNotificationInvoiceCreationFrom;
-
-  @Bean
-  public InvoiceEventListenerRouteBuilder invoiceEventListenerRouteBuilder(
-      JaxbDataFormat jaxbDataFormatServiceResponse,
-      InvoiceEventService invoiceEventService,
-      BusinessBankingService businessBankingService) {
-    return new InvoiceEventListenerRouteBuilder(
-        jaxbDataFormatServiceResponse,
-        invoiceEventService,
-        businessBankingService,
-        uriCreatedEventFrom,
-        uriCreatedEventTo,
-        maxRetries,
-        retryDelayInMs);
-  }
 
   @Bean
   public InvoiceAckEventListenerRouteBuilder invoiceAckEventListenerRouteBuilder(
