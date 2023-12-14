@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.ti.handler;
 
+import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCancellationFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceFinancingFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
 import com.tcmp.tiapi.ti.dto.TIOperation;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class TICCIncomingHandler {
   private final InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
   private final InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
+  private final InvoiceCancellationFlowStrategy invoiceCancellationFlowStrategy;
 
   private final Map<String, TICCIncomingStrategy> operationToStrategy = new HashMap<>();
 
@@ -26,6 +28,7 @@ public class TICCIncomingHandler {
         "TFINVSET", invoiceSettlementFlowStrategy); // Temporal fix for production
     registerOperation(TIOperation.SETTLE_INVOICE, invoiceSettlementFlowStrategy);
     registerOperation(TIOperation.FINANCE_INVOICE_RESULT, invoiceFinancingFlowStrategy);
+    registerOperation(TIOperation.CANCEL_INVOICE_RESULT, invoiceCancellationFlowStrategy);
   }
 
   private void registerOperation(TIOperation operation, TICCIncomingStrategy strategy) {

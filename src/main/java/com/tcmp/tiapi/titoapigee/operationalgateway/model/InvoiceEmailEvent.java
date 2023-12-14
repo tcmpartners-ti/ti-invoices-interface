@@ -10,6 +10,7 @@ public enum InvoiceEmailEvent {
   FINANCED("Anticipo"),
   SETTLED("Vencimiento"),
   CREDITED("Consumo crédito proveedor por descuento"),
+  CANCELLED("Solicitud de cancelación"),
   POSTED("Carga");
 
   private final String value;

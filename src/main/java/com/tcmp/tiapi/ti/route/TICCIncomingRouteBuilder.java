@@ -27,10 +27,10 @@ public class TICCIncomingRouteBuilder extends RouteBuilder {
     String operation = serviceRequest.getHeader().getOperation();
 
     try {
-      ticcIncomingHandler.strategy(operation).handleServiceRequest(serviceRequest);
+      TICCIncomingStrategy strategy = ticcIncomingHandler.strategy(operation);
+      strategy.handleServiceRequest(serviceRequest);
     } catch (IllegalArgumentException e) {
       log.info("Unhandled operation: {}", operation);
-      log.info("Body={}", serviceRequest);
     }
   }
 }
