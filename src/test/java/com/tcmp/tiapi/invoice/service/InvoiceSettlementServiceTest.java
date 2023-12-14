@@ -11,7 +11,7 @@ import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.model.CustomerId;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
@@ -221,7 +221,7 @@ class InvoiceSettlementServiceTest {
 
   @Test
   void buildDistributorCreditRequest_itShouldBuildRequest() {
-    var invoiceSettlementMessage = CreateDueInvoiceEventMessage.builder()
+    var invoiceSettlementMessage = InvoiceSettlementEventMessage.builder()
       .paymentAmount("100")
       .receivedOn("2023-11-06")
       .paymentValueDate("2023-11-30")
@@ -267,7 +267,7 @@ class InvoiceSettlementServiceTest {
 
   @Test
   void buildBglToSellerTransaction_itShouldBuildRequest() {
-    var invoiceSettlementMessage = CreateDueInvoiceEventMessage.builder()
+    var invoiceSettlementMessage = InvoiceSettlementEventMessage.builder()
       .invoiceNumber("01-001")
       .paymentCurrency("USD")
       .paymentAmount("123")
@@ -289,7 +289,7 @@ class InvoiceSettlementServiceTest {
 
   @Test
   void buildInvoiceSettlementEmailInfo_itShouldBuildRequest() {
-    var invoiceSettlementMessage = CreateDueInvoiceEventMessage.builder()
+    var invoiceSettlementMessage = InvoiceSettlementEventMessage.builder()
       .buyerIdentifier("1722466420001")
       .paymentValueDate("2023-01-01")
       .paymentCurrency("USD")

@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.invoice.dto.ti.financeack;
 
 import com.tcmp.tiapi.ti.dto.TINamespace;
-import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.dto.TIOperationTag;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(
-    name = TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE,
+    name = TIOperationTag.INVOICE_FINANCING_RESULT,
     namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FinanceAckMessage {

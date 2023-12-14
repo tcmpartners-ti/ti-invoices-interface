@@ -1,6 +1,7 @@
-package com.tcmp.tiapi.invoice.dto.ti;
+package com.tcmp.tiapi.invoice.dto.ti.creation;
 
 import com.tcmp.tiapi.ti.dto.TINamespace;
+import com.tcmp.tiapi.ti.dto.TIOperationTag;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -14,9 +15,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "tfinvdet")
+@XmlRootElement(name = TIOperationTag.INVOICE_CREATION_RESULT)
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NotificationInvoiceCreationMessage {
+public class InvoiceCreationResultMessage {
   @XmlElement(name = "MessageName", namespace = TINamespace.CONTROL)
   private String messageName;
 

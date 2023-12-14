@@ -4,7 +4,7 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
@@ -98,7 +98,7 @@ public class InvoiceSettlementService {
   }
 
   public DistributorCreditRequest buildDistributorCreditRequest(
-      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      InvoiceSettlementEventMessage invoiceSettlementMessage,
       Customer buyer,
       ProgramExtension programExtension,
       EncodedAccountParser buyerAccountParser) {
@@ -152,7 +152,7 @@ public class InvoiceSettlementService {
   }
 
   public TransactionRequest buildBuyerToBglTransactionRequest(
-      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      InvoiceSettlementEventMessage invoiceSettlementMessage,
       Customer seller,
       EncodedAccountParser buyerAccountParser) {
     String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
@@ -171,7 +171,7 @@ public class InvoiceSettlementService {
   }
 
   public TransactionRequest buildBglToSellerTransaction(
-      CreateDueInvoiceEventMessage invoiceSettlementMessage,
+      InvoiceSettlementEventMessage invoiceSettlementMessage,
       Customer buyer,
       EncodedAccountParser sellerAccountParser) {
     String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
@@ -190,14 +190,14 @@ public class InvoiceSettlementService {
   }
 
   private BigDecimal getPaymentAmountFromMessage(
-      CreateDueInvoiceEventMessage invoiceSettlementMessage) {
+      InvoiceSettlementEventMessage invoiceSettlementMessage) {
     BigDecimal paymentAmountInCents = new BigDecimal(invoiceSettlementMessage.getPaymentAmount());
     return MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
   }
 
   public InvoiceEmailInfo buildInvoiceSettlementEmailInfo(
       InvoiceEmailEvent event,
-      CreateDueInvoiceEventMessage message,
+      InvoiceSettlementEventMessage message,
       Customer customer,
       BigDecimal amount) {
     return InvoiceEmailInfo.builder()

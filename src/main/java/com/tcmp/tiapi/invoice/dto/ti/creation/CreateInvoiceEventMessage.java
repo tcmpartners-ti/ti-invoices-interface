@@ -4,6 +4,7 @@ import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
 import com.tcmp.tiapi.ti.LocalDateAdapter;
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import com.tcmp.tiapi.shared.messaging.CurrencyAmount;
+import com.tcmp.tiapi.ti.dto.TIOperation;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -21,7 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = "TFINVNEW", namespace = TINamespace.MESSAGES)
+@XmlRootElement(name = TIOperation.CREATE_INVOICE_VALUE, namespace = TINamespace.MESSAGES)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CreateInvoiceEventMessage implements Serializable {
   @Serial private static final long serialVersionUID = 8917249871L;

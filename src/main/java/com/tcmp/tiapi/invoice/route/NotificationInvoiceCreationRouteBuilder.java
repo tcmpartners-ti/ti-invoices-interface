@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.invoice.route;
 
 import com.tcmp.tiapi.customer.model.Customer;
-import com.tcmp.tiapi.invoice.dto.ti.NotificationInvoiceCreationMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.InvoiceCreationResultMessage;
 import com.tcmp.tiapi.invoice.service.InvoiceNotificationCreationService;
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import com.tcmp.tiapi.ti.dto.TIOperation;
@@ -34,7 +34,7 @@ public class NotificationInvoiceCreationRouteBuilder extends RouteBuilder {
         .routeId("NotificationInvoiceCreationResult")
         .unmarshal(jaxbDataFormat)
         .choice()
-        .when(operationXpath.isEqualTo(TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_VALUE))
+        .when(operationXpath.isEqualTo(TIOperation.CREATE_INVOICE_RESULT_VALUE))
         .log("Started invoice notification creation flow.")
         .process()
         .body(AckServiceRequest.class, this::startInvoiceNotificationFlow)
@@ -49,10 +49,10 @@ public class NotificationInvoiceCreationRouteBuilder extends RouteBuilder {
   }
 
   private void startInvoiceNotificationFlow(
-      AckServiceRequest<NotificationInvoiceCreationMessage> serviceRequest) {
+      AckServiceRequest<InvoiceCreationResultMessage> serviceRequest) {
     if (serviceRequest == null)
       throw new UnrecoverableApiGeeRequestException("Message with no body received.");
-    NotificationInvoiceCreationMessage invoiceNotificationCreationMessage =
+    InvoiceCreationResultMessage invoiceNotificationCreationMessage =
         serviceRequest.getBody();
 
     Customer seller =

@@ -1,10 +1,10 @@
 package com.tcmp.tiapi.ti.dto.request;
 
-import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.NotificationInvoiceCreationMessage;
+import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.InvoiceCreationResultMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.ti.dto.TINamespace;
-import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.dto.TIOperationTag;
 import jakarta.xml.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +18,9 @@ import lombok.NoArgsConstructor;
 @XmlRootElement(name = "ServiceRequest", namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({
-  CreateDueInvoiceEventMessage.class,
+  InvoiceSettlementEventMessage.class,
   FinanceAckMessage.class,
-  NotificationInvoiceCreationMessage.class
+  InvoiceCreationResultMessage.class
 })
 public class AckServiceRequest<T> {
 
@@ -29,16 +29,16 @@ public class AckServiceRequest<T> {
 
   @XmlElements({
     @XmlElement(
-        name = TIOperation.DUE_INVOICE_DETAILS_VALUE,
-        type = CreateDueInvoiceEventMessage.class,
+        name = TIOperationTag.INVOICE_SETTLEMENT,
+        type = InvoiceSettlementEventMessage.class,
         namespace = TINamespace.CONTROL),
     @XmlElement(
-        name = TIOperation.FINANCE_ACK_INVOICE_DETAILS_VALUE,
+        name = TIOperationTag.INVOICE_FINANCING_RESULT,
         type = FinanceAckMessage.class,
         namespace = TINamespace.CONTROL),
     @XmlElement(
-        name = TIOperation.NOTIFICATION_CREATION_ACK_INVOICE_DETAILS_VALUE,
-        type = NotificationInvoiceCreationMessage.class,
+        name = TIOperationTag.INVOICE_CREATION_RESULT,
+        type = InvoiceCreationResultMessage.class,
         namespace = TINamespace.CONTROL),
   })
   private T body;

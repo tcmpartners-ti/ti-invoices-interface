@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import com.tcmp.tiapi.customer.model.Address;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.NotificationInvoiceCreationMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.InvoiceCreationResultMessage;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
@@ -54,7 +54,7 @@ class InvoiceNotificationCreationServiceTest {
 
   @Test
   void buildInvoiceNotificationCreationEmailInfo_itShouldBuildRequest() {
-    var notificationInvoiceCreation = NotificationInvoiceCreationMessage.builder()
+    var notificationInvoiceCreation = InvoiceCreationResultMessage.builder()
       .sellerIdentifier("1722466420001")
       .faceValueCurrency("USD")
       .invoiceNumber("001-001-0001")

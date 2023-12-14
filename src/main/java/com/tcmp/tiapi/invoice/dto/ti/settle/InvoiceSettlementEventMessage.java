@@ -1,7 +1,7 @@
-package com.tcmp.tiapi.invoice.dto.ti;
+package com.tcmp.tiapi.invoice.dto.ti.settle;
 
 import com.tcmp.tiapi.ti.dto.TINamespace;
-import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.dto.TIOperationTag;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement(name = TIOperation.DUE_INVOICE_DETAILS_VALUE, namespace = TINamespace.CONTROL)
+@XmlRootElement(name = TIOperationTag.INVOICE_SETTLEMENT, namespace = TINamespace.CONTROL)
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CreateDueInvoiceEventMessage {
+public class InvoiceSettlementEventMessage {
   @XmlElement(name = "MessageName", namespace = TINamespace.CONTROL)
   private String messageName;
 

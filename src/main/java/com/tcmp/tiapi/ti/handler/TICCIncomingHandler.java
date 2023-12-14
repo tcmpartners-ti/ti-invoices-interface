@@ -24,8 +24,8 @@ public class TICCIncomingHandler {
   private void setUp() {
     operationToStrategy.put(
         "TFINVSET", invoiceSettlementFlowStrategy); // Temporal fix for production
-    registerOperation(TIOperation.DUE_INVOICE, invoiceSettlementFlowStrategy);
-    registerOperation(TIOperation.FINANCE_ACK_INVOICE, invoiceFinancingFlowStrategy);
+    registerOperation(TIOperation.SETTLE_INVOICE, invoiceSettlementFlowStrategy);
+    registerOperation(TIOperation.FINANCE_INVOICE_RESULT, invoiceFinancingFlowStrategy);
   }
 
   private void registerOperation(TIOperation operation, TICCIncomingStrategy strategy) {

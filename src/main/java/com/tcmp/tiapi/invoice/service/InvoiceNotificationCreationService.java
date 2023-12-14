@@ -2,7 +2,7 @@ package com.tcmp.tiapi.invoice.service;
 
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.NotificationInvoiceCreationMessage;
+import com.tcmp.tiapi.invoice.dto.ti.creation.InvoiceCreationResultMessage;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
@@ -26,7 +26,7 @@ public class InvoiceNotificationCreationService {
   }
 
   public InvoiceEmailInfo buildInvoiceNotificationCreationEmailInfo(
-      NotificationInvoiceCreationMessage notificationAckMessage,
+      InvoiceCreationResultMessage notificationAckMessage,
       Customer customer,
       InvoiceEmailEvent event) {
     return InvoiceEmailInfo.builder()
@@ -42,7 +42,7 @@ public class InvoiceNotificationCreationService {
   }
 
   private BigDecimal getFaceValueAmountFromMessage(
-      NotificationInvoiceCreationMessage notificationAckMessage) {
+      InvoiceCreationResultMessage notificationAckMessage) {
     BigDecimal faceValueAmountInCents = new BigDecimal(notificationAckMessage.getFaceValueAmount());
     return MonetaryAmountUtils.convertCentsToDollars(faceValueAmountInCents);
   }

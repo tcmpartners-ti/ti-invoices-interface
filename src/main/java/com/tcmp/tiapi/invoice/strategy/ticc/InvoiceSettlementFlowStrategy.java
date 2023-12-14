@@ -2,7 +2,7 @@ package com.tcmp.tiapi.invoice.strategy.ticc;
 
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
-import com.tcmp.tiapi.invoice.dto.ti.CreateDueInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.service.InvoiceSettlementService;
@@ -48,7 +48,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
 
   @Override
   public void handleServiceRequest(AckServiceRequest<?> serviceRequest) {
-    CreateDueInvoiceEventMessage message = (CreateDueInvoiceEventMessage) serviceRequest.getBody();
+    InvoiceSettlementEventMessage message = (InvoiceSettlementEventMessage) serviceRequest.getBody();
     BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
     BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
 
@@ -100,7 +100,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
 
   private void notifyInvoiceStatusToCustomer(
       InvoiceEmailEvent event,
-      CreateDueInvoiceEventMessage message,
+      InvoiceSettlementEventMessage message,
       Customer customer,
       BigDecimal paymentAmount) {
     InvoiceEmailInfo creditedInvoiceInfo =
@@ -114,7 +114,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   }
 
   private void createBuyerCreditOrThrowException(
-      CreateDueInvoiceEventMessage message,
+      InvoiceSettlementEventMessage message,
       Customer buyer,
       ProgramExtension programExtension,
       EncodedAccountParser buyerAccountParser)
@@ -135,7 +135,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   }
 
   private void transferPaymentAmountFromBuyerToSellerOrThrowException(
-      CreateDueInvoiceEventMessage message,
+      InvoiceSettlementEventMessage message,
       Customer buyer,
       Customer seller,
       EncodedAccountParser buyerAccountParser)
@@ -171,7 +171,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
 
   private void notifySettlementStatus(
       PayloadStatus status,
-      CreateDueInvoiceEventMessage message,
+      InvoiceSettlementEventMessage message,
       InvoiceMaster invoice,
       @Nullable String error) {
     List<String> errors = error == null ? null : List.of(error);
