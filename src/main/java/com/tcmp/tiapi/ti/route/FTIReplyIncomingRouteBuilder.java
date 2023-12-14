@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.ti.route;
 
-import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandler;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
+import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -21,6 +21,7 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
   public void configure() {
     from(uriFrom)
         .routeId("ftiReplyIncomingQueue")
+        .threads(5, 10)
         .unmarshal(jaxbDataFormatServiceResponse)
         .process()
         .body(ServiceResponse.class, this::handleServiceResponse)
@@ -31,7 +32,8 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
     String operation = serviceResponse.getResponseHeader().getOperation();
 
     try {
-      ftiReplyIncomingHandler.strategy(operation).handleServiceResponse(serviceResponse);
+      FTIReplyIncomingStrategy strategy = ftiReplyIncomingHandler.strategy(operation);
+      strategy.handleServiceResponse(serviceResponse);
     } catch (IllegalArgumentException e) {
       log.info("Unhandled operation: {}", operation);
     }
