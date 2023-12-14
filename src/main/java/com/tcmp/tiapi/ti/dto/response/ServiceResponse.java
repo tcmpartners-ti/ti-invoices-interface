@@ -1,5 +1,6 @@
-package com.tcmp.tiapi.ti.model.requests;
+package com.tcmp.tiapi.ti.dto.response;
 
+import com.tcmp.tiapi.ti.dto.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -9,22 +10,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@XmlRootElement(name = "ServiceResponse", namespace = TINamespace.CONTROL)
+@XmlAccessorType(XmlAccessType.FIELD)
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class Credentials {
-  @XmlElement(name = "Name")
-  private String name;
-
-  @XmlElement(name = "Password")
-  private String password;
-
-  @XmlElement(name = "Certificate")
-  private String certificate;
-
-  @XmlElement(name = "Digest")
-  private String digest;
+public class ServiceResponse {
+  @XmlElement(name = "ResponseHeader", namespace = TINamespace.CONTROL)
+  private ResponseHeader responseHeader;
 }

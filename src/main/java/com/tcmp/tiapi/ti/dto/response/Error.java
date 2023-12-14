@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.model.response;
+package com.tcmp.tiapi.ti.dto.response;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;

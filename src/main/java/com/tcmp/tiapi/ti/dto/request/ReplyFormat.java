@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.model.requests;
+package com.tcmp.tiapi.ti.dto.request;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

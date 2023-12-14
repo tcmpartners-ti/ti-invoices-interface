@@ -2,7 +2,7 @@ package com.tcmp.tiapi.invoice.dto.ti.finance;
 
 import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
 import com.tcmp.tiapi.ti.LocalDateAdapter;
-import com.tcmp.tiapi.ti.model.TINamespace;
+import com.tcmp.tiapi.ti.dto.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

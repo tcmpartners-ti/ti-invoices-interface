@@ -1,9 +1,9 @@
-package com.tcmp.tiapi.ti.model.requests;
+package com.tcmp.tiapi.ti.dto.request;
 
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
-import com.tcmp.tiapi.ti.model.TINamespace;
-import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.dto.TINamespace;
+import com.tcmp.tiapi.ti.dto.TIOperation;
 import jakarta.xml.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
-package com.tcmp.tiapi.ti.model.response;
+package com.tcmp.tiapi.ti.dto.response;
 
-import com.tcmp.tiapi.ti.model.TINamespace;
+import com.tcmp.tiapi.ti.dto.TINamespace;
 import jakarta.xml.bind.annotation.*;
 import java.util.List;
 import lombok.AllArgsConstructor;

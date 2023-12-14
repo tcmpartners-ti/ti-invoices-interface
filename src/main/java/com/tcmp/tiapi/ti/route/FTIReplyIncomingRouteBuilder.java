@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.ti.route;
 
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandler;
-import com.tcmp.tiapi.ti.model.response.ServiceResponse;
+import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;

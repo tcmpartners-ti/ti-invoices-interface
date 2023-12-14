@@ -1,6 +1,6 @@
 package com.tcmp.tiapi.shared.messaging;
 
-import com.tcmp.tiapi.ti.model.TINamespace;
+import com.tcmp.tiapi.ti.dto.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;

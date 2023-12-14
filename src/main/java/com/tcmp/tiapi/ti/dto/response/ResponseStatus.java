@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.model.response;
+package com.tcmp.tiapi.ti.dto.response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

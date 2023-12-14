@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.model;
+package com.tcmp.tiapi.ti.dto;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

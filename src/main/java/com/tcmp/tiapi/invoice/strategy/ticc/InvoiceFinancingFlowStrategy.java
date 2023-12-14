@@ -9,7 +9,7 @@ import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
-import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
+import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 import com.tcmp.tiapi.ti.route.TICCIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;

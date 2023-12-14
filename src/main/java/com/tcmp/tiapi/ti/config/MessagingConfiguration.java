@@ -1,10 +1,10 @@
 package com.tcmp.tiapi.ti.config;
 
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
-import com.tcmp.tiapi.ti.model.TINamespace;
-import com.tcmp.tiapi.ti.model.requests.AckServiceRequest;
-import com.tcmp.tiapi.ti.model.requests.ServiceRequest;
-import com.tcmp.tiapi.ti.model.response.ServiceResponse;
+import com.tcmp.tiapi.ti.dto.TINamespace;
+import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
+import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
+import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
