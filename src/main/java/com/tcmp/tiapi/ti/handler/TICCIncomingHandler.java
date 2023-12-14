@@ -2,7 +2,7 @@ package com.tcmp.tiapi.ti.handler;
 
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceFinancingFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
-import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.route.TICCIncomingStrategy;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;

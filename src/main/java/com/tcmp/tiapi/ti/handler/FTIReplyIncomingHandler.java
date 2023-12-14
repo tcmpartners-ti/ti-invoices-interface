@@ -1,8 +1,8 @@
 package com.tcmp.tiapi.ti.handler;
 
-import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceCreationNotifierStrategy;
-import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceFinancingNotifierStrategy;
-import com.tcmp.tiapi.ti.model.TIOperation;
+import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceCreationStatusNotifierStrategy;
+import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceFinancingStatusNotifierStrategy;
+import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.route.FTIReplyIncomingStrategy;
 import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class FTIReplyIncomingHandler {
-  private final InvoiceCreationNotifierStrategy invoiceCreationNotifierStrategy;
-  private final InvoiceFinancingNotifierStrategy invoiceFinancingNotifierStrategy;
+  private final InvoiceCreationStatusNotifierStrategy invoiceCreationStatusNotifierStrategy;
+  private final InvoiceFinancingStatusNotifierStrategy invoiceFinancingStatusNotifierStrategy;
 
   private final Map<String, FTIReplyIncomingStrategy> operationToStrategy = new HashMap<>();
 
@@ -24,8 +24,8 @@ public class FTIReplyIncomingHandler {
    */
   @PostConstruct
   private void setUp() {
-    registerOperation(TIOperation.CREATE_INVOICE, invoiceCreationNotifierStrategy);
-    registerOperation(TIOperation.FINANCE_INVOICE, invoiceFinancingNotifierStrategy);
+    registerOperation(TIOperation.CREATE_INVOICE, invoiceCreationStatusNotifierStrategy);
+    registerOperation(TIOperation.FINANCE_INVOICE, invoiceFinancingStatusNotifierStrategy);
   }
 
   private void registerOperation(TIOperation operation, FTIReplyIncomingStrategy strategy) {
