@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.ti.handler;
 
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCancellationFlowStrategy;
+import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCreationResultFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceFinancingFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
 import com.tcmp.tiapi.ti.dto.TIOperation;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class TICCIncomingHandler {
+  private final InvoiceCreationResultFlowStrategy invoiceCreationResultFlowStrategy;
   private final InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
   private final InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
   private final InvoiceCancellationFlowStrategy invoiceCancellationFlowStrategy;
@@ -26,6 +28,7 @@ public class TICCIncomingHandler {
   private void setUp() {
     operationToStrategy.put(
         "TFINVSET", invoiceSettlementFlowStrategy); // Temporal fix for production
+    registerOperation(TIOperation.CREATE_INVOICE_RESULT, invoiceCreationResultFlowStrategy);
     registerOperation(TIOperation.SETTLE_INVOICE, invoiceSettlementFlowStrategy);
     registerOperation(TIOperation.FINANCE_INVOICE_RESULT, invoiceFinancingFlowStrategy);
     registerOperation(TIOperation.CANCEL_INVOICE_RESULT, invoiceCancellationFlowStrategy);
