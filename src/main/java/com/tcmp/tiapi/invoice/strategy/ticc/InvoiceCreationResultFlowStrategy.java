@@ -39,7 +39,7 @@ public class InvoiceCreationResultFlowStrategy implements TICCIncomingStrategy {
     }
   }
 
-  public Customer findCustomerByMnemonic(String customerMnemonic) {
+  private Customer findCustomerByMnemonic(String customerMnemonic) {
     return customerRepository
         .findFirstByIdMnemonic(customerMnemonic)
         .orElseThrow(
@@ -48,17 +48,17 @@ public class InvoiceCreationResultFlowStrategy implements TICCIncomingStrategy {
                     "Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  public InvoiceEmailInfo buildInvoiceCreationEmailInfo(
-      InvoiceCreationResultMessage notificationAckMessage, Customer customer) {
+  private InvoiceEmailInfo buildInvoiceCreationEmailInfo(
+      InvoiceCreationResultMessage invoiceCreationResultMessage, Customer customer) {
     return InvoiceEmailInfo.builder()
-        .customerMnemonic(notificationAckMessage.getSellerIdentifier())
+        .customerMnemonic(invoiceCreationResultMessage.getSellerIdentifier())
         .customerEmail(customer.getAddress().getCustomerEmail().trim())
         .customerName(customer.getFullName().trim())
-        .date(notificationAckMessage.getReceivedOn())
+        .date(invoiceCreationResultMessage.getReceivedOn())
         .action(InvoiceEmailEvent.POSTED.getValue())
-        .invoiceCurrency(notificationAckMessage.getFaceValueCurrency())
-        .invoiceNumber(notificationAckMessage.getInvoiceNumber())
-        .amount(getFaceValueAmountFromMessage(notificationAckMessage))
+        .invoiceNumber(invoiceCreationResultMessage.getInvoiceNumber())
+        .invoiceCurrency(invoiceCreationResultMessage.getFaceValueCurrency())
+        .amount(getFaceValueAmountFromMessage(invoiceCreationResultMessage))
         .build();
   }
 
