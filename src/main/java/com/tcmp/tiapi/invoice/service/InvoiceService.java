@@ -5,6 +5,7 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
+import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
@@ -14,6 +15,7 @@ import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
+import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,14 +76,15 @@ public class InvoiceService {
             .sellerMnemonic(creationDTO.getSeller())
             .build());
 
-    producerTemplate.sendBody(
-        uriFromFtiOutgoing,
+    ServiceRequest<CreateInvoiceEventMessage> createInvoiceTiRequest =
         serviceRequestWrapper.wrapRequest(
             TIService.TRADE_INNOVATION,
             TIOperation.CREATE_INVOICE,
             ReplyFormat.STATUS,
             invoiceUuid,
-            invoiceMapper.mapDTOToFTIMessage(creationDTO)));
+            invoiceMapper.mapDTOToFTIMessage(creationDTO));
+
+    producerTemplate.sendBody(uriFromFtiOutgoing, createInvoiceTiRequest);
   }
 
   public void financeInvoice(InvoiceFinancingDTO financingDTO) {

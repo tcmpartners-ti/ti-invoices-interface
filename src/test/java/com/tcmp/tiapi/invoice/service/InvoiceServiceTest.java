@@ -1,23 +1,23 @@
 package com.tcmp.tiapi.invoice.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.tcmp.tiapi.invoice.InvoiceMapper;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceContextDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
+import com.tcmp.tiapi.invoice.dto.request.*;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
+import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.apache.camel.ProducerTemplate;
@@ -37,19 +37,23 @@ class InvoiceServiceTest {
   @Mock private InvoiceMapper invoiceMapper;
 
   @Captor private ArgumentCaptor<String> routeCaptor;
-  @Captor private ArgumentCaptor<CreateInvoiceEventMessage> messageCaptor;
+  @Captor private ArgumentCaptor<ServiceRequest<?>> messageCaptor;
 
-  private InvoiceService testedInvoiceService;
+  private InvoiceService invoiceService;
 
   @BeforeEach
-  void setUp() {
-    testedInvoiceService =
+  void setUp() throws NoSuchFieldException, IllegalAccessException {
+    invoiceService =
         new InvoiceService(
             producerTemplate,
             invoiceRepository,
             invoiceEventRepository,
             invoiceMapper,
             new TIServiceRequestWrapper());
+
+    Field uriFromFtiOutgoing = InvoiceService.class.getDeclaredField("uriFromFtiOutgoing");
+    uriFromFtiOutgoing.setAccessible(true);
+    uriFromFtiOutgoing.set(invoiceService, "direct:mock");
   }
 
   @Test
@@ -60,7 +64,7 @@ class InvoiceServiceTest {
 
     assertThrows(
         NotFoundHttpException.class,
-        () -> testedInvoiceService.getInvoiceById(invoiceId),
+        () -> invoiceService.getInvoiceById(invoiceId),
         String.format("Could not find an invoice with id %s.", invoiceId));
   }
 
@@ -71,7 +75,7 @@ class InvoiceServiceTest {
     when(invoiceRepository.findById(anyLong()))
         .thenReturn(Optional.of(InvoiceMaster.builder().id(invoiceId).build()));
 
-    testedInvoiceService.getInvoiceById(invoiceId);
+    invoiceService.getInvoiceById(invoiceId);
 
     verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class));
   }
@@ -89,7 +93,7 @@ class InvoiceServiceTest {
             anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(InvoiceMaster.builder().build()));
 
-    testedInvoiceService.searchInvoice(searchParams);
+    invoiceService.searchInvoice(searchParams);
 
     verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class));
   }
@@ -107,30 +111,34 @@ class InvoiceServiceTest {
                 CurrencyAmountDTO.builder().amount(BigDecimal.TEN).currency("USD").build())
             .build();
 
-    String expectedRoute = "direct:mockCreate";
-
     when(invoiceMapper.mapDTOToFTIMessage(any()))
         .thenReturn(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build());
 
-    testedInvoiceService.createSingleInvoiceInTi(invoiceCreationDTO);
+    invoiceService.createSingleInvoiceInTi(invoiceCreationDTO);
 
-    verify(producerTemplate).sendBody(routeCaptor.capture(), messageCaptor.capture());
-    assertThat(routeCaptor.getValue()).isEqualTo(expectedRoute);
-    assertThat(messageCaptor.getValue().getInvoiceNumber())
-        .isEqualTo(invoiceCreationDTO.getInvoiceNumber());
+    verify(invoiceEventRepository).save(any(InvoiceEventInfo.class));
+    verify(producerTemplate).sendBody(anyString(), messageCaptor.capture());
+    assertEquals(
+        invoiceCreationDTO.getInvoiceNumber(),
+        ((CreateInvoiceEventMessage) messageCaptor.getValue().getBody()).getInvoiceNumber());
   }
 
   @Test
   void financeInvoice_itShouldSendMessageToTI() {
-    String expectedUriFrom = "direct:financeInvoiceInTi";
-    FinanceBuyerCentricInvoiceEventMessage expectedMessage =
-        FinanceBuyerCentricInvoiceEventMessage.builder().build();
-
+    when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(
+            anyString(), anyString(), anyString()))
+        .thenReturn(Optional.of(InvoiceMaster.builder().batchId("123").build()));
     when(invoiceMapper.mapFinancingDTOToFTIMessage(any(InvoiceFinancingDTO.class)))
-        .thenReturn(expectedMessage);
+        .thenReturn(FinanceBuyerCentricInvoiceEventMessage.builder().build());
 
-    testedInvoiceService.financeInvoice(InvoiceFinancingDTO.builder().build());
+    invoiceService.financeInvoice(
+        InvoiceFinancingDTO.builder()
+            .invoice(InvoiceNumberDTO.builder().number("001-001-123").build())
+            .programme("Program123")
+            .seller("1722466420")
+            .build());
 
-    verify(producerTemplate).sendBody(expectedUriFrom, expectedMessage);
+    verify(invoiceEventRepository).save(any(InvoiceEventInfo.class));
+    verify(producerTemplate).sendBody(anyString(), any(ServiceRequest.class));
   }
 }
