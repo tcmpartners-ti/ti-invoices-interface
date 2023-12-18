@@ -98,6 +98,23 @@ class InvoiceServiceTest {
   }
 
   @Test
+  void searchInvoice_itShouldThrowNotFoundException() {
+    InvoiceSearchParams nonExistentInvoiceParams =
+        InvoiceSearchParams.builder()
+            .programme("SteelBallRun")
+            .seller("Funny Valentine")
+            .invoice("001-001-d4c")
+            .build();
+
+    when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
+            anyString(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(Optional.empty());
+
+    assertThrows(
+        NotFoundHttpException.class, () -> invoiceService.searchInvoice(nonExistentInvoiceParams));
+  }
+
+  @Test
   void createSingleInvoiceInTi_itShouldInvokeCamelRouteWhenCreatingInvoice() {
     InvoiceCreationDTO invoiceCreationDTO =
         InvoiceCreationDTO.builder()
@@ -120,6 +137,23 @@ class InvoiceServiceTest {
     assertEquals(
         invoiceCreationDTO.getInvoiceNumber(),
         ((CreateInvoiceEventMessage) messageCaptor.getValue().getBody()).getInvoiceNumber());
+  }
+
+  @Test
+  void financeInvoice_itThrowNotFoundException() {
+    InvoiceFinancingDTO invoiceFinancingDto =
+        InvoiceFinancingDTO.builder()
+            .programme("SteelBallRun")
+            .seller("D4C")
+            .invoice(InvoiceNumberDTO.builder().number("123").build())
+            .build();
+
+    when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(
+            anyString(), anyString(), anyString()))
+        .thenReturn(Optional.empty());
+
+    assertThrows(
+        NotFoundHttpException.class, () -> invoiceService.financeInvoice(invoiceFinancingDto));
   }
 
   @Test
