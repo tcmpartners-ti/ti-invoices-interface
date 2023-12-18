@@ -49,11 +49,13 @@ class InvoiceCreationResultFlowStrategyTest {
 
     invoiceCreationResultFlowStrategy.handleServiceRequest(new AckServiceRequest<>(null, message));
 
-    verify(customerRepository).findFirstByIdMnemonic(anyString());
+    verify(customerRepository).findFirstByIdMnemonic("1722466421");
     verify(operationalGatewayService)
         .sendNotificationRequest(invoiceEmailInfoArgumentCaptor.capture());
 
+    assertNotNull(invoiceEmailInfoArgumentCaptor.getValue());
     assertEquals("1722466421", invoiceEmailInfoArgumentCaptor.getValue().customerMnemonic());
+    assertEquals("2023-12-15", invoiceEmailInfoArgumentCaptor.getValue().date());
     assertEquals("jjoestar@d4c.com", invoiceEmailInfoArgumentCaptor.getValue().customerEmail());
     assertEquals("Johnny Joestar", invoiceEmailInfoArgumentCaptor.getValue().customerName());
   }
