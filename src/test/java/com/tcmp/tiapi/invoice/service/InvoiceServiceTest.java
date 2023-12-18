@@ -36,7 +36,6 @@ class InvoiceServiceTest {
   @Mock private InvoiceEventRepository invoiceEventRepository;
   @Mock private InvoiceMapper invoiceMapper;
 
-  @Captor private ArgumentCaptor<String> routeCaptor;
   @Captor private ArgumentCaptor<ServiceRequest<?>> messageCaptor;
 
   private InvoiceService invoiceService;
