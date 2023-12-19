@@ -56,11 +56,5 @@ ti.route:
     out:
       from: "direct:sendToFtiOutgoingQueue"
       to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
-    in.from: "" # Pending
     in-reply.from: "activemq:queue:${ti.queue.fti.reply.name}"
   ticc.in.from: "activemq:queue:${ti.queue.ticc.sub.name}"
-
-invoice:
-  route:
-    notification-invoice-creation:
-      from: "activemq:queue:${ti.queue.fti.sub.name}"
