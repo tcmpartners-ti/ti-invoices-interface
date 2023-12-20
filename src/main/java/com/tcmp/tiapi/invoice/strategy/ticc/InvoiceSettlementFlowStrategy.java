@@ -35,7 +35,6 @@ import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionRequest;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionType;
 import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.TransferResponseError;
 import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
@@ -110,13 +109,9 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
       sendInvoiceStatusEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount);
 
       notifySettlementStatusExternally(PayloadStatus.SUCCEEDED, message, invoice, null);
-    } catch (CreditCreationException e) {
+    } catch (CreditCreationException | PaymentExecutionException e) {
       log.error(e.getMessage());
       notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, e.getMessage());
-    } catch (PaymentExecutionException e) {
-      String errorMessage = e.getTransferResponseError().title();
-      log.error(errorMessage);
-      notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, errorMessage);
     }
   }
 
@@ -271,10 +266,8 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             && buyerToBglTransactionResponse.isOk()
             && bglToSellerTransactionResponse.isOk();
     if (!isBuyerToSellerTransactionOk) {
-      String defaultTransferError =
-          "Could not transfer invoice payment amount from buyer to seller.";
       throw new PaymentExecutionException(
-          TransferResponseError.builder().title(defaultTransferError).build());
+          "Could not transfer invoice payment amount from buyer to seller.");
     }
   }
 
