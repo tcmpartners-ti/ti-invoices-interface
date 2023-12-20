@@ -58,7 +58,7 @@ class InvoiceSettlementFlowStrategyTest {
   @Mock private ProgramExtensionRepository programExtensionRepository;
 
   @Captor private ArgumentCaptor<InvoiceEmailInfo> invoiceEmailInfoArgumentCaptor;
-  @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> requestPayloadArgumentCaptor;
+  @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
 
   private InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
 
@@ -121,7 +121,7 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
         .thenReturn(Optional.of(financedInvoice));
-    when(productMasterExtensionRepository.findByMasterId(anyLong()))
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
             Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
 
@@ -152,7 +152,7 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
         .thenReturn(Optional.of(notFinancedInvoice));
-    when(productMasterExtensionRepository.findByMasterId(anyLong()))
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
             Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
     when(corporateLoanService.createCredit(any(DistributorCreditRequest.class)))
@@ -166,8 +166,7 @@ class InvoiceSettlementFlowStrategyTest {
     verify(corporateLoanService).createCredit(any(DistributorCreditRequest.class));
     verify(businessBankingService)
         .notifyEvent(
-            eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT),
-            requestPayloadArgumentCaptor.capture());
+            eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT), payloadArgumentCaptor.capture());
   }
 
   @Test
@@ -185,7 +184,7 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
         .thenReturn(Optional.of(notFinancedInvoice));
-    when(productMasterExtensionRepository.findByMasterId(anyLong()))
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
             Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
     when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
@@ -207,16 +206,14 @@ class InvoiceSettlementFlowStrategyTest {
     verify(corporateLoanService).createCredit(any());
     verify(businessBankingService)
         .notifyEvent(
-            eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT),
-            requestPayloadArgumentCaptor.capture());
+            eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT), payloadArgumentCaptor.capture());
 
-    var payload = requestPayloadArgumentCaptor.getValue();
+    var payload = payloadArgumentCaptor.getValue();
     assertEquals(PayloadStatus.FAILED.getValue(), payload.status());
   }
 
   @Test
-  void
-      handleServiceRequest_itShouldSendBuyerNotificationAndSellerNotificationsIfExtraFinancedAndHasNotBeenFinanced() {
+  void handleServiceRequest_itShouldHandleHappyPath() {
     InvoiceMaster notFinancedInvoice =
         InvoiceMaster.builder()
             .id(1L)
@@ -230,7 +227,7 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
         .thenReturn(Optional.of(notFinancedInvoice));
-    when(productMasterExtensionRepository.findByMasterId(anyLong()))
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
             Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
     when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))

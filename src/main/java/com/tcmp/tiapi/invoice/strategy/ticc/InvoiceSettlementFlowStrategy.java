@@ -79,7 +79,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     Customer seller = findCustomerByMnemonic(message.getSellerIdentifier());
     ProgramExtension programExtension = findProgrammeExtensionByIdOrDefault(message.getProgramme());
     InvoiceMaster invoice = findInvoiceByMasterRef(message.getMasterRef());
-    ProductMasterExtension invoiceExtension = findProductMasterExtensionByMasterId(invoice.getId());
+    ProductMasterExtension invoiceExtension = findProductMasterExtensionByMasterReference(message.getMasterRef());
 
     EncodedAccountParser buyerAccountParser =
         new EncodedAccountParser(invoiceExtension.getFinanceAccount());
@@ -130,9 +130,9 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
                     "Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  private ProductMasterExtension findProductMasterExtensionByMasterId(Long invoiceMasterId) {
+  private ProductMasterExtension findProductMasterExtensionByMasterReference(String masterReference) {
     return productMasterExtensionRepository
-        .findByMasterId(invoiceMasterId)
+        .findByMasterReference(masterReference)
         .orElseThrow(
             () ->
                 new EntityNotFoundException(
