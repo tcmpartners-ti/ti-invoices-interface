@@ -26,5 +26,5 @@ public class CounterPartyDTO {
   private String status;
 
   @Schema(description = "Invoice limit amount and currency code.")
-  CurrencyAmountDTO invoiceLimit;
+  private CurrencyAmountDTO invoiceLimit;
 }
