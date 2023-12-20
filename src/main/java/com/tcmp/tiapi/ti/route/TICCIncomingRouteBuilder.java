@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.ti.route;
 
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
-import com.tcmp.tiapi.ti.handler.TICCIncomingHandler;
+import com.tcmp.tiapi.ti.handler.TICCIncomingHandlerContext;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -9,7 +9,7 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
 @RequiredArgsConstructor
 public class TICCIncomingRouteBuilder extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormatAckEventRequest;
-  private final TICCIncomingHandler ticcIncomingHandler;
+  private final TICCIncomingHandlerContext ticcIncomingHandlerContext;
 
   private final String uriFrom;
 
@@ -28,10 +28,10 @@ public class TICCIncomingRouteBuilder extends RouteBuilder {
     String operation = serviceRequest.getHeader().getOperation();
 
     try {
-      TICCIncomingStrategy strategy = ticcIncomingHandler.strategy(operation);
+      TICCIncomingStrategy strategy = ticcIncomingHandlerContext.strategy(operation);
       strategy.handleServiceRequest(serviceRequest);
     } catch (IllegalArgumentException e) {
-      log.info("Unhandled operation: {}", operation);
+      log.error(e.getMessage());
     }
   }
 }
