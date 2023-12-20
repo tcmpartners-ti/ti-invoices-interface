@@ -42,12 +42,7 @@ public class ProgramService {
 
     return PaginatedResult.<CounterPartyDTO>builder()
         .data(counterPartyMapper.mapEntitiesToDTOs(sellerCounterPartiesPage.getContent()))
-        .meta(
-            PaginatedResultMeta.builder()
-                .isLastPage(sellerCounterPartiesPage.isLast())
-                .totalItems(sellerCounterPartiesPage.getTotalElements())
-                .totalPages(sellerCounterPartiesPage.getTotalPages())
-                .build())
+        .meta(PaginatedResultMeta.from(sellerCounterPartiesPage))
         .build();
   }
 
