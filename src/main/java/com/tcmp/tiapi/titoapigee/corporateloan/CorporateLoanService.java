@@ -8,6 +8,7 @@ import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
+import jakarta.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +32,8 @@ public class CorporateLoanService {
     return createCredit(distributorCreditRequest, false);
   }
 
-  public DistributorCreditResponse simulateCredit(DistributorCreditRequest distributorCreditRequest) {
+  public DistributorCreditResponse simulateCredit(
+      DistributorCreditRequest distributorCreditRequest) {
     return createCredit(distributorCreditRequest, true);
   }
 
@@ -56,14 +58,14 @@ public class CorporateLoanService {
     headers.put("X-Operation-Token", buildOperationId());
     headers.put("X-Operation-Id", isSimulation ? "V/X" : "C/D");
 
+    DistributorCreditResponse response = null;
+
     try {
-      DistributorCreditResponse response = corporateLoanClient.createCredit(headers, request);
+      response = corporateLoanClient.createCredit(headers, request);
       log.info(
           "Credit created. Amount $ {}. Disbursement Amount $ {}.",
           distributorCreditRequest.amount(),
           response.data().disbursementAmount());
-
-      tryRequestAndResponseLogging(headers, request, response);
 
       return response;
     } catch (FeignException e) {
@@ -75,6 +77,8 @@ public class CorporateLoanService {
               });
 
       throw new CreditCreationException("Credit creation failed.");
+    } finally {
+      tryRequestAndResponseLogging(headers, request, response);
     }
   }
 
@@ -82,11 +86,12 @@ public class CorporateLoanService {
     return UUID.randomUUID().toString().replace("-", "").substring(0, 20);
   }
 
-  private void tryRequestAndResponseLogging(Map<String, String> headers, ApiGeeBaseRequest<?> request, Object response) {
+  private void tryRequestAndResponseLogging(
+      Map<String, String> headers, ApiGeeBaseRequest<?> request, @Nullable Object response) {
     try {
       log.info("Headers={}", objectMapper.writeValueAsString(headers));
       log.info("Request={}", objectMapper.writeValueAsString(request));
-      log.info("Response={}", objectMapper.writeValueAsString(response));
+      log.info("Response={}", response == null ? "-" : objectMapper.writeValueAsString(response));
     } catch (JsonProcessingException e) {
       log.error("Could not log request and response json.");
     }
