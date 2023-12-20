@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.ti.config;
 
-import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandler;
-import com.tcmp.tiapi.ti.handler.TICCIncomingHandler;
+import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
+import com.tcmp.tiapi.ti.handler.TICCIncomingHandlerContext;
 import com.tcmp.tiapi.ti.route.FTIOutgoingRouteBuilder;
 import com.tcmp.tiapi.ti.route.FTIReplyIncomingRouteBuilder;
 import com.tcmp.tiapi.ti.route.TICCIncomingRouteBuilder;
@@ -38,15 +38,15 @@ public class RoutesConfiguration {
   @Bean
   public FTIReplyIncomingRouteBuilder ftiReplyIncomingRouteBuilder(
       JaxbDataFormat jaxbDataFormatServiceResponse,
-      FTIReplyIncomingHandler ftiReplyIncomingHandler) {
+      FTIReplyIncomingHandlerContext ftiReplyIncomingHandlerContext) {
     return new FTIReplyIncomingRouteBuilder(
-        jaxbDataFormatServiceResponse, ftiReplyIncomingHandler, uriFromFtiReplyIncoming);
+        jaxbDataFormatServiceResponse, ftiReplyIncomingHandlerContext, uriFromFtiReplyIncoming);
   }
 
   @Bean
   public TICCIncomingRouteBuilder ticcIncomingRouteBuilder(
-      JaxbDataFormat jaxbDataFormatAckEventRequest, TICCIncomingHandler ticcIncomingHandler) {
+      JaxbDataFormat jaxbDataFormatAckEventRequest, TICCIncomingHandlerContext ticcIncomingHandlerContext) {
     return new TICCIncomingRouteBuilder(
-        jaxbDataFormatAckEventRequest, ticcIncomingHandler, uriFromTiccIncoming);
+        jaxbDataFormatAckEventRequest, ticcIncomingHandlerContext, uriFromTiccIncoming);
   }
 }

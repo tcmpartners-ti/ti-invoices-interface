@@ -24,8 +24,7 @@ public class TICCIncomingHandlerContext {
       case "TFINVSET", TIOperation.SETTLE_INVOICE_RESULT_VALUE -> invoiceSettlementFlowStrategy;
       case TIOperation.FINANCE_INVOICE_RESULT_VALUE -> invoiceFinancingFlowStrategy;
       case TIOperation.CANCEL_INVOICE_RESULT_VALUE -> invoiceCancellationFlowStrategy;
-      default -> throw new IllegalArgumentException(
-          String.format("Unhandled operation: %s", operation));
+      default -> throw new IllegalArgumentException("Unhandled operation: " + operation);
     };
   }
 }
