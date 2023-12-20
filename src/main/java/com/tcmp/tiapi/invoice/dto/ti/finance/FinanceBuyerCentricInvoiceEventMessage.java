@@ -56,4 +56,7 @@ public class FinanceBuyerCentricInvoiceEventMessage {
 
   @XmlElement(name = "InvoiceNumberss", namespace = TINamespace.MESSAGES)
   private InvoiceNumbersContainer invoiceNumbersContainer;
+
+  @XmlElement(name = "ExtraData", namespace = TINamespace.MESSAGES)
+  private ExtraFinancingData extraFinancingData;
 }

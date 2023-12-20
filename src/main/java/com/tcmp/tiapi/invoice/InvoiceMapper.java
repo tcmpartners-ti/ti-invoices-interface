@@ -172,6 +172,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "context.theirReference", target = "theirReference")
   @Mapping(source = "programme", target = "programme")
   @Mapping(source = "seller", target = "seller")
+  @Mapping(source = "sellerAccount", target = "extraFinancingData.financeSellerAccount")
   @Mapping(source = "buyer", target = "buyer")
   @Mapping(source = "anchorParty", target = "anchorParty")
   @Mapping(source = "financeCurrency", target = "financeCurrency")

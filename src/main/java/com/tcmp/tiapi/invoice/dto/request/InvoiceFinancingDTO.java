@@ -55,6 +55,15 @@ public class InvoiceFinancingDTO {
   @Schema(description = "The customer who is the credit party on the invoice(s).")
   private String seller;
 
+  @Size(min = 12, max = 12, message = "This field must have 12 characters")
+  @Pattern(
+      regexp = FieldValidationRegex.BP_BANK_ACCOUNT,
+      message = "This field must begin with AH or CC followed by 10 digits")
+  @Schema(
+      description = "The seller's account to finance the invoice.",
+      examples = {"AH1234567890", "CC0987654321"})
+  private String sellerAccount;
+
   @NotNull(message = "This field is required.")
   @Size(min = 13, max = 13, message = "This field must have 13 characters")
   @Pattern(

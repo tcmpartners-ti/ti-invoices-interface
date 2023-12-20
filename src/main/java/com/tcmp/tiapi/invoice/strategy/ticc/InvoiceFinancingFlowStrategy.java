@@ -3,8 +3,10 @@ package com.tcmp.tiapi.invoice.strategy.ticc;
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
+import com.tcmp.tiapi.invoice.model.EventExtension;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.repository.EventExtensionRepository;
 import com.tcmp.tiapi.invoice.service.InvoiceFinancingService;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
@@ -40,6 +42,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
+  private final EventExtensionRepository eventExtensionRepository;
+
   private final InvoiceFinancingService invoiceFinancingService;
   private final CorporateLoanService corporateLoanService;
   private final PaymentExecutionService paymentExecutionService;
@@ -61,17 +65,14 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     ProductMasterExtension invoiceExtension =
         invoiceFinancingService.findProductMasterExtensionByMasterReference(masterReference);
     InvoiceMaster invoice = invoiceFinancingService.findInvoiceByMasterReference(masterReference);
-    Account sellerAccount =
-        invoiceFinancingService.findAccountByCustomerMnemonic(financeMessage.getSellerIdentifier());
     ProgramExtension programExtension =
         invoiceFinancingService.findByProgrammeIdOrDefault(financeMessage.getProgramme());
 
-    EncodedAccountParser buyerAccountParser =
-        new EncodedAccountParser(invoiceExtension.getFinanceAccount());
-    EncodedAccountParser sellerAccountParser =
-        new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
-
     try {
+      EncodedAccountParser buyerAccountParser =
+          new EncodedAccountParser(invoiceExtension.getFinanceAccount());
+      EncodedAccountParser sellerAccountParser = findSelectedSellerAccountOrDefault(financeMessage);
+
       notifyInvoiceStatusToSeller(
           InvoiceEmailEvent.FINANCED, financeMessage, seller, financeDealAmount);
       createAndTransferCreditAmountFromBuyerToSellerOrThrowException(
@@ -82,7 +83,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
           InvoiceEmailEvent.PROCESSED, financeMessage, seller, financeDealAmount);
 
       notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
-    } catch (CreditCreationException e) {
+    } catch (CreditCreationException | EncodedAccountParser.AccountDecodingException e) {
       log.error(e.getMessage());
       notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, e.getMessage());
     } catch (PaymentExecutionException e) {
@@ -90,6 +91,23 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       notifyFinanceStatus(
           PayloadStatus.FAILED, financeMessage, invoice, e.getTransferResponseError().title());
     }
+  }
+
+  private EncodedAccountParser findSelectedSellerAccountOrDefault(
+      FinanceAckMessage financeMessage) {
+    return eventExtensionRepository
+        .findByMasterReference(financeMessage.getMasterRef())
+        .map(EventExtension::getFinanceSellerAccount)
+        .filter(account -> !account.isBlank())
+        .map(EncodedAccountParser::new)
+        .orElseGet(
+            () -> {
+              String sellerMnemonic = financeMessage.getSellerIdentifier();
+              Account defaultSellerAccount =
+                  invoiceFinancingService.findAccountByCustomerMnemonic(sellerMnemonic);
+
+              return new EncodedAccountParser(defaultSellerAccount.getExternalAccountNumber());
+            });
   }
 
   private void notifyInvoiceStatusToSeller(
