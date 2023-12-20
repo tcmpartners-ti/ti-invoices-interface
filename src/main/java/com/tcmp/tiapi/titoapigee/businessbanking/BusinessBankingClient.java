@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public interface BusinessBankingClient {
   @PostMapping("/operational-gateway")
   @Retryable(
-      retryFor = {FeignException.InternalServerError.class},
+      retryFor = {FeignException.InternalServerError.class, FeignException.GatewayTimeout.class},
       backoff = @Backoff(delay = 1_000))
   Void notifyEvent(
       @RequestHeader Map<String, String> headers,
