@@ -1,13 +1,24 @@
 package com.tcmp.tiapi.health;
 
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
+@RequestMapping("health")
 public class HealthController {
-  @GetMapping("health")
+  private final HealthService healthService;
+
+  @GetMapping
   public Map<String, String> getHealthCheck() {
     return Map.of("message", "ok");
+  }
+
+  @GetMapping("full")
+  public Map<String, String> getFullHealthCheck() {
+    return healthService.checkStatusFromSources();
   }
 }
