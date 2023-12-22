@@ -11,10 +11,14 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.WebUtils;
@@ -25,6 +29,9 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
   private static final int MAX_PAYLOAD_LENGTH = 2_000;
 
   private final ObjectMapper objectMapper;
+
+  private final Map<HttpMethod, List<String>> methodToIgnoredUris =
+      Map.of(HttpMethod.GET, List.of("/", "/health"));
 
   private AtomicLong startTime;
 
@@ -62,6 +69,13 @@ public class RequestTraceLogLoggingFilter extends OncePerRequestFilter {
   private void afterRequest(
       @NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
     try {
+      HttpMethod method = HttpMethod.valueOf(request.getMethod());
+      String uri = request.getRequestURI();
+
+      boolean isIgnoredMethodAndUri =
+          Optional.ofNullable(methodToIgnoredUris.get(method)).orElse(List.of()).contains(uri);
+      if (isIgnoredMethodAndUri) return;
+
       RequestTraceLog requestTraceLog = buildRequestTraceLog(request, response);
       log.info("{}", objectMapper.writeValueAsString(requestTraceLog));
       // Send To kafka??
