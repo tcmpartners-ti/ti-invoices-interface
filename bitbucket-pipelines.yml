@@ -17,28 +17,33 @@ definitions:
           - gradle test
 
     - step: &deploy-dev
-        name: "Deploy to development"
+        name: Deploy
         caches: [ gradle ]
         script:
-          - az acr build --file Dockerfile --registry crpchtidev01 --platform linux -t ti-invoices:latest .
+          - echo "Deploying to development"
+          - pipe: atlassian/azure-web-apps-containers-deploy:1.2.0
+            variables:
+              AZURE_APP_ID: $AZ_APP_ID
+              AZURE_PASSWORD: $AZ_PASSWORD
+              AZURE_TENANT_ID: $AZ_TENANT
+              AZURE_RESOURCE_GROUP: 'rg-pch-tidev-appserv-01' # Important: this might change
+              AZURE_APP_NAME: 'astipch-invoices-dev'
+              DOCKER_CUSTOM_IMAGE_NAME: 'ti-invoices'
+              DOCKER_REGISTRY_SERVER_URL: 'crpchtidev01.azurecr.io'
+              DOCKER_REGISTRY_SERVER_USER: 'crpchtidev01'
+              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD
 
 pipelines:
   branches:
     main:
-      - step:
-          script: [ echo "Starting pipeline for production" ]
       - step: *build
       - step: *test
 
     qa:
-      - step:
-          script: [ echo "Starting pipeline for test" ]
       - step: *build
       - step: *test
 
     develop:
-      - step:
-          script: [ echo "Starting pipeline for development" ]
       - step: *build
       - step: *test
       - step: *deploy-dev
