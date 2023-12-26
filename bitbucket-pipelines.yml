@@ -1,17 +1,44 @@
 image: gradle:8.3.0-jdk17
 
-pipelines:
-  default:
-    - step:
-        name: Build
-        caches:
-          - gradle
+definitions:
+  steps:
+    - step: &build
+        name: Build app
+        caches: [ gradle ]
         script:
           - echo "Building invoices..."
           - gradle build -x test
 
-    - step:
-        name: Test
+    - step: &test
+        name: Run unit tests
+        caches: [ gradle ]
         script:
           - echo "Running tests..."
           - gradle test
+
+    - step: &deploy-dev
+        name: "Deploy to development"
+        caches: [ gradle ]
+        script:
+          - az acr build --file Dockerfile --registry crpchtidev01 --platform linux -t ti-invoices:latest .
+
+pipelines:
+  branches:
+    main:
+      - step:
+          script: [ echo "Starting pipeline for production" ]
+      - step: *build
+      - step: *test
+
+    qa:
+      - step:
+          script: [ echo "Starting pipeline for test" ]
+      - step: *build
+      - step: *test
+
+    develop:
+      - step:
+          script: [ echo "Starting pipeline for development" ]
+      - step: *build
+      - step: *test
+      - step: *deploy-dev
