@@ -4,11 +4,11 @@ import jakarta.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "SX20LF")
-@Where(clause = "ADDRTYPE = '1'") // Link to primary address only
+@SQLRestriction("ADDRTYPE = '1'") // Link to primary address only
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
