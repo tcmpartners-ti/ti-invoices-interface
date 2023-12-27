@@ -7,6 +7,7 @@ import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,16 @@ public class BuyerController {
 
   @GetMapping(path = "{buyerMnemonic}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get the buyer's (anchor's) programs by its mnemonic.")
-  @Parameter(name = "page", description = "Page (0 based).", in = ParameterIn.QUERY, example = "0")
+  @Parameter(
+      name = "page",
+      description = "Page (0 based).",
+      schema = @Schema(type = "number"),
+      in = ParameterIn.QUERY,
+      example = "0")
   @Parameter(
       name = "size",
       description = "Page size (items per page).",
+      schema = @Schema(type = "number"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<ProgramDTO> getBuyerProgramsByMnemonic(

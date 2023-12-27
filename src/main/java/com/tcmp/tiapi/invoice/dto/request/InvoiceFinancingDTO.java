@@ -33,7 +33,7 @@ public class InvoiceFinancingDTO {
   @Pattern(
       regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
       message = "Special characters are not allowed")
-  @Schema(description = "The anchor party's mnemonic.")
+  @Schema(description = "The anchor party's mnemonic.", example = "1722466433001")
   private String anchorParty;
 
   @NotNull(message = "This field is required.")
@@ -41,7 +41,9 @@ public class InvoiceFinancingDTO {
   @Pattern(
       regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
       message = "Special characters are not allowed")
-  @Schema(description = "Indicates the credit line to which the invoice relates.")
+  @Schema(
+      description = "Indicates the credit line to which the invoice relates.",
+      example = "SUPERMAXI")
   private String programme;
 
   @NotNull(message = "This field is required.")
@@ -52,7 +54,9 @@ public class InvoiceFinancingDTO {
   @Pattern(
       regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
       message = "Special characters are not allowed")
-  @Schema(description = "The customer who is the credit party on the invoice(s).")
+  @Schema(
+      description = "The customer who is the credit party on the invoice(s).",
+      example = "1722466434001")
   private String seller;
 
   @Size(min = 12, max = 12, message = "This field must have 12 characters")

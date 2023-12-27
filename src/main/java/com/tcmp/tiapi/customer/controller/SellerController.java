@@ -8,6 +8,7 @@ import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +31,19 @@ public class SellerController {
       name = "status",
       description =
           "Invoice status to filter by. If not set, invoices with every status will be returned. Possible values: O,L,P,D,E,C.",
-      example = "O",
-      in = ParameterIn.QUERY)
+      schema = @Schema(type = "string"),
+      in = ParameterIn.QUERY,
+      example = "O")
   @Parameter(
       name = "page",
       description = "Page (0 based). Default: 0.",
+      schema = @Schema(type = "number"),
       in = ParameterIn.QUERY,
       example = "0")
   @Parameter(
       name = "size",
       description = "Page size (items per page). Default: 10.",
+      schema = @Schema(type = "number"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(

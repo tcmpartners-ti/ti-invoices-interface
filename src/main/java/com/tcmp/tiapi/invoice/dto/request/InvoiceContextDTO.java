@@ -25,7 +25,7 @@ public class InvoiceContextDTO {
   @Pattern(
       regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
       message = "Special characters are not allowed")
-  @Schema(description = "Sender's customer mnemonic.")
+  @Schema(description = "Sender's customer mnemonic.", example = "1722466433001")
   private String customer;
 
   @NotNull(message = "This field is required")
@@ -34,7 +34,9 @@ public class InvoiceContextDTO {
   @Pattern(
       regexp = FieldValidationRegex.INVOICE_NUMBER,
       message = "This field allows numbers and hyphens (-) only")
-  @Schema(description = "Sender's reference for this transaction (if known).")
+  @Schema(
+      description = "Sender's reference for this transaction (if known).",
+      example = "001-001-0000000001")
   private String theirReference;
 
   @NotNull(message = "This field is required")
@@ -43,6 +45,6 @@ public class InvoiceContextDTO {
   @Pattern(
       regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
       message = "Special characters are not allowed")
-  @Schema(description = "The behalf of branch for the transaction.")
+  @Schema(description = "The behalf of branch for the transaction.", example = "BPEC")
   private String behalfOfBranch;
 }

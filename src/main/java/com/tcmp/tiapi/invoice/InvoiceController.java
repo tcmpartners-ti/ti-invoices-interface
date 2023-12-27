@@ -13,6 +13,7 @@ import com.tcmp.tiapi.invoice.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +41,18 @@ public class InvoiceController {
   @Parameter(
       name = "programme",
       description = "Indicates the credit line to which the invoice relates.",
+      schema = @Schema(type = "string"),
       in = ParameterIn.QUERY)
-  @Parameter(name = "seller", description = "Seller mnemonic (RUC).", in = ParameterIn.QUERY)
-  @Parameter(name = "invoice", description = "Invoice reference number.", in = ParameterIn.QUERY)
+  @Parameter(
+      name = "seller",
+      description = "Seller mnemonic (RUC).",
+      schema = @Schema(type = "string"),
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "invoice",
+      description = "Invoice reference number.",
+      schema = @Schema(type = "string"),
+      in = ParameterIn.QUERY)
   public InvoiceDTO searchInvoice(
       @Valid @Parameter(hidden = true) InvoiceSearchParams searchParams) {
     return invoiceService.searchInvoice(searchParams);
