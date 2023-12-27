@@ -65,8 +65,8 @@ class InvoiceCreationStatusNotifierStrategyTest {
 
     verify(invoiceEventService).findInvoiceEventInfoByUuid("123");
     verify(businessBankingMapper).mapToRequestPayload(any(), any());
-    verify(invoiceEventService).deleteInvoiceByUuid("123");
     verify(businessBankingService).notifyEvent(any(), payloadArgumentCaptor.capture());
+    verify(invoiceEventService).deleteInvoiceByUuid("123");
 
     assertEquals(PayloadStatus.FAILED.getValue(), payloadArgumentCaptor.getValue().status());
   }

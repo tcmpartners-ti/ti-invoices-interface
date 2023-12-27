@@ -16,6 +16,10 @@ import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
+import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.dto.TIService;
+import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
+import com.tcmp.tiapi.ti.dto.request.RequestHeader;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -26,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -35,21 +40,15 @@ class InvoiceServiceTest {
   @Mock private InvoiceRepository invoiceRepository;
   @Mock private InvoiceEventRepository invoiceEventRepository;
   @Mock private InvoiceMapper invoiceMapper;
+  @Mock private TIServiceRequestWrapper serviceRequestWrapper;
 
   @Captor private ArgumentCaptor<ServiceRequest<?>> messageCaptor;
+  @Captor private ArgumentCaptor<InvoiceEventInfo> invoiceInfoArgumentCaptor;
 
-  private InvoiceService invoiceService;
+  @InjectMocks private InvoiceService invoiceService;
 
   @BeforeEach
   void setUp() throws NoSuchFieldException, IllegalAccessException {
-    invoiceService =
-        new InvoiceService(
-            producerTemplate,
-            invoiceRepository,
-            invoiceEventRepository,
-            invoiceMapper,
-            new TIServiceRequestWrapper());
-
     Field uriFromFtiOutgoing = InvoiceService.class.getDeclaredField("uriFromFtiOutgoing");
     uriFromFtiOutgoing.setAccessible(true);
     uriFromFtiOutgoing.set(invoiceService, "direct:mock");
@@ -127,20 +126,34 @@ class InvoiceServiceTest {
                 CurrencyAmountDTO.builder().amount(BigDecimal.TEN).currency("USD").build())
             .build();
 
-    when(invoiceMapper.mapDTOToFTIMessage(any()))
+    when(invoiceMapper.mapDTOToFTIMessage(any(InvoiceCreationDTO.class)))
         .thenReturn(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build());
+    when(serviceRequestWrapper.wrapRequest(any(TIService.class), any(), any(), any(), any()))
+        .thenReturn(
+            ServiceRequest.builder()
+                .header(RequestHeader.builder().build())
+                .body(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build())
+                .build());
 
     invoiceService.createSingleInvoiceInTi(invoiceCreationDTO);
 
-    verify(invoiceEventRepository).save(any(InvoiceEventInfo.class));
+    verify(invoiceEventRepository).save(invoiceInfoArgumentCaptor.capture());
+    verify(serviceRequestWrapper)
+        .wrapRequest(
+            eq(TIService.TRADE_INNOVATION),
+            eq(TIOperation.CREATE_INVOICE),
+            eq(ReplyFormat.STATUS),
+            anyString(),
+            any(CreateInvoiceEventMessage.class));
     verify(producerTemplate).sendBody(anyString(), messageCaptor.capture());
+
     assertEquals(
         invoiceCreationDTO.getInvoiceNumber(),
         ((CreateInvoiceEventMessage) messageCaptor.getValue().getBody()).getInvoiceNumber());
   }
 
   @Test
-  void financeInvoice_itThrowNotFoundException() {
+  void financeInvoice_itShouldThrowNotFoundException() {
     InvoiceFinancingDTO invoiceFinancingDto =
         InvoiceFinancingDTO.builder()
             .programme("SteelBallRun")
@@ -163,6 +176,12 @@ class InvoiceServiceTest {
         .thenReturn(Optional.of(InvoiceMaster.builder().batchId("123").build()));
     when(invoiceMapper.mapFinancingDTOToFTIMessage(any(InvoiceFinancingDTO.class)))
         .thenReturn(FinanceBuyerCentricInvoiceEventMessage.builder().build());
+    when(serviceRequestWrapper.wrapRequest(any(TIService.class), any(), any(), any(), any()))
+        .thenReturn(
+            ServiceRequest.builder()
+                .header(RequestHeader.builder().build())
+                .body(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build())
+                .build());
 
     invoiceService.financeInvoice(
         InvoiceFinancingDTO.builder()
@@ -172,6 +191,13 @@ class InvoiceServiceTest {
             .build());
 
     verify(invoiceEventRepository).save(any(InvoiceEventInfo.class));
+    verify(serviceRequestWrapper)
+        .wrapRequest(
+            eq(TIService.TRADE_INNOVATION),
+            eq(TIOperation.FINANCE_INVOICE),
+            eq(ReplyFormat.STATUS),
+            anyString(),
+            any(FinanceBuyerCentricInvoiceEventMessage.class));
     verify(producerTemplate).sendBody(anyString(), any(ServiceRequest.class));
   }
 }

@@ -1,5 +1,11 @@
 package com.tcmp.tiapi.invoice.strategy.ftireply;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.ti.dto.response.ResponseHeader;
@@ -17,31 +23,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class InvoiceFinancingStatusNotifierStrategyTest {
-  @Mock
-  private InvoiceEventService invoiceEventService;
+  @Mock private InvoiceEventService invoiceEventService;
   @Mock private BusinessBankingService businessBankingService;
   @Mock private BusinessBankingMapper businessBankingMapper;
 
-  @Captor
-  private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
+  @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
 
   @InjectMocks
   private InvoiceFinancingStatusNotifierStrategy invoiceFinancingStatusNotifierStrategy;
+
   @Test
   void handleServiceResponse_itShouldDeleteInvoiceIfFinancedSuccessfully() {
     var header =
-            ResponseHeader.builder()
-                    .status(ResponseStatus.SUCCESS.getValue())
-                    .correlationId("123")
-                    .build();
+        ResponseHeader.builder()
+            .status(ResponseStatus.SUCCESS.getValue())
+            .correlationId("123")
+            .build();
     var serviceResponse = ServiceResponse.builder().responseHeader(header).build();
 
     invoiceFinancingStatusNotifierStrategy.handleServiceResponse(serviceResponse);
@@ -53,16 +52,16 @@ class InvoiceFinancingStatusNotifierStrategyTest {
   @Test
   void handleServiceResponse_itShouldNotifyIfFinancingFailed() {
     var header =
-            ResponseHeader.builder()
-                    .status(ResponseStatus.FAILED.getValue())
-                    .correlationId("123")
-                    .build();
+        ResponseHeader.builder()
+            .status(ResponseStatus.FAILED.getValue())
+            .correlationId("123")
+            .build();
     var serviceResponse = ServiceResponse.builder().responseHeader(header).build();
 
     when(invoiceEventService.findInvoiceEventInfoByUuid(anyString()))
-            .thenReturn(InvoiceEventInfo.builder().build());
+        .thenReturn(InvoiceEventInfo.builder().build());
     when(businessBankingMapper.mapToRequestPayload(any(), any()))
-            .thenReturn(OperationalGatewayRequestPayload.builder().status("FAILED").build());
+        .thenReturn(OperationalGatewayRequestPayload.builder().status("FAILED").build());
 
     invoiceFinancingStatusNotifierStrategy.handleServiceResponse(serviceResponse);
 
@@ -73,22 +72,22 @@ class InvoiceFinancingStatusNotifierStrategyTest {
 
     assertEquals(PayloadStatus.FAILED.getValue(), payloadArgumentCaptor.getValue().status());
   }
+
   @Test
   void handleServiceResponse_itShouldGenerateCorrectPayload() {
     var header =
-            ResponseHeader.builder()
-                    .status(ResponseStatus.FAILED.getValue())
-                    .correlationId("123")
-                    .build();
+        ResponseHeader.builder()
+            .status(ResponseStatus.FAILED.getValue())
+            .correlationId("123")
+            .build();
     var serviceResponse = ServiceResponse.builder().responseHeader(header).build();
 
     when(invoiceEventService.findInvoiceEventInfoByUuid(header.getCorrelationId()))
-            .thenReturn(InvoiceEventInfo.builder().build());
+        .thenReturn(InvoiceEventInfo.builder().build());
     when(businessBankingMapper.mapToRequestPayload(any(), any()))
-            .thenReturn(OperationalGatewayRequestPayload.builder().status("FAILED").build());
+        .thenReturn(OperationalGatewayRequestPayload.builder().status("FAILED").build());
 
     invoiceFinancingStatusNotifierStrategy.handleServiceResponse(serviceResponse);
     verify(businessBankingService).notifyEvent(any(), payloadArgumentCaptor.capture());
   }
 }
-

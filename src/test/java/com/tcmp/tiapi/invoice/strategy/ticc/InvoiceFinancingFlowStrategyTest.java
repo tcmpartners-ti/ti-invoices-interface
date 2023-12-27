@@ -50,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -73,32 +74,19 @@ class InvoiceFinancingFlowStrategyTest {
   @Captor private ArgumentCaptor<TransactionRequest> transactionRequestArgumentCaptor;
   @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
 
-  private InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
+  @InjectMocks private InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
 
   private Customer seller;
 
   @BeforeEach
   void setUp() {
-    invoiceFinancingFlowStrategy =
-        new InvoiceFinancingFlowStrategy(
-            eventExtensionRepository,
-            productMasterExtensionRepository,
-            programExtensionRepository,
-            customerRepository,
-            accountRepository,
-            invoiceRepository,
-            corporateLoanService,
-            paymentExecutionService,
-            operationalGatewayService,
-            businessBankingService);
-
+    // !Note: TI saves string fields with extra spaces.
     Customer buyer =
         Customer.builder()
             .id(
                 CustomerId.builder()
                     .sourceBankingBusinessCode("BPEC")
-                    .mnemonic(
-                        "1722466420002                    ") // TI saves this with extra spaces
+                    .mnemonic("1722466420002               ")
                     .build())
             .type("ADL")
             .number("1244188")
@@ -136,6 +124,8 @@ class InvoiceFinancingFlowStrategyTest {
         new AckServiceRequest<>(null, invoiceFinanceMessage));
 
     verify(operationalGatewayService).sendNotificationRequest(emailInfoArgumentCaptor.capture());
+    String actualSellerEmail = emailInfoArgumentCaptor.getValue().customerEmail();
+    assertEquals(seller.getAddress().getCustomerEmail(), actualSellerEmail);
 
     verify(corporateLoanService).createCredit(any(DistributorCreditRequest.class));
     verify(businessBankingService)
