@@ -7,7 +7,7 @@ COPY build.gradle.kts settings.gradle.kts ./
 
 RUN gradle --no-daemon assemble
 
-FROM amazoncorretto:17.0.8-alpine3.18
+FROM amazoncorretto:17.0.9-alpine3.18
 
 RUN addgroup -S invoices-group && adduser -S invoices -G invoices-group
 
