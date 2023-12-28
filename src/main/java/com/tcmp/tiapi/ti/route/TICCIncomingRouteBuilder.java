@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 
+/**
+ * This route handles the results of successful operations such as: invoice creation, invoice
+ * settlement, invoice financing, and invoice cancellation.
+ */
 @RequiredArgsConstructor
 public class TICCIncomingRouteBuilder extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormatAckEventRequest;

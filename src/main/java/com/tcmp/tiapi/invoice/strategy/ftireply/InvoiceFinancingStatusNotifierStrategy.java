@@ -24,7 +24,6 @@ public class InvoiceFinancingStatusNotifierStrategy implements FTIReplyIncomingS
 
   @Override
   public void handleServiceResponse(ServiceResponse serviceResponse) {
-
     String invoiceUuidFromCorrelationId = serviceResponse.getResponseHeader().getCorrelationId();
 
     String responseStatus = serviceResponse.getResponseHeader().getStatus();
