@@ -24,11 +24,9 @@ import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
-import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
@@ -46,6 +44,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple5;
 
 @Component
 @RequiredArgsConstructor
@@ -68,54 +68,143 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   @Value("${bp.service.payment-execution.bgl-account}")
   private String bglAccount;
 
+  /**
+   * This function handles the settlement message sent by TI. It notifies to Business Banking the
+   * status of the settlement
+   *
+   * @param serviceRequest The `TFINVSETCU` message (custom).
+   */
   @Override
   public void handleServiceRequest(AckServiceRequest<?> serviceRequest) {
     InvoiceSettlementEventMessage message =
         (InvoiceSettlementEventMessage) serviceRequest.getBody();
+    InvoiceMaster invoice = findInvoiceByMasterReference(message.getMasterRef());
+
+    Mono.zip(
+            Mono.fromCallable(() -> findCustomerByMnemonic(message.getBuyerIdentifier())),
+            Mono.fromCallable(() -> findCustomerByMnemonic(message.getSellerIdentifier())),
+            Mono.fromCallable(() -> findProgrammeExtensionByIdOrDefault(message.getProgramme())),
+            Mono.fromCallable(() -> findMasterExtensionByReference(message.getMasterRef())),
+            Mono.fromCallable(() -> findAccountByCustomerMnemonic(message.getSellerIdentifier())))
+        .flatMap(
+            tuple -> {
+              log.info("Started settlement flow.");
+              ProgramExtension programExtension = tuple.getT3();
+
+              boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;
+              if (!hasExtraFinancingDays) return handleNoExtraDaysInvoice();
+
+              boolean hasBeenFinanced = invoiceHasLinkedFinanceEvent(invoice);
+              if (hasBeenFinanced) return handleFinancedInvoice(message, tuple);
+
+              return handleNotFinancedInvoice(message, tuple, invoice);
+            })
+        .doOnSuccess(success -> log.info("Invoice settlement flow completed successfully."))
+        .onErrorResume(error -> handleError(error, message, invoice))
+        .subscribe();
+  }
+
+  private Mono<Object> handleNoExtraDaysInvoice() {
+    // For Mvp, we ignore invoices with no extra financing days.
+    log.info("Programe has no extra financing days, flow ended.");
+    return Mono.empty();
+  }
+
+  private Mono<Object> handleFinancedInvoice(
+      InvoiceSettlementEventMessage message,
+      Tuple5<Customer, Customer, ProgramExtension, ProductMasterExtension, Account> tuple) {
+    Customer buyer = tuple.getT1();
+
     BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
     BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
 
-    Customer buyer = findCustomerByMnemonic(message.getBuyerIdentifier());
-    Customer seller = findCustomerByMnemonic(message.getSellerIdentifier());
-    ProgramExtension programExtension = findProgrammeExtensionByIdOrDefault(message.getProgramme());
-    InvoiceMaster invoice = findInvoiceByMasterRef(message.getMasterRef());
-    ProductMasterExtension invoiceExtension = findProductMasterExtensionByMasterReference(message.getMasterRef());
-
-    EncodedAccountParser buyerAccountParser =
-        new EncodedAccountParser(invoiceExtension.getFinanceAccount());
-
-    boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;
-    boolean hasBeenFinanced = invoiceHasLinkedFinanceEvent(invoice);
-
-    // For Mvp, we ignore invoices with no extra financing days.
-    if (!hasExtraFinancingDays) {
-      log.info("Programe has no extra financing days, flow ended.");
-      return;
-    }
-
-    try {
-      // Second settlement case: end flow, we only notify credit to buyer.
-      if (hasBeenFinanced) {
-        sendInvoiceStatusEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
-        return;
-      }
-
-      // Not financed invoices flow
-      sendInvoiceStatusEmailToCustomer(InvoiceEmailEvent.SETTLED, message, seller, paymentAmount);
-      createBuyerCreditOrThrowException(message, buyer, programExtension, buyerAccountParser);
-      sendInvoiceStatusEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
-      transferPaymentAmountFromBuyerToSellerOrThrowException(
-          message, buyer, seller, buyerAccountParser);
-      sendInvoiceStatusEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount);
-
-      notifySettlementStatusExternally(PayloadStatus.SUCCEEDED, message, invoice, null);
-    } catch (CreditCreationException | PaymentExecutionException e) {
-      log.error(e.getMessage());
-      notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, e.getMessage());
-    }
+    return sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
   }
 
-  private InvoiceMaster findInvoiceByMasterRef(String masterReference) {
+  private Mono<Object> handleNotFinancedInvoice(
+      InvoiceSettlementEventMessage message,
+      Tuple5<Customer, Customer, ProgramExtension, ProductMasterExtension, Account> tuple,
+      InvoiceMaster invoice) {
+    Customer buyer = tuple.getT1();
+    Customer seller = tuple.getT2();
+    ProgramExtension programExtension = tuple.getT3();
+
+    EncodedAccountParser buyerAccount = new EncodedAccountParser(tuple.getT4().getFinanceAccount());
+    EncodedAccountParser sellerAccount =
+        new EncodedAccountParser(tuple.getT5().getExternalAccountNumber());
+
+    BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
+    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
+
+    return sendEmailToCustomer(InvoiceEmailEvent.SETTLED, message, seller, paymentAmount)
+        .then(createBuyerCredit(message, buyer, programExtension, buyerAccount))
+        .then(sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount))
+        .then(
+            transferPaymentAmountFromBuyerToSeller(
+                message, buyer, seller, buyerAccount, sellerAccount))
+        .then(sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount))
+        .then(notifySettlementStatusExternally(PayloadStatus.SUCCEEDED, message, invoice, null));
+  }
+
+  private Mono<Object> sendEmailToCustomer(
+      InvoiceEmailEvent event,
+      InvoiceSettlementEventMessage message,
+      Customer customer,
+      BigDecimal paymentAmount) {
+
+    InvoiceEmailInfo creditedInvoiceInfo =
+        InvoiceEmailInfo.builder()
+            .customerMnemonic(message.getBuyerIdentifier())
+            .customerEmail(customer.getAddress().getCustomerEmail().trim())
+            .customerName(customer.getFullName().trim())
+            .date(message.getPaymentValueDate())
+            .action(event.getValue())
+            .invoiceCurrency(message.getPaymentCurrency().trim())
+            .invoiceNumber(message.getInvoiceNumber())
+            .amount(paymentAmount)
+            .build();
+
+    return Mono.fromRunnable(
+        () -> operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo));
+  }
+
+  private Mono<Object> handleError(
+      Throwable e, InvoiceSettlementEventMessage message, InvoiceMaster invoice) {
+    log.error(e.getMessage());
+
+    boolean isNotifiableError =
+        e instanceof CreditCreationException || e instanceof PaymentExecutionException;
+    if (!isNotifiableError) return Mono.empty();
+
+    return notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, e.getMessage());
+  }
+
+  private Mono<Object> notifySettlementStatusExternally(
+      PayloadStatus status,
+      InvoiceSettlementEventMessage message,
+      InvoiceMaster invoice,
+      @Nullable String error) {
+    List<String> errors = error == null ? null : List.of(error);
+
+    OperationalGatewayRequestPayload payload =
+        OperationalGatewayRequestPayload.builder()
+            .status(status.getValue())
+            .invoice(
+                PayloadInvoice.builder()
+                    .batchId(invoice.getBatchId().trim())
+                    .reference(message.getInvoiceNumber())
+                    .sellerMnemonic(message.getSellerIdentifier())
+                    .build())
+            .details(new PayloadDetails(errors, null, null))
+            .build();
+
+    return Mono.fromRunnable(
+        () ->
+            businessBankingService.notifyEvent(
+                OperationalGatewayProcessCode.INVOICE_SETTLEMENT, payload));
+  }
+
+  private InvoiceMaster findInvoiceByMasterReference(String masterReference) {
     return invoiceRepository
         .findByProductMasterMasterReference(masterReference)
         .orElseThrow(() -> new EntityNotFoundException("Could not find invoice."));
@@ -130,7 +219,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
                     "Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  private ProductMasterExtension findProductMasterExtensionByMasterReference(String masterReference) {
+  private ProductMasterExtension findMasterExtensionByReference(String masterReference) {
     return productMasterExtensionRepository
         .findByMasterReference(masterReference)
         .orElseThrow(
@@ -167,24 +256,32 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         && (discountDealAmount != null && BigDecimal.ZERO.compareTo(discountDealAmount) != 0);
   }
 
-  private void createBuyerCreditOrThrowException(
+  private Mono<Object> createBuyerCredit(
       InvoiceSettlementEventMessage message,
       Customer buyer,
       ProgramExtension programExtension,
-      EncodedAccountParser buyerAccountParser)
+      EncodedAccountParser buyerAccount)
       throws CreditCreationException {
-    log.info("Started credit creation.");
-    DistributorCreditRequest creditRequest =
-        buildDistributorCreditRequest(message, buyer, programExtension, buyerAccountParser);
-    DistributorCreditResponse creditResponse = corporateLoanService.createCredit(creditRequest);
-    Error creditError = creditResponse.data().error();
+    return Mono.fromCallable(
+            () -> {
+              log.info("Started credit creation.");
+              DistributorCreditRequest request =
+                  buildDistributorCreditRequest(message, buyer, programExtension, buyerAccount);
+              return corporateLoanService.createCredit(request);
+            })
+        .flatMap(
+            creditResponse -> {
+              Error error = creditResponse.data().error();
+              boolean hasBeenCredited = error != null && error.hasNoError();
+              if (!hasBeenCredited) {
+                String creditErrorMessage =
+                    error != null ? error.message() : "Credit creation failed.";
 
-    boolean hasBeenCredited = creditError != null && creditError.hasNoError();
-    if (!hasBeenCredited) {
-      String creditErrorMessage =
-          creditError != null ? creditError.message() : "Credit creation failed.";
-      throw new CreditCreationException(creditErrorMessage);
-    }
+                return Mono.error(new CreditCreationException(creditErrorMessage));
+              }
+
+              return Mono.empty();
+            });
   }
 
   private DistributorCreditRequest buildDistributorCreditRequest(
@@ -241,123 +338,62 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     return currentDate.format(formatter);
   }
 
-  private void transferPaymentAmountFromBuyerToSellerOrThrowException(
+  private Mono<Object> transferPaymentAmountFromBuyerToSeller(
       InvoiceSettlementEventMessage message,
       Customer buyer,
       Customer seller,
-      EncodedAccountParser buyerAccountParser)
+      EncodedAccountParser buyerAccountParser,
+      EncodedAccountParser sellerAccountParser)
       throws PaymentExecutionException {
     log.info("Started buyer to seller transaction.");
-    Account sellerAccount = findAccountByCustomerMnemonic(message.getSellerIdentifier());
-    EncodedAccountParser sellerAccountParser =
-        new EncodedAccountParser(sellerAccount.getExternalAccountNumber());
 
-    BusinessAccountTransfersResponse buyerToBglTransactionResponse =
-        paymentExecutionService.makeTransactionRequest(
-            buildBuyerToBglTransactionRequest(message, seller, buyerAccountParser));
+    String invoiceReference = message.getInvoiceNumber();
+    String debitConcept =
+        String.format("Descuento Factura %s %s", invoiceReference, seller.getFullName().trim());
+    String creditConcept =
+        String.format("Pago Factura %s %s", invoiceReference, buyer.getFullName().trim());
+    String currency = message.getPaymentCurrency();
+    BigDecimal amount = getPaymentAmountFromMessage(message);
 
-    BusinessAccountTransfersResponse bglToSellerTransactionResponse =
-        paymentExecutionService.makeTransactionRequest(
-            buildBglToSellerTransaction(message, buyer, sellerAccountParser));
+    TransactionRequest debitRequest =
+        TransactionRequest.from(
+            TransactionType.CLIENT_TO_BGL,
+            buyerAccountParser.getAccount(),
+            bglAccount,
+            debitConcept,
+            currency,
+            amount);
+    TransactionRequest creditRequest =
+        TransactionRequest.from(
+            TransactionType.BGL_TO_CLIENT,
+            bglAccount,
+            sellerAccountParser.getAccount(),
+            creditConcept,
+            currency,
+            amount);
 
-    boolean isBuyerToSellerTransactionOk =
-        buyerToBglTransactionResponse != null
-            && bglToSellerTransactionResponse != null
-            && buyerToBglTransactionResponse.isOk()
-            && bglToSellerTransactionResponse.isOk();
-    if (!isBuyerToSellerTransactionOk) {
-      throw new PaymentExecutionException(
-          "Could not transfer invoice payment amount from buyer to seller.");
-    }
-  }
+    return Mono.zip(
+            Mono.fromCallable(() -> paymentExecutionService.makeTransactionRequest(debitRequest)),
+            Mono.fromCallable(() -> paymentExecutionService.makeTransactionRequest(creditRequest)))
+        .flatMap(
+            tuple -> {
+              BusinessAccountTransfersResponse buyerToBglTransfer = tuple.getT1();
+              BusinessAccountTransfersResponse bglToSellerTransfer = tuple.getT2();
 
-  private TransactionRequest buildBuyerToBglTransactionRequest(
-      InvoiceSettlementEventMessage invoiceSettlementMessage,
-      Customer seller,
-      EncodedAccountParser buyerAccountParser) {
-    String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
-    String sellerName = seller.getFullName().trim();
-    String concept = String.format("Descuento Factura %s %s", invoiceReference, sellerName);
-    String currency = invoiceSettlementMessage.getPaymentCurrency();
-    BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
+              boolean isTransactionOk = buyerToBglTransfer.isOk() && bglToSellerTransfer.isOk();
+              if (!isTransactionOk) {
+                return Mono.error(
+                    new PaymentExecutionException(
+                        "Could not transfer invoice payment amount from buyer to seller."));
+              }
 
-    return TransactionRequest.from(
-        TransactionType.CLIENT_TO_BGL,
-        buyerAccountParser.getAccount(),
-        bglAccount,
-        concept,
-        currency,
-        amount);
-  }
-
-  private TransactionRequest buildBglToSellerTransaction(
-      InvoiceSettlementEventMessage invoiceSettlementMessage,
-      Customer buyer,
-      EncodedAccountParser sellerAccountParser) {
-    String invoiceReference = invoiceSettlementMessage.getInvoiceNumber();
-    String buyerName = buyer.getFullName().trim();
-    String concept = String.format("Pago Factura %s %s", invoiceReference, buyerName);
-    String currency = invoiceSettlementMessage.getPaymentCurrency();
-    BigDecimal amount = getPaymentAmountFromMessage(invoiceSettlementMessage);
-
-    return TransactionRequest.from(
-        TransactionType.BGL_TO_CLIENT,
-        bglAccount,
-        sellerAccountParser.getAccount(),
-        concept,
-        currency,
-        amount);
+              return Mono.empty();
+            });
   }
 
   private BigDecimal getPaymentAmountFromMessage(
       InvoiceSettlementEventMessage invoiceSettlementMessage) {
     BigDecimal paymentAmountInCents = new BigDecimal(invoiceSettlementMessage.getPaymentAmount());
     return MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
-  }
-
-  private void sendInvoiceStatusEmailToCustomer(
-      InvoiceEmailEvent event,
-      InvoiceSettlementEventMessage message,
-      Customer customer,
-      BigDecimal paymentAmount) {
-    try {
-      InvoiceEmailInfo creditedInvoiceInfo =
-          InvoiceEmailInfo.builder()
-              .customerMnemonic(message.getBuyerIdentifier())
-              .customerEmail(customer.getAddress().getCustomerEmail().trim())
-              .customerName(customer.getFullName().trim())
-              .date(message.getPaymentValueDate())
-              .action(event.getValue())
-              .invoiceCurrency(message.getPaymentCurrency().trim())
-              .invoiceNumber(message.getInvoiceNumber())
-              .amount(paymentAmount)
-              .build();
-
-      operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo);
-    } catch (OperationalGatewayException e) {
-      log.error(e.getMessage());
-    }
-  }
-
-  private void notifySettlementStatusExternally(
-      PayloadStatus status,
-      InvoiceSettlementEventMessage message,
-      InvoiceMaster invoice,
-      @Nullable String error) {
-    List<String> errors = error == null ? null : List.of(error);
-
-    OperationalGatewayRequestPayload payload =
-        OperationalGatewayRequestPayload.builder()
-            .status(status.getValue())
-            .invoice(
-                PayloadInvoice.builder()
-                    .batchId(invoice.getBatchId().trim())
-                    .reference(message.getInvoiceNumber())
-                    .sellerMnemonic(message.getSellerIdentifier())
-                    .build())
-            .details(new PayloadDetails(errors, null, null))
-            .build();
-
-    businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_SETTLEMENT, payload);
   }
 }
