@@ -7,14 +7,14 @@ definitions:
         caches: [ gradle ]
         script:
           - echo "Building invoices..."
-          - gradle build -x test
+          - gradle build --no-daemon -x test
 
     - step: &unit-tests
         name: Run unit tests
         caches: [ gradle ]
         script:
           - echo "Running unit tests..."
-          - gradle test
+          - gradle test --no-daemon
 
     - step: &integration-tests
         name: Run integration tests
@@ -22,7 +22,7 @@ definitions:
         caches: [ docker ]
         script:
           - echo "Running integration tests..."
-          - gradle integrationTest
+          - gradle integrationTest --no-daemon -PTESTCONTAINERS_RYUK_DISABLED=true
 
     - step: &deploy-dev
         name: Deploy
