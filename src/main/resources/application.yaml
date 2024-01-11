@@ -5,12 +5,7 @@ logging.level.org.springframework.web.filter.RequestTraceLogLoggingFilter: DEBUG
 spring:
   profiles.active: ${APPLICATION_ENV:local}
   jackson.time-zone: "America/Guayaquil"
-
-  jpa:
-    open-in-view: true
-    database-platform: "org.hibernate.dialect.SQLServerDialect"
-    properties.hibernate:
-      dialect: "org.hibernate.dialect.SQLServerDialect"
+  jpa.open-in-view: true
 
 ti.queue:
   fti:
@@ -19,11 +14,9 @@ ti.queue:
     reply:
       name: "BP.DIGIBANK.TO.FTI.REPLY"
       jndi: "queue/digibankInIncomingReply"
-  ticc:
-    sub.name: "BP.TICC.TO.DIGIBANK"
+  ticc.sub.name: "BP.TICC.TO.DIGIBANK"
   # Custom component
-  scheduler:
-    sub.name: "BP.SCHEDULER.TO.DIGIBANK"
+  scheduler.sub.name: "BP.SCHEDULER.TO.DIGIBANK"
 
 bp.api-gee.url:
   dev: "https://api-dev.pichincha.com"
@@ -31,7 +24,5 @@ bp.api-gee.url:
   prod: "https://api.pichincha.com"
 
 springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    path: '/swagger.html'
+  api-docs.enabled: true
+  swagger-ui.path: '/swagger.html'
