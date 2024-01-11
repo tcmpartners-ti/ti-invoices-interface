@@ -9,12 +9,20 @@ definitions:
           - echo "Building invoices..."
           - gradle build -x test
 
-    - step: &test
+    - step: &unit-tests
         name: Run unit tests
         caches: [ gradle ]
         script:
-          - echo "Running tests..."
+          - echo "Running unit tests..."
           - gradle test
+
+    - step: &integration-tests
+        name: Run integration tests
+        services: [ docker ]
+        caches: [ docker ]
+        script:
+          - echo "Running integration tests..."
+          - gradle integrationTest
 
     - step: &deploy-dev
         name: Deploy
@@ -23,28 +31,66 @@ definitions:
           - echo "Deploying to development"
           - pipe: atlassian/azure-web-apps-containers-deploy:1.2.0
             variables:
-              AZURE_APP_ID: $AZ_APP_ID
-              AZURE_PASSWORD: $AZ_PASSWORD
-              AZURE_TENANT_ID: $AZ_TENANT
+              AZURE_APP_ID: $AZ_APP_ID_DEV
+              AZURE_PASSWORD: $AZ_PASSWORD_DEV
+              AZURE_TENANT_ID: $AZ_TENANT_DEV
               AZURE_SUBSCRIPTION: $AZ_SUBSCRIPTION_ID_TI_DEV
-              AZURE_RESOURCE_GROUP: 'rg-pch-tidev-appserv-01' # Important: this might change
+              AZURE_RESOURCE_GROUP: 'rg-pch-tidev-interfaces-01'
               AZURE_APP_NAME: 'astipch-invoices-dev'
               DOCKER_CUSTOM_IMAGE_NAME: 'ti-invoices'
               DOCKER_REGISTRY_SERVER_URL: 'crpchtidev01.azurecr.io'
               DOCKER_REGISTRY_SERVER_USER: 'crpchtidev01'
-              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD
+              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD_DEV
+
+    - step: &deploy-test
+        name: Deploy
+        caches: [ gradle ]
+        script:
+          - echo "Deploying to test"
+          - pipe: atlassian/azure-web-apps-containers-deploy:1.2.0
+            variables:
+              AZURE_APP_ID: $AZ_APP_ID_TEST
+              AZURE_PASSWORD: $AZ_PASSWORD_TEST
+              AZURE_TENANT_ID: $AZ_TENANT_TEST
+              AZURE_SUBSCRIPTION: $AZ_SUBSCRIPTION_ID_TI_TEST
+              AZURE_RESOURCE_GROUP: 'rg-pch-tiqa-interfaces-01'
+              AZURE_APP_NAME: 'astipch-invoices-qa'
+              DOCKER_CUSTOM_IMAGE_NAME: 'ti-invoices'
+              DOCKER_REGISTRY_SERVER_URL: 'crpchtiqa01.azurecr.io'
+              DOCKER_REGISTRY_SERVER_USER: 'crpchtiqa01'
+              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD_TEST
+
+  services:
+    docker:
+      memory: 2048
 
 pipelines:
   branches:
+    # Production Branch
     main:
       - step: *build
-      - step: *test
+      - step: *unit-tests
 
-    qa:
+    # Test branch
+    test:
       - step: *build
-      - step: *test
+      - parallel:
+          steps:
+            - step: *unit-tests
+            - step: *integration-tests
 
+    # Development Branches
     develop:
       - step: *build
-      - step: *test
-      - step: *deploy-dev
+      - parallel:
+          steps:
+            - step: *unit-tests
+            - step: *integration-tests
+        # Approve
+        # Vulnerabilities
+    feat/*:
+      - step: *build
+      - parallel:
+          steps:
+            - step: *unit-tests
+            - step: *integration-tests
