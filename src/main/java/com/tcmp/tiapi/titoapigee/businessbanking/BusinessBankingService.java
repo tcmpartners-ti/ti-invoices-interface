@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.titoapigee.businessbanking;
 
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequest;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ProcessCode;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ReferenceData;
@@ -7,7 +8,6 @@ import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcess
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import java.util.Map;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +20,7 @@ public class BusinessBankingService {
 
   private final HeaderSigner encryptedBodyRequestHeaderSigner;
   private final BusinessBankingClient businessBankingClient;
+  private final UUIDGenerator uuidGenerator;
 
   public void notifyEvent(OperationalGatewayProcessCode processCode, Object payload) {
     ApiGeeBaseRequest<OperationalGatewayRequest<?>> body =
@@ -29,7 +30,7 @@ public class BusinessBankingService {
                     .referenceData(
                         ReferenceData.builder()
                             .provider(REQUEST_PROVIDER)
-                            .correlatedMessageId(UUID.randomUUID().toString())
+                            .correlatedMessageId(uuidGenerator.getNewId())
                             .processCode(ProcessCode.of(processCode))
                             .build())
                     .payload(payload)

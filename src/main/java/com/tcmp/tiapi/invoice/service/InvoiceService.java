@@ -10,13 +10,13 @@ import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
@@ -34,6 +34,7 @@ public class InvoiceService {
   private final InvoiceMapper invoiceMapper;
 
   private final TIServiceRequestWrapper serviceRequestWrapper;
+  private final UUIDGenerator uuidGenerator;
 
   @Value("${ti.route.fti.out.from}")
   private String uriFromFtiOutgoing;
@@ -66,7 +67,7 @@ public class InvoiceService {
   }
 
   public void createSingleInvoiceInTi(InvoiceCreationDTO creationDTO) {
-    String invoiceUuid = UUID.randomUUID().toString();
+    String invoiceUuid = uuidGenerator.getNewId();
 
     invoiceEventRepository.save(
         InvoiceEventInfo.builder()
@@ -88,7 +89,7 @@ public class InvoiceService {
   }
 
   public void financeInvoice(InvoiceFinancingDTO financingDTO) {
-    String invoiceUuid = UUID.randomUUID().toString();
+    String invoiceUuid = uuidGenerator.getNewId();
 
     InvoiceMaster invoice = findInvoiceFromFinancingInfo(financingDTO);
     invoiceEventRepository.save(

@@ -6,6 +6,7 @@ import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.dto.TIOperation;
@@ -37,6 +38,9 @@ public class InvoiceBatchOperationsService {
   private final RedisTemplate<String, Object> redisTemplate;
   private final InvoiceMapper invoiceMapper;
 
+  private final TIServiceRequestWrapper wrapper;
+  private final UUIDGenerator uuidGenerator;
+
   @Value("${ti.route.fti.out.from}")
   private String uriFtiOutgoingFrom;
 
@@ -61,6 +65,7 @@ public class InvoiceBatchOperationsService {
   private void processFileAsBatches(
       String batchId, CsvToBean<InvoiceCreationRowCSV> invoiceCsvToBean) {
     List<InvoiceCreationRowCSV> invoicesBatch = new ArrayList<>();
+    // Skip header
     int currentLine = 1;
 
     for (InvoiceCreationRowCSV invoiceRow : invoiceCsvToBean) {
@@ -83,12 +88,12 @@ public class InvoiceBatchOperationsService {
   private void processBatch(String batchId, List<InvoiceCreationRowCSV> invoicesBatch) {
     int batchSize = invoicesBatch.size();
 
-    TIServiceRequestWrapper wrapper = new TIServiceRequestWrapper();
     List<InvoiceEventInfo> invoiceEvents = new ArrayList<>(batchSize);
     List<ServiceRequest<CreateInvoiceEventMessage>> invoiceMessages = new ArrayList<>(batchSize);
 
     for (InvoiceCreationRowCSV invoiceRow : invoicesBatch) {
-      String uuid = UUID.randomUUID().toString();
+      String uuid = uuidGenerator.getNewId();
+
       invoiceEvents.add(
           InvoiceEventInfo.builder()
               .id(uuid)
