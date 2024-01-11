@@ -9,7 +9,7 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
 /**
  * This route receives the "validations" results from operations such as: Invoice creation and
  * Invoice Financing. E.g.: if the program/seller/buyer relationship is not correct, the error will
- * be caught in this route.
+ * be received in this route.
  */
 @RequiredArgsConstructor
 public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
@@ -37,6 +37,7 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
       strategy.handleServiceResponse(serviceResponse);
     } catch (IllegalArgumentException e) {
       log.info("Unhandled operation: {}", operation);
+      log.info("ServiceResponse={}", serviceResponse);
     }
   }
 }
