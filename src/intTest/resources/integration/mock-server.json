@@ -1,0 +1,28 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/operational-gateway/v2/notifications"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": "{\"data\":[{\"recipient\":{\"channel\":{\"description\":\"email\",\"value\":\"dareyesp@pichincha.com\"}}}]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/business-banking/v1/operational-gateway"
+    },
+    "httpResponse": {
+      "statusCode": 201,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": null
+    }
+  }
+]

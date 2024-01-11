@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    username: "test"
+    password: "test"
+    driver-class-name: "org.postgresql.Driver"
+
+  activemq:
+    user: "admin"
+    password: "admin"
+    packages.trust-all: true
+
+bp:
+  service:
+    operational-gateway:
+      template-id: "305003729"
+      business-banking-url: "https://bancaempresas.pichincha.com"
+    payment-execution:
+      bgl-account: ""
+
+  api-gee:
+    headers.device: "TradeInnovationInterface"
+
+    credentials:
+      app-id: "app-id"
+      api-key: "api-key000000000"
+      api-secret: "api-secret000000"
+
+    services:
+      business-banking.url: "${bp.api-gee.base-url}/business-banking/v1"
+      payment-execution.url: "${bp.api-gee.base-url}/payment-execution/v1"
+      operational-gateway.url: "${bp.api-gee.base-url}/operational-gateway/v2"
+      corporate-loan:
+        user: ""
+        operation-token: ""
+        url: "${bp.api-gee.base-url}/domain/corporate-loan/v1"
+
+ti.route:
+  fti:
+    out:
+      from: "direct:sendToFtiOutgoingQueue"
+      to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
+    in-reply.from: "activemq:queue:${ti.queue.fti.reply.name}"
+  ticc.in.from: "activemq:queue:${ti.queue.ticc.sub.name}"

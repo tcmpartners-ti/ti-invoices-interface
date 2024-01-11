@@ -1,56 +1,78 @@
-val springbootVersion = "3.2.0"
-val camelVersion = "4.0.0"
-val lombokVersion = "1.18.28"
-val h2Version = "2.2.220"
-val mapstructVersion = "1.5.5.Final"
-val jdbcVersion = "12.2.0.jre11"
-val junitVersion = "5.10.1"
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-    `java-library`
-    `maven-publish`
-    id("org.springframework.boot") version "3.2.0"
+    java
+    `jvm-test-suite`
+    id("org.springframework.boot") version "3.2.1"
+    id("io.spring.dependency-management") version "1.1.4"
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri("https://repo.maven.apache.org/maven2/")
-    }
+    mavenCentral()
 }
 
+//<editor-fold desc="Dependencies Versions">
+val springbootVersion = "3.2.1"
+val camelVersion = "4.3.0"
+val lombokVersion = "1.18.28"
+val h2Version = "2.2.220"
+val postgresVersion = "42.7.1"
+val mapstructVersion = "1.5.5.Final"
+val jdbcVersion = "12.2.0.jre11"
+val openCsvVersion = "5.9"
+val commonsCodecVersion = "1.16.0"
+val openApiVersion = "2.3.0"
+val woodStoxVersion = "4.4.1"
+val openFeignVersion = "4.1.0"
+val retryVersion = "2.0.3"
+val aspectsVersion = "6.0.11"
+
+val junitVersion = "5.10.1"
+val testContainersVersion = "1.19.3"
+val awaitilityVersion = "4.2.0"
+val restAssuredVersion = "5.4.0"
+val mockServerClientVersion = "5.15.0"
+//</editor-fold>
+
 dependencies {
-    api("org.springframework.boot:spring-boot-starter-web:$springbootVersion")
-    api("org.springframework.boot:spring-boot-starter-validation:$springbootVersion")
-    api("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
-    api("org.apache.camel:camel-activemq:$camelVersion")
-    api("org.apache.camel:camel-jackson:$camelVersion")
-    api("org.apache.camel:camel-jaxb:$camelVersion")
-    api("org.apache.camel:camel-bindy:$camelVersion")
-    api("com.opencsv:opencsv:5.9")
-    api("commons-codec:commons-codec:1.16.0") // For crypto stuff
-    api("org.codehaus.woodstox:woodstox-core-asl:4.4.1")
-    api("org.mapstruct:mapstruct:$mapstructVersion")
-    api("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0")
-    // Retries
-    api("org.springframework.retry:spring-retry:2.0.3")
-    api("org.springframework:spring-aspects:6.0.11")
+    // Spring Boot Dependencies
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis:$springbootVersion")
+    implementation("org.springframework.boot:spring-boot-starter-validation:$springbootVersion")
+    implementation("org.springframework.boot:spring-boot-starter-web:$springbootVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:$openFeignVersion")
+    implementation("org.springframework.retry:spring-retry:$retryVersion")
+    implementation("org.springframework:spring-aspects:$aspectsVersion")
 
-    api("org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion")
-    api("org.projectlombok:lombok:$lombokVersion")
-    api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-    api("org.springframework.boot:spring-boot-starter-data-redis:3.2.0")
+    // Apache Camel
+    implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
+    implementation("org.apache.camel:camel-activemq:$camelVersion")
+    implementation("org.apache.camel:camel-bindy:$camelVersion")
+    implementation("org.apache.camel:camel-jackson:$camelVersion")
+    implementation("org.apache.camel:camel-jaxb:$camelVersion")
 
+    // Other libraries
+    implementation("com.opencsv:opencsv:$openCsvVersion")
+    implementation("commons-codec:commons-codec:$commonsCodecVersion") // Cryptography
+    implementation("org.codehaus.woodstox:woodstox-core-asl:$woodStoxVersion")
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    implementation("org.projectlombok:lombok:$lombokVersion")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openApiVersion") // Documentation
+
+    // Annotation Processors
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
     annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
-    compileOnly("org.springframework.boot:spring-boot-devtools:$springbootVersion")
+    // Compile and Runtime Dependencies
     compileOnly("org.projectlombok:lombok:$lombokVersion")
+    compileOnly("org.springframework.boot:spring-boot-devtools:$springbootVersion")
     runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:$jdbcVersion")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:$springbootVersion")
+
+    // Testing Dependencies
     testImplementation("com.h2database:h2:$h2Version")
     testImplementation("org.apache.camel:camel-test-junit5:$camelVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:$springbootVersion")
 }
 
 group = "com.tcmp"
@@ -58,13 +80,14 @@ version = "0.0.1"
 description = "InvoicesInterface"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
+sourceSets {
+    create("intTest") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
     }
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
 
     testLogging {
@@ -74,6 +97,12 @@ tasks.test {
     systemProperty("spring.profiles.active", "test")
 }
 
+tasks.withType<BootJar> {
+    group = "boot"
+    description = "This task is used to avoid duped dependencies in docker"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
@@ -81,4 +110,41 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<Javadoc> {
     options.encoding = "UTF-8"
+}
+
+// Integration Tests configuration
+configurations {
+    val intTestImplementation: Configuration by configurations.getting {
+        extendsFrom(configurations.implementation.get())
+    }
+
+    val intTestRuntimeOnly: Configuration by configurations.getting
+    configurations["intTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+
+    dependencies {
+        intTestImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+        intTestImplementation("org.springframework.boot:spring-boot-starter-test:$springbootVersion")
+
+        intTestImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
+        intTestImplementation("org.postgresql:postgresql:$postgresVersion") // For test containers
+        intTestImplementation("org.awaitility:awaitility:$awaitilityVersion")
+        intTestImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
+        intTestImplementation("org.testcontainers:testcontainers:$testContainersVersion")
+        intTestImplementation("org.testcontainers:postgresql:$testContainersVersion")
+        intTestImplementation("org.mock-server:mockserver-client-java:$mockServerClientVersion")
+    }
+
+    task<Test>("integrationTest") {
+        description = "Runs integration tests."
+        group = "verification"
+
+        testClassesDirs = sourceSets["intTest"].output.classesDirs
+        classpath = sourceSets["intTest"].runtimeClasspath
+
+        useJUnitPlatform()
+
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
 }
