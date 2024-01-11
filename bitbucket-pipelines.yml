@@ -19,7 +19,7 @@ definitions:
     - step: &integration-tests
         name: Run integration tests
         services: [ docker ]
-        caches: [ docker ]
+        caches: [ gradle, docker ]
         script:
           - echo "Running integration tests..."
           - export TESTCONTAINERS_RYUK_DISABLED=true
