@@ -9,10 +9,13 @@ import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.request.*;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
+import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbersContainer;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
@@ -23,6 +26,7 @@ import com.tcmp.tiapi.ti.dto.request.RequestHeader;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +45,7 @@ class InvoiceServiceTest {
   @Mock private InvoiceEventRepository invoiceEventRepository;
   @Mock private InvoiceMapper invoiceMapper;
   @Mock private TIServiceRequestWrapper serviceRequestWrapper;
+  @Mock private UUIDGenerator uuidGenerator;
 
   @Captor private ArgumentCaptor<ServiceRequest<?>> messageCaptor;
   @Captor private ArgumentCaptor<InvoiceEventInfo> invoiceInfoArgumentCaptor;
@@ -115,7 +120,8 @@ class InvoiceServiceTest {
 
   @Test
   void createSingleInvoiceInTi_itShouldInvokeCamelRouteWhenCreatingInvoice() {
-    InvoiceCreationDTO invoiceCreationDTO =
+    var invoiceUuid = "001-001";
+    var invoiceCreationDTO =
         InvoiceCreationDTO.builder()
             .context(InvoiceContextDTO.builder().theirReference("INV123").customer("C123").build())
             .anchorParty("C123")
@@ -131,9 +137,10 @@ class InvoiceServiceTest {
     when(serviceRequestWrapper.wrapRequest(any(TIService.class), any(), any(), any(), any()))
         .thenReturn(
             ServiceRequest.builder()
-                .header(RequestHeader.builder().build())
+                .header(RequestHeader.builder().correlationId(invoiceUuid).build())
                 .body(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build())
                 .build());
+    when(uuidGenerator.getNewId()).thenReturn(invoiceUuid);
 
     invoiceService.createSingleInvoiceInTi(invoiceCreationDTO);
 
@@ -150,6 +157,8 @@ class InvoiceServiceTest {
     assertEquals(
         invoiceCreationDTO.getInvoiceNumber(),
         ((CreateInvoiceEventMessage) messageCaptor.getValue().getBody()).getInvoiceNumber());
+    assertEquals(invoiceUuid, invoiceInfoArgumentCaptor.getValue().getId());
+    assertEquals(invoiceUuid, messageCaptor.getValue().getHeader().getCorrelationId());
   }
 
   @Test
@@ -171,17 +180,26 @@ class InvoiceServiceTest {
 
   @Test
   void financeInvoice_itShouldSendMessageToTI() {
+    var invoiceUuid = "000-001";
+    var mappedMessage =
+        FinanceBuyerCentricInvoiceEventMessage.builder()
+            .invoiceNumbersContainer(
+                new InvoiceNumbersContainer(
+                    List.of(InvoiceNumbers.builder().invoiceNumber("001-001-123").build())))
+            .build();
+
     when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReference(
             anyString(), anyString(), anyString()))
         .thenReturn(Optional.of(InvoiceMaster.builder().batchId("123").build()));
     when(invoiceMapper.mapFinancingDTOToFTIMessage(any(InvoiceFinancingDTO.class)))
-        .thenReturn(FinanceBuyerCentricInvoiceEventMessage.builder().build());
+        .thenReturn(mappedMessage);
     when(serviceRequestWrapper.wrapRequest(any(TIService.class), any(), any(), any(), any()))
         .thenReturn(
             ServiceRequest.builder()
-                .header(RequestHeader.builder().build())
-                .body(CreateInvoiceEventMessage.builder().invoiceNumber("INV123").build())
+                .header(RequestHeader.builder().correlationId(invoiceUuid).build())
+                .body(mappedMessage)
                 .build());
+    when(uuidGenerator.getNewId()).thenReturn(invoiceUuid);
 
     invoiceService.financeInvoice(
         InvoiceFinancingDTO.builder()
@@ -190,7 +208,7 @@ class InvoiceServiceTest {
             .seller("1722466420")
             .build());
 
-    verify(invoiceEventRepository).save(any(InvoiceEventInfo.class));
+    verify(invoiceEventRepository).save(invoiceInfoArgumentCaptor.capture());
     verify(serviceRequestWrapper)
         .wrapRequest(
             eq(TIService.TRADE_INNOVATION),
@@ -198,6 +216,9 @@ class InvoiceServiceTest {
             eq(ReplyFormat.STATUS),
             anyString(),
             any(FinanceBuyerCentricInvoiceEventMessage.class));
-    verify(producerTemplate).sendBody(anyString(), any(ServiceRequest.class));
+    verify(producerTemplate).sendBody(anyString(), messageCaptor.capture());
+
+    assertEquals(invoiceUuid, invoiceInfoArgumentCaptor.getValue().getId());
+    assertEquals(invoiceUuid, messageCaptor.getValue().getHeader().getCorrelationId());
   }
 }
