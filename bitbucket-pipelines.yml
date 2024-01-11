@@ -25,6 +25,13 @@ definitions:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
+    - step: &snyk-scan
+        name: Scan dependencies and images
+        script:
+          - pipe: snyk/snyk—scan:4.6
+            variables:
+              SNYK_TOKEN: $SNYK_TOKEN
+
     - step: &deploy-dev
         name: Deploy
         caches: [ gradle ]
@@ -87,6 +94,7 @@ pipelines:
           steps:
             - step: *unit-tests
             - step: *integration-tests
+      - step: *snyk-scan
         # Approve
         # Vulnerabilities
     feat/*:
