@@ -22,6 +22,7 @@ definitions:
         caches: [ docker ]
         script:
           - echo "Running integration tests..."
+          - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
     - step: &deploy-dev
