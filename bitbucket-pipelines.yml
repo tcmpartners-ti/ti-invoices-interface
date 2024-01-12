@@ -25,49 +25,14 @@ definitions:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
-    - step: &snyk-scan
-        name: Scan dependencies and images
+    - step: &scan-dependencies
+        name: Scan dependencies
         caches: [ gradle ]
         script:
-          - pipe: snyk/snyk-scan:0.4.3
+          - pipe: snyk/snyk-scan:1.0.0
             variables:
               SNYK_TOKEN: $SNYK_TOKEN
-
-    - step: &deploy-dev
-        name: Deploy
-        caches: [ gradle ]
-        script:
-          - echo "Deploying to development"
-          - pipe: atlassian/azure-web-apps-containers-deploy:1.2.0
-            variables:
-              AZURE_APP_ID: $AZ_APP_ID_DEV
-              AZURE_PASSWORD: $AZ_PASSWORD_DEV
-              AZURE_TENANT_ID: $AZ_TENANT_DEV
-              AZURE_SUBSCRIPTION: $AZ_SUBSCRIPTION_ID_TI_DEV
-              AZURE_RESOURCE_GROUP: 'rg-pch-tidev-interfaces-01'
-              AZURE_APP_NAME: 'astipch-invoices-dev'
-              DOCKER_CUSTOM_IMAGE_NAME: 'ti-invoices'
-              DOCKER_REGISTRY_SERVER_URL: 'crpchtidev01.azurecr.io'
-              DOCKER_REGISTRY_SERVER_USER: 'crpchtidev01'
-              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD_DEV
-
-    - step: &deploy-test
-        name: Deploy
-        caches: [ gradle ]
-        script:
-          - echo "Deploying to test"
-          - pipe: atlassian/azure-web-apps-containers-deploy:1.2.0
-            variables:
-              AZURE_APP_ID: $AZ_APP_ID_TEST
-              AZURE_PASSWORD: $AZ_PASSWORD_TEST
-              AZURE_TENANT_ID: $AZ_TENANT_TEST
-              AZURE_SUBSCRIPTION: $AZ_SUBSCRIPTION_ID_TI_TEST
-              AZURE_RESOURCE_GROUP: 'rg-pch-tiqa-interfaces-01'
-              AZURE_APP_NAME: 'astipch-invoices-qa'
-              DOCKER_CUSTOM_IMAGE_NAME: 'ti-invoices'
-              DOCKER_REGISTRY_SERVER_URL: 'crpchtiqa01.azurecr.io'
-              DOCKER_REGISTRY_SERVER_USER: 'crpchtiqa01'
-              DOCKER_REGISTRY_SERVER_PASSWORD: $ACR_PASSWORD_TEST
+              LANGUAGE: gradle-jdk17
 
   services:
     docker:
@@ -95,7 +60,7 @@ pipelines:
           steps:
             - step: *unit-tests
             - step: *integration-tests
-      - step: *snyk-scan
+      - step: *scan-dependencies
         # Approve
     feat/*:
       - step: *build
