@@ -3,21 +3,21 @@ image: gradle:8.3.0-jdk17
 definitions:
   steps:
     - step: &build
-        name: Build app
+        name: Build
         caches: [ gradle ]
         script:
           - echo "Building invoices..."
           - gradle build --no-daemon -x test
 
     - step: &unit-tests
-        name: Run unit tests
+        name: Unit tests
         caches: [ gradle ]
         script:
           - echo "Running unit tests..."
           - gradle test --no-daemon
 
     - step: &integration-tests
-        name: Run integration tests
+        name: Integration tests
         services: [ docker ]
         caches: [ gradle, docker ]
         script:
@@ -27,12 +27,13 @@ definitions:
 
     - step: &scan-dependencies
         name: Scan dependencies
-        caches: [ gradle ]
+        caches: [ docker, gradle ]
         script:
           - pipe: snyk/snyk-scan:1.0.0
             variables:
               SNYK_TOKEN: $SNYK_TOKEN
-              LANGUAGE: gradle-jdk17
+              LANGUAGE: "gradle-jdk17"
+              PROJECT_FOLDER: "/src"
 
   services:
     docker:
