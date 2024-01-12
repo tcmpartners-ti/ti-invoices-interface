@@ -27,8 +27,9 @@ definitions:
 
     - step: &snyk-scan
         name: Scan dependencies and images
+        caches: [ gradle ]
         script:
-          - pipe: snyk/snyk—scan:0.4.6
+          - pipe: snyk/snyk-scan:0.4.3
             variables:
               SNYK_TOKEN: $SNYK_TOKEN
 
@@ -96,7 +97,6 @@ pipelines:
             - step: *integration-tests
       - step: *snyk-scan
         # Approve
-        # Vulnerabilities
     feat/*:
       - step: *build
       - parallel:
