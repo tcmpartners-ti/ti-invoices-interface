@@ -33,6 +33,7 @@ definitions:
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
           # Project is already built in this step
+          - chmod +x /opt/atlassian/pipelines/agent/build/gradlew
           - ./snyk test --all-projects -d
 
   services:
