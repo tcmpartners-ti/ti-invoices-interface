@@ -7,7 +7,7 @@ definitions:
         caches: [ gradle ]
         script:
           - echo "Building invoices..."
-          - gradle build --
+          - gradle build --daemon -x test
 
     - step: &unit-tests
         name: Unit tests
@@ -32,8 +32,8 @@ definitions:
           # Install snyk cli
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - gradle build --daemon -x test
-          - DEBUG=./snyk test --all-projects
+          # Project is already built in this step
+          - ./snyk test --all-projects -d
 
   services:
     docker:
