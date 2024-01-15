@@ -33,7 +33,7 @@ definitions:
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
           - gradle build --no-daemon -x test
-          - snyk test --all-projects
+          - ./snyk test --all-projects
 
   services:
     docker:
