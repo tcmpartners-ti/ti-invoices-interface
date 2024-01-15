@@ -15,7 +15,7 @@ repositories {
 val springbootVersion = "3.2.1"
 val camelVersion = "4.3.0"
 val lombokVersion = "1.18.28"
-val h2Version = "2.2.220"
+val h2Version = "2.2.224"
 val postgresVersion = "42.7.1"
 val mapstructVersion = "1.5.5.Final"
 val jdbcVersion = "12.2.0.jre11"
@@ -101,6 +101,7 @@ tasks.withType<BootJar> {
     group = "boot"
     description = "This task is used to avoid duped dependencies in docker"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mainClass = "com.tcmp.tiapi.TIInvoicesAPIApplication"
 }
 
 tasks.withType<JavaCompile> {
@@ -120,6 +121,13 @@ configurations {
 
     val intTestRuntimeOnly: Configuration by configurations.getting
     configurations["intTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+
+    all {
+        resolutionStrategy {
+            force("com.google.guava:guava:32.0.0-jre")
+            force("org.mozilla:rhino:1.7.12")
+        }
+    }
 
     dependencies {
         intTestImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
