@@ -30,6 +30,8 @@ definitions:
         caches: [ docker, gradle ]
         script:
           - pipe: sonarsource/sonarcloud-scan:2.0.0
+            variables:
+              SONAR_TOKEN: $SONAR_TOKEN
 
   services:
     docker:
