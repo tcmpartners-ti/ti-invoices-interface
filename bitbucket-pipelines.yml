@@ -27,14 +27,13 @@ definitions:
 
     - step: &scan-dependencies
         name: Scan dependencies
-        caches: [ docker, gradle ]
+        caches: [ gradle ]
         script:
-          - pipe: snyk/snyk-scan:1.0.0
-            variables:
-              SNYK_TOKEN: $SNYK_TOKEN
-              LANGUAGE: "gradle-jdk17"
-              PROJECT_FOLDER: "/src"
-              TARGET_FILE: "build.gradle.kts"
+          # Install snyk cli
+          - export SNYK_TOKEN=$SNYK_TOKEN
+          - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
+          - gradle build --no-daemon -x test
+          - snyk test --all-projects
 
   services:
     docker:
