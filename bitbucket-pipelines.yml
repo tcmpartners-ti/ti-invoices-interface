@@ -7,14 +7,14 @@ definitions:
         caches: [ gradle ]
         script:
           - echo "Building invoices..."
-          - gradle build --no-daemon -x test
+          - gradle build --
 
     - step: &unit-tests
         name: Unit tests
         caches: [ gradle ]
         script:
           - echo "Running unit tests..."
-          - gradle test --no-daemon
+          - gradle test --daemon
 
     - step: &integration-tests
         name: Integration tests
@@ -23,7 +23,7 @@ definitions:
         script:
           - echo "Running integration tests..."
           - export TESTCONTAINERS_RYUK_DISABLED=true
-          - gradle integrationTest --no-daemon
+          - gradle integrationTest --daemon
 
     - step: &scan-dependencies
         name: Scan dependencies
@@ -32,8 +32,8 @@ definitions:
           # Install snyk cli
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - gradle build --no-daemon -x test
-          - ./snyk test --all-projects
+          - gradle build --daemon -x test
+          - DEBUG=./snyk test --all-projects
 
   services:
     docker:
