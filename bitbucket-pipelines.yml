@@ -29,9 +29,12 @@ definitions:
         name: Scan dependencies
         caches: [ docker, gradle ]
         script:
-          - pipe: sonarsource/sonarcloud-scan:2.0.0
+          - pipe: snyk/snyk-scan:1.0.0
             variables:
-              SONAR_TOKEN: $SONAR_TOKEN
+              SNYK_TOKEN: $SNYK_TOKEN
+              LANGUAGE: "gradle-jdk17"
+              PROJECT_FOLDER: "/src"
+              TARGET_FILE: "build.gradle.kts"
 
   services:
     docker:
