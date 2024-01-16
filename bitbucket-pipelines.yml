@@ -49,7 +49,7 @@ definitions:
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
           - docker build -t invoices:latest .
-           ./snyk container test invoices:latest --severity-threshold=medium
+          - ./snyk container test invoices:latest --severity-threshold=medium
 
   services:
     docker:
