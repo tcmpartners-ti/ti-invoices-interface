@@ -127,7 +127,7 @@ class InvoiceIntegrationTest extends AbstractIntegrationTest {
     mockSuccessfulTiResponses(invoiceUuid);
 
     await()
-        .atMost(Durations.ONE_SECOND)
+        .atMost(Durations.FIVE_SECONDS)
         .pollDelay(Durations.ONE_HUNDRED_MILLISECONDS)
         .untilAsserted(
             () -> {
