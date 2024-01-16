@@ -13,16 +13,15 @@ import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
-import org.junit.jupiter.api.BeforeEach;
+import java.math.BigDecimal;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceCancellationFlowStrategyTest {
@@ -33,13 +32,27 @@ class InvoiceCancellationFlowStrategyTest {
 
   @Captor private ArgumentCaptor<InvoiceEmailInfo> invoiceEmailInfoArgumentCaptor;
 
-  private InvoiceCancellationFlowStrategy invoiceCancellationFlowStrategy;
+  @InjectMocks private InvoiceCancellationFlowStrategy invoiceCancellationFlowStrategy;
 
-  @BeforeEach
-  void setUp() {
-    invoiceCancellationFlowStrategy =
-        new InvoiceCancellationFlowStrategy(
-            operationalGatewayService, invoiceRepository, customerRepository);
+  @Test
+  void handleServiceRequest_itShouldHandlePossibleExceptions() {
+    when(customerRepository.findFirstByIdMnemonic(anyString()))
+        .thenReturn(
+            Optional.of(
+                Customer.builder()
+                    .address(Address.builder().customerEmail("seller@mail.com").build())
+                    .fullName("Seller Bucciarati")
+                    .build()))
+        .thenReturn(Optional.empty());
+    when(invoiceRepository.findByProductMasterMasterReference(anyString()))
+        .thenReturn(Optional.empty());
+
+    invoiceCancellationFlowStrategy.handleServiceRequest(
+        new AckServiceRequest<>(null, buildMockMessage()));
+    invoiceCancellationFlowStrategy.handleServiceRequest(
+        new AckServiceRequest<>(null, buildMockMessage()));
+
+    verifyNoInteractions(operationalGatewayService);
   }
 
   @Test

@@ -10,13 +10,14 @@ import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.creation.InvoiceCreationResultMessage;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
+import com.tcmp.tiapi.titoapigee.operationalgateway.exception.OperationalGatewayException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,12 +28,29 @@ class InvoiceCreationResultFlowStrategyTest {
 
   @Captor private ArgumentCaptor<InvoiceEmailInfo> invoiceEmailInfoArgumentCaptor;
 
-  private InvoiceCreationResultFlowStrategy invoiceCreationResultFlowStrategy;
+  @InjectMocks private InvoiceCreationResultFlowStrategy invoiceCreationResultFlowStrategy;
 
-  @BeforeEach
-  void setUp() {
-    invoiceCreationResultFlowStrategy =
-        new InvoiceCreationResultFlowStrategy(operationalGatewayService, customerRepository);
+  @Test
+  void handleServiceRequest_itShouldHandlePossibleExceptions() {
+    when(customerRepository.findFirstByIdMnemonic(anyString()))
+        .thenReturn(
+            Optional.of(
+                Customer.builder()
+                    .address(Address.builder().customerEmail("gyro@sbr.com").build())
+                    .fullName("Gyro Zeppeli")
+                    .build()))
+        .thenReturn(Optional.empty());
+
+    doThrow(new OperationalGatewayException(""))
+        .when(operationalGatewayService)
+        .sendNotificationRequest(any());
+
+    invoiceCreationResultFlowStrategy.handleServiceRequest(
+        new AckServiceRequest<>(null, buildMockMessage()));
+    invoiceCreationResultFlowStrategy.handleServiceRequest(
+            new AckServiceRequest<>(null, buildMockMessage()));
+
+    verify(operationalGatewayService, times(1)).sendNotificationRequest(any());
   }
 
   @Test
