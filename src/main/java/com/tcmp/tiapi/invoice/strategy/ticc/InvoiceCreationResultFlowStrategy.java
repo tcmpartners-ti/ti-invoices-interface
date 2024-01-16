@@ -29,12 +29,12 @@ public class InvoiceCreationResultFlowStrategy implements TICCIncomingStrategy {
     InvoiceCreationResultMessage invoiceCreationResultMessage =
         (InvoiceCreationResultMessage) serviceRequest.getBody();
 
-    Customer seller = findCustomerByMnemonic(invoiceCreationResultMessage.getSellerIdentifier());
-
     try {
+      Customer seller = findCustomerByMnemonic(invoiceCreationResultMessage.getSellerIdentifier());
+
       operationalGatewayService.sendNotificationRequest(
           buildInvoiceCreationEmailInfo(invoiceCreationResultMessage, seller));
-    } catch (OperationalGatewayException e) {
+    } catch (EntityNotFoundException | OperationalGatewayException e) {
       log.error(e.getMessage());
     }
   }
