@@ -1,17 +1,19 @@
 package com.tcmp.tiapi.invoice.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,21 +21,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class InvoiceEventServiceTest {
   @Mock private InvoiceEventRepository invoiceEventRepository;
 
-  private InvoiceEventService testedInvoiceEventService;
+  @Captor private ArgumentCaptor<String> uuidArgumentCaptor;
 
-  @BeforeEach
-  void setUp() {
-    testedInvoiceEventService = new InvoiceEventService(invoiceEventRepository);
-  }
+  @InjectMocks private InvoiceEventService invoiceEventService;
 
   @Test
   void findInvoiceEventInfoByUuid_itShouldReturnInvoiceEventInfo() {
-    String invoiceInfoUuid = "1-1-1-1";
+    var invoiceInfoUuid = "1-1-1-1";
 
     when(invoiceEventRepository.findById(anyString()))
         .thenReturn(Optional.of(InvoiceEventInfo.builder().build()));
 
-    assertNotNull(testedInvoiceEventService.findInvoiceEventInfoByUuid(invoiceInfoUuid));
+    assertNotNull(invoiceEventService.findInvoiceEventInfoByUuid(invoiceInfoUuid));
   }
 
   @Test
@@ -41,7 +40,16 @@ class InvoiceEventServiceTest {
     when(invoiceEventRepository.findById(anyString())).thenReturn(Optional.empty());
 
     assertThrows(
-        EntityNotFoundException.class,
-        () -> testedInvoiceEventService.findInvoiceEventInfoByUuid(""));
+        EntityNotFoundException.class, () -> invoiceEventService.findInvoiceEventInfoByUuid(""));
+  }
+
+  @Test
+  void deleteInvoiceByUuid_itShouldDeleteInvoice() {
+    var invoiceUuid = "000-001";
+
+    invoiceEventService.deleteInvoiceByUuid(invoiceUuid);
+
+    verify(invoiceEventRepository).deleteById(uuidArgumentCaptor.capture());
+    assertEquals(invoiceUuid, uuidArgumentCaptor.getValue());
   }
 }
