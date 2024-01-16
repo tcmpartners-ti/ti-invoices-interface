@@ -6,6 +6,7 @@ import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
+import com.tcmp.tiapi.invoice.repository.InvoiceCacheRepository;
 import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
@@ -16,14 +17,11 @@ import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,9 +33,8 @@ public class InvoiceBatchOperationsService {
 
   private final ProducerTemplate producerTemplate;
 
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final InvoiceCacheRepository invoiceCacheRepository;
   private final InvoiceMapper invoiceMapper;
-
   private final TIServiceRequestWrapper wrapper;
   private final UUIDGenerator uuidGenerator;
 
@@ -94,66 +91,29 @@ public class InvoiceBatchOperationsService {
     for (InvoiceCreationRowCSV invoiceRow : invoicesBatch) {
       String uuid = uuidGenerator.getNewId();
 
-      invoiceEvents.add(
+      InvoiceEventInfo invoiceInfo =
           InvoiceEventInfo.builder()
               .id(uuid)
               .batchId(batchId)
               .reference(invoiceRow.getInvoiceNumber())
               .sellerMnemonic(invoiceRow.getSeller())
-              .build());
+              .build();
+      invoiceEvents.add(invoiceInfo);
 
-      invoiceMessages.add(
+      ServiceRequest<CreateInvoiceEventMessage> tiMessage =
           wrapper.wrapRequest(
               TIService.TRADE_INNOVATION,
               TIOperation.CREATE_INVOICE,
               ReplyFormat.STATUS,
               uuid,
-              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId)));
+              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId));
+      invoiceMessages.add(tiMessage);
     }
 
-    saveAllInvoicesInCache(invoiceEvents);
+    invoiceCacheRepository.saveAll(invoiceEvents);
     sendMessagesToQueue(invoiceMessages);
 
     log.info("Sent a batch of {} invoice(s).", batchSize);
-  }
-
-  private void saveAllInvoicesInCache(List<InvoiceEventInfo> invoiceEvents) {
-    redisTemplate.executePipelined(
-        (RedisCallback<Object>)
-            connection -> {
-              invoiceEvents.forEach(
-                  invoiceEvent -> {
-                    Map<String, String> hashFields = new HashMap<>();
-                    hashFields.put("_class", invoiceEvent.getClass().getName());
-                    hashFields.put("id", invoiceEvent.getId());
-                    hashFields.put("batchId", invoiceEvent.getBatchId());
-                    hashFields.put("reference", invoiceEvent.getReference());
-                    hashFields.put("sellerMnemonic", invoiceEvent.getSellerMnemonic());
-
-                    String key = "InvoiceEvent:" + invoiceEvent.getId();
-                    connection
-                        .hashCommands()
-                        .hMSet(key.getBytes(), converStringMapToBytesMap(hashFields));
-                  });
-
-              return null;
-            });
-  }
-
-  private Map<byte[], byte[]> converStringMapToBytesMap(Map<String, String> hashFields) {
-    Map<byte[], byte[]> byteMap = new HashMap<>();
-
-    for (Map.Entry<String, String> entry : hashFields.entrySet()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
-
-      byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-      byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
-
-      byteMap.put(keyBytes, valueBytes);
-    }
-
-    return byteMap;
   }
 
   private void sendMessagesToQueue(
