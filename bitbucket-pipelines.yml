@@ -32,7 +32,6 @@ definitions:
           # Install snyk cli
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          # Project is already built in this step
           - chmod +x /opt/atlassian/pipelines/agent/build/gradlew
           - ./snyk test --all-projects
     - step: &scan-code
@@ -41,8 +40,16 @@ definitions:
         script:
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - chmod +x /opt/atlassian/pipelines/agent/build/gradlew
           - ./snyk code test --severity-threshold=high
+    - step: &scan-image
+        name: Scan image
+        caches: [ docker ]
+        services: [ docker ]
+        script:
+          - export SNYK_TOKEN=$SNYK_TOKEN
+          - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
+          - docker build -t invoices:latest .
+           ./snyk container test invoices:latest --severity-threshold=medium
 
   services:
     docker:
@@ -70,10 +77,11 @@ pipelines:
           steps:
             - step: *unit-tests
             - step: *integration-tests
-      - parallel:
+      - parallel: # Snyk scans
           steps:
             - step: *scan-dependencies
             - step: *scan-code
+            - step: *scan-image
 
         # Approve
     feat/*:
