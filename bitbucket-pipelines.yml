@@ -51,6 +51,12 @@ definitions:
           - docker build -t invoices:latest .
           - ./snyk container test invoices:latest --severity-threshold=medium
 
+    - step: &qa-approval
+        name: QA Approval
+        trigger: manual
+        script:
+          - echo "Step has been approved"
+
   services:
     docker:
       memory: 2048
@@ -82,6 +88,7 @@ pipelines:
             - step: *scan-dependencies
             - step: *scan-code
             - step: *scan-image
+      - step: *qa-approval
 
         # Approve
     feat/*:
