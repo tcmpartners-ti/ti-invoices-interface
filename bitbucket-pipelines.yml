@@ -63,7 +63,7 @@ definitions:
         services: [ docker ]
         script:
           # Login to container registry
-          - echo $CR_PASS_DEV | docker login -u $CR_USER_DEV --password-stdin
+          - echo $CR_PASS_DEV | docker login $CR_NAME_DEV -u $CR_USER_DEV --password-stdin
           # Build image
           - docker build -t $CR_NAME_DEV/ti-invoices:latest .
           # Push to container registry
