@@ -19,6 +19,7 @@ public class ProgramCustomerDTO {
       name = "mnemonic",
       description = "Customer mnemonic (RUC).",
       minLength = 1,
-      maxLength = 20)
+      maxLength = 20,
+      example = "1722466421001")
   private String mnemonic;
 }

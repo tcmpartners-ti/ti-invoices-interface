@@ -17,10 +17,10 @@ import lombok.NoArgsConstructor;
 public class ProgramDTO {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
 
-  @Schema(description = "Program identifier.", maxLength = 35)
+  @Schema(description = "Program identifier.", maxLength = 35, example = "ASEGURADORASUR")
   private String id;
 
-  @Schema(description = "Program description.", maxLength = 60)
+  @Schema(description = "Program description.", maxLength = 60, example = "ASEGURADORASUR")
   private String description;
 
   private ProgramCustomerDTO customer;
@@ -33,11 +33,19 @@ public class ProgramDTO {
   @Schema(description = "Program end date in format yyyy-MM-dd.")
   private LocalDate expiryDate;
 
-  @Schema(description = "Program type. B=Buyer centric, S=Seller centric.")
-  private String type;
+  @Schema(
+      description = "Program type. B=Buyer centric, S=Seller centric.",
+      minLength = 1,
+      maxLength = 1,
+      example = "B")
+  private Character type;
 
   private CurrencyAmountDTO creditLimit;
 
-  @Schema(description = "Program status. B=Blocked, R=Referred, I=Inactive, A=Active.")
+  @Schema(
+      description = "Program status. B=Blocked, R=Referred, I=Inactive, A=Active.",
+      minLength = 1,
+      maxLength = 1,
+      example = "A")
   private Character status;
 }
