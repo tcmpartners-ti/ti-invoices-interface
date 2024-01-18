@@ -19,12 +19,12 @@ public class CurrencyAmountDTO {
   @DecimalMax(
       value = "99999999999999999999",
       message = "The amount must not exceed 9999999999999999999999.")
-  @Schema(description = "Monetary amount.")
+  @Schema(type = "number", description = "Monetary amount.", example = "1000")
   private BigDecimal amount;
 
   @NotNull(message = "This field is required.")
   @Size(min = 1, max = 3, message = "Currency code must be between 1 and 3 characters")
   @Pattern(regexp = FieldValidationRegex.ONLY_LETTERS, message = "Only letters are allowed")
-  @Schema(description = "Currency code.")
+  @Schema(type = "string", description = "Currency code.", example = "USD")
   private String currency;
 }
