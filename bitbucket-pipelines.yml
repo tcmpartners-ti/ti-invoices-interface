@@ -48,14 +48,26 @@ definitions:
         script:
           - export SNYK_TOKEN=$SNYK_TOKEN
           - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - docker build -t invoices:latest .
-          - ./snyk container test invoices:latest --severity-threshold=medium
+          - docker build -t ti-invoices:latest .
+          - ./snyk container test ti-invoices:latest --severity-threshold=medium
 
     - step: &qa-approval
         name: QA Approval
         trigger: manual
         script:
           - echo "Step has been approved"
+
+    - step: &deploy-dev
+        name: Deploy to dev
+        caches: [ docker ]
+        services: [ docker ]
+        script:
+          # Login to container registry
+          - echo $CR_PASS_DEV | docker login -u $CR_USER_DEV --password-stdin
+          # Build image
+          - docker build -t $CR_NAME_DEV/ti-invoices:latest .
+          # Push to container registry
+          - docker push $CR_NAME_DEV/ti-invoices:latest
 
   services:
     docker:
@@ -89,6 +101,7 @@ pipelines:
             - step: *scan-code
             - step: *scan-image
       - step: *qa-approval
+      - step: *deploy-dev
 
         # Approve
     feat/*:
