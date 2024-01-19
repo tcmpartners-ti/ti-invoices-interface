@@ -7,6 +7,10 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceSpecifications;
+import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResultMeta;
@@ -24,7 +28,9 @@ import org.springframework.stereotype.Service;
 public class SellerService {
   private final CustomerRepository customerRepository;
   private final InvoiceRepository invoiceRepository;
+  private final ProgramRepository programRepository;
   private final InvoiceMapper invoiceMapper;
+  private final ProgramMapper programMapper;
 
   public PaginatedResult<InvoiceDTO> getSellerInvoices(
       String sellerMnemonic, SearchSellerInvoicesParams searchParams, PageParams pageParams) {
@@ -45,6 +51,39 @@ public class SellerService {
     return PaginatedResult.<InvoiceDTO>builder()
         .data(invoicesDTOs)
         .meta(PaginatedResultMeta.from(sellerInvoicesPage))
+        .build();
+  }
+
+  public PaginatedResult<ProgramDTO> getSellerProgramsByMnemonic(
+      String sellerMnemonic, PageParams pageParams) {
+    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
+      throw new NotFoundHttpException(
+          String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));
+    }
+
+    PageRequest pageable = PageRequest.of(pageParams.getPage(), pageParams.getSize());
+    Page<Program> programsPage =
+        programRepository.findAllBySellerMnemonic(sellerMnemonic, pageable);
+
+    return PaginatedResult.<ProgramDTO>builder()
+        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
+        .meta(PaginatedResultMeta.from(programsPage))
+        .build();
+  }
+
+  public PaginatedResult<ProgramDTO> getSellerProgramsByCif(
+      String sellerCif, PageParams pageParams) {
+    if (!customerRepository.existsByNumber(sellerCif)) {
+      throw new NotFoundHttpException(
+          String.format("Could not find a seller with cif %s.", sellerCif));
+    }
+
+    PageRequest pageable = PageRequest.of(pageParams.getPage(), pageParams.getSize());
+    Page<Program> programsPage = programRepository.findAllBySellerCif(sellerCif, pageable);
+
+    return PaginatedResult.<ProgramDTO>builder()
+        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
+        .meta(PaginatedResultMeta.from(programsPage))
         .build();
   }
 }

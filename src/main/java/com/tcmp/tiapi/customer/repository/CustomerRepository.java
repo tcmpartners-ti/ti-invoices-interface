@@ -11,4 +11,6 @@ public interface CustomerRepository extends JpaRepository<Customer, CustomerId> 
   Optional<Customer> findFirstByIdMnemonic(String customerMnemonic);
 
   boolean existsByIdMnemonic(String customerMnemonic);
+
+  boolean existsByNumber(String customerNumber);
 }
