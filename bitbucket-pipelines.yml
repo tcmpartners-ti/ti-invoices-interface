@@ -51,14 +51,14 @@ definitions:
           - docker build -t ti-invoices:latest .
           - ./snyk container test ti-invoices:latest --severity-threshold=medium
 
-    - step: &qa-approval
-        name: QA Approval
+    - step: &dev-approval
+        name: Developer approval
         trigger: manual
         script:
-          - echo "Step has been approved"
+          - echo "Step approved by developer"
 
     - step: &deploy-dev
-        name: Deploy to dev
+        name: Deploy to development
         caches: [ docker ]
         services: [ docker ]
         script:
@@ -80,15 +80,7 @@ pipelines:
       - step: *build
       - step: *unit-tests
 
-    # Test branch
-    test:
-      - step: *build
-      - parallel:
-          steps:
-            - step: *unit-tests
-            - step: *integration-tests
-
-    # Development Branches
+    # Staging (Test) branch
     develop:
       - step: *build
       - parallel:
@@ -100,13 +92,18 @@ pipelines:
             - step: *scan-dependencies
             - step: *scan-code
             - step: *scan-image
-      - step: *qa-approval
-      - step: *deploy-dev
 
-        # Approve
+    # Development Branches
     feat/*:
       - step: *build
       - parallel:
           steps:
             - step: *unit-tests
             - step: *integration-tests
+      - parallel: # Snyk scans
+          steps:
+            - step: *scan-dependencies
+            - step: *scan-code
+            - step: *scan-image
+      - step: *dev-approval
+      - step: *deploy-dev
