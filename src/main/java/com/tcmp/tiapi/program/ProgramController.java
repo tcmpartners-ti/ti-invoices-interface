@@ -28,6 +28,12 @@ public class ProgramController {
 
   @GetMapping(path = "{programId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get a program by its identifier.")
+  @Parameter(
+      name = "programId",
+      description = "Program identifier.",
+      schema = @Schema(type = "string"),
+      in = ParameterIn.PATH,
+      example = "ASEGURADORASUR")
   public ProgramDTO getProgramById(@PathVariable String programId) {
     return programService.getProgramById(programId);
   }
@@ -36,7 +42,8 @@ public class ProgramController {
   @Operation(description = "Get a program's sellers by its identifier")
   @Parameter(
       name = "programId",
-      description = "Program Id",
+      description = "Program identifier.",
+      schema = @Schema(type = "string"),
       in = ParameterIn.PATH,
       example = "IDEAL01")
   @Parameter(
