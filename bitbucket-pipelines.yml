@@ -1,55 +1,51 @@
 image: gradle:8.3.0-jdk17
 
 definitions:
+  services:
+    docker:
+      memory: 2048
+
   steps:
     - step: &build
         name: Build
         caches: [ gradle ]
         script:
-          - echo "Building invoices..."
-          - gradle build --daemon -x test
+          - gradle build --no-daemon -x test
 
     - step: &unit-tests
         name: Unit tests
         caches: [ gradle ]
         script:
-          - echo "Running unit tests..."
-          - gradle test --daemon
+          - gradle test --no-daemon
 
     - step: &integration-tests
         name: Integration tests
         services: [ docker ]
         caches: [ gradle, docker ]
         script:
-          - echo "Running integration tests..."
           - export TESTCONTAINERS_RYUK_DISABLED=true
-          - gradle integrationTest --daemon
+          - gradle integrationTest --no-daemon
 
     - step: &scan-dependencies
         name: Scan dependencies
         caches: [ gradle ]
         script:
-          # Install snyk cli
-          - export SNYK_TOKEN=$SNYK_TOKEN
-          - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - chmod +x /opt/atlassian/pipelines/agent/build/gradlew
+          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
           - ./snyk test --all-projects
     - step: &scan-code
         name: Scan code
         caches: [ gradle ]
         script:
-          - export SNYK_TOKEN=$SNYK_TOKEN
-          - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
+          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
           - ./snyk code test --severity-threshold=high
     - step: &scan-image
         name: Scan image
-        caches: [ docker ]
+        caches: [ gradle, docker ]
         services: [ docker ]
         script:
-          - export SNYK_TOKEN=$SNYK_TOKEN
-          - curl https://static.snyk.io/cli/latest/snyk-linux --output snyk && chmod +x ./snyk
-          - docker build -t ti-invoices:latest .
-          - ./snyk container test ti-invoices:latest --severity-threshold=medium
+          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
+          - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
+          - ./snyk container test $IMAGE:latest --severity-threshold=medium
 
     - step: &dev-approval
         name: Developer approval
@@ -59,19 +55,22 @@ definitions:
 
     - step: &deploy-dev
         name: Deploy to development
-        caches: [ docker ]
+        caches: [ gradle, docker ]
         services: [ docker ]
         script:
-          # Login to container registry
           - echo $CR_PASS_DEV | docker login $CR_NAME_DEV -u $CR_USER_DEV --password-stdin
-          # Build image
-          - docker build -t $CR_NAME_DEV/ti-invoices:latest .
-          # Push to container registry
-          - docker push $CR_NAME_DEV/ti-invoices:latest
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_DEV/$IMAGE:latest .
+          - docker push $CR_NAME_DEV/$IMAGE:latest
 
-  services:
-    docker:
-      memory: 2048
+    - step: &deploy-test
+        name: Deploy to test
+        caches: [ gradle, docker ]
+        services: [ docker ]
+        script:
+          - echo $CR_PASS_TEST | docker login $CR_NAME_TEST -u $CR_USER_TEST --password-stdin
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest .
+          - docker push $CR_NAME_TEST/$IMAGE:latest
+
 
 pipelines:
   branches:
@@ -92,6 +91,7 @@ pipelines:
             - step: *scan-dependencies
             - step: *scan-code
             - step: *scan-image
+      - step: *deploy-test
 
     # Development Branches
     feat/*:
