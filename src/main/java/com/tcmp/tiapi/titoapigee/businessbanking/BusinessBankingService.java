@@ -7,6 +7,7 @@ import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.ReferenceData;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.dto.request.ApiGeeBaseRequest;
 import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
+import feign.FeignException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,11 @@ public class BusinessBankingService {
 
     Map<String, String> headers = encryptedBodyRequestHeaderSigner.buildRequestHeaders(body);
 
-    businessBankingClient.notifyEvent(headers, body);
-    log.info("Event notified. {}", body);
+    try {
+      businessBankingClient.notifyEvent(headers, body);
+      log.info("Event notified. {}", body);
+    } catch (FeignException e) {
+      log.error(e.getMessage());
+    }
   }
 }
