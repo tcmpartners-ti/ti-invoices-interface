@@ -1,4 +1,8 @@
 spring:
+  jpa:
+    show-sql: true
+#    properties.hibernate.format_sql: true
+
   datasource:
     username: "test"
     password: "test"
@@ -8,6 +12,8 @@ spring:
     user: "admin"
     password: "admin"
     packages.trust-all: true
+
+mockserver.initializationJsonPath: "resources/integration/mock-server.json"
 
 bp:
   service:
