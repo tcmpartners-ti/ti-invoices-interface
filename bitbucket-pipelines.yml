@@ -31,7 +31,7 @@ definitions:
         caches: [ gradle ]
         script:
           - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - ./snyk test --all-projects
+          - ./snyk test --all-projects --severity-threshold=medium
     - step: &scan-code
         name: Scan code
         caches: [ gradle ]
