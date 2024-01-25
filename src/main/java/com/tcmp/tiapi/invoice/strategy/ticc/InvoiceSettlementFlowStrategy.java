@@ -78,6 +78,11 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   public void handleServiceRequest(AckServiceRequest<?> serviceRequest) {
     InvoiceSettlementEventMessage message =
         (InvoiceSettlementEventMessage) serviceRequest.getBody();
+    log.info(
+        "Started settlement flow for invoice [{}], with master ref [{}].",
+        message.getInvoiceNumber(),
+        message.getMasterRef());
+
     InvoiceMaster invoice = findInvoiceByMasterReference(message.getMasterRef());
 
     Mono.zip(

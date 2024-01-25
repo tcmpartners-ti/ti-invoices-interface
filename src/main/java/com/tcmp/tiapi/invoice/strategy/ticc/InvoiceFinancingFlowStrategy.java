@@ -67,6 +67,16 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   @Value("${bp.service.payment-execution.bgl-account}")
   private String bglAccount;
 
+  /**
+   * This function receives the financing result message from TI. First, it sends a notification to
+   * the seller that the invoice has been financed, then it creates a credit and transfers the
+   * disbursement amount from buyer to seller, the flows continues with a credit simulation (to know
+   * how much taxes does the seller have to pay) and then a seller to buyer transaction is created,
+   * then a notification is sent to the seller with a processed status and finally the result is
+   * notified to business banking.
+   *
+   * @param serviceRequest The `TFBCFCRE` message.
+   */
   @Override
   public void handleServiceRequest(AckServiceRequest<?> serviceRequest) {
     FinanceAckMessage financeMessage = (FinanceAckMessage) serviceRequest.getBody();
@@ -74,6 +84,11 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     BigDecimal financeDealAmountInCents = new BigDecimal(financeMessage.getFinanceDealAmount());
     BigDecimal financeDealAmount =
         MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
+
+    log.info(
+        "Starting financing flow for invoice [{}] with master ref [{}].",
+        financeMessage.getTheirRef(),
+        masterReference);
 
     Customer buyer = findCustomerByMnemonic(financeMessage.getBuyerIdentifier());
     Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
