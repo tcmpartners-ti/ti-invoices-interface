@@ -162,9 +162,9 @@ CREATE TABLE public.invmaster (
     buyer bigint,
     buyer_pty bigint,
     cust_pty bigint,
-    factor_key bigint,
+    factor_key bigint NULL,
     fince_ev bigint,
-    ibpmaster bigint,
+    ibpmaster bigint NULL,
     key97 bigint NOT NULL,
     programme bigint,
     seller bigint,
@@ -189,7 +189,6 @@ CREATE TABLE public.invmaster (
     CONSTRAINT invmaster_eligible_check CHECK (((eligible)::text = ANY ((ARRAY['N'::character varying, 'Y'::character varying])::text[]))),
     CONSTRAINT invmaster_recourse_check CHECK (((recourse)::text = ANY ((ARRAY['N'::character varying, 'Y'::character varying])::text[])))
 );
-
 
 ALTER TABLE public.invmaster OWNER TO test;
 
@@ -255,8 +254,8 @@ CREATE TABLE public.scfcparty (
     cpartysna5 character varying(35),
     salutation character varying(35),
     email character varying(128),
-    cpartynaf oid,
-    cpartysnaf oid
+    cpartynaf character varying(35),
+    cpartysnaf character varying(35)
 );
 
 
@@ -542,3 +541,36 @@ INSERT INTO public.sx20lf
     (ADDRTYPE, SEQUENCE, SXCUS1_SBB, SXCUS1, EMAIL)
 VALUES
     (1, 1, N'BPCH    ', N'1722466420001       ', N'dareyesp@pichincha.com');
+
+-- Invoice Data
+--  Seller
+INSERT INTO public.SCFCPARTY
+    (KEY97, PROGRAMME, CPARTY, ROLE, CUST_SBB, CUSTOMER, CPARTYNAME, SALUTATION, CPARTYNA1, CPARTYNA2, CPARTYNA3, CPARTYNA4, CPARTYNA5, CPARTYNAF, ZIP, PHONE, FAX, TELEX, TELEX_ANS, EMAIL, BRANCH, CPARTYSWB, CPARTYCNAS, CPARTYSWL, CPARTYSWBR, CPARTYSNA1, CPARTYSNA2, CPARTYSNA3, CPARTYSNA4, CPARTYSNA5, CPARTYSNAF, COUNTRY, CPARTYXM, LANGUAGE, STATUS, LIMIT_AMT, LIMIT_CCY, TRANSLIT, LAST_MAINT, OBSOLETE, AUTOKEY, MNT_IN_BO, TYPEFLAG, TSTAMP)
+VALUES
+    (1420, 1639, N'1722466420001       ', N'S', N'BPCH    ', N'1722466420001       ', N'DAVID REYES                        ', N'                                   ', N'Amazonas                           ', N'                                   ', N'                                   ', N'                                   ', N'                                   ', N'Amazonas', N'               ', N'                    ', N'                    ', N'                    ', N'        ', N'dareyesp@pichincha.com', N'BPEC    ', N'    ', N'  ', N'  ', N'   ', N'Amazonas                           ', N'                                   ', N'                                   ', N'                                   ', N'                                   ', N'Amazonas', N'EC', N'GW', N'  ', N'A', 0, N'USD', N'N', '2023-12-15', N'N', N'1420                ', N'N', 9870, 2);
+--  Buyer
+INSERT INTO public.SCFCPARTY
+    (KEY97, PROGRAMME, CPARTY, ROLE, CUST_SBB, CUSTOMER, CPARTYNAME, SALUTATION, CPARTYNA1, CPARTYNA2, CPARTYNA3, CPARTYNA4, CPARTYNA5, CPARTYNAF, ZIP, PHONE, FAX, TELEX, TELEX_ANS, EMAIL, BRANCH, CPARTYSWB, CPARTYCNAS, CPARTYSWL, CPARTYSWBR, CPARTYSNA1, CPARTYSNA2, CPARTYSNA3, CPARTYSNA4, CPARTYSNA5, CPARTYSNAF, COUNTRY, CPARTYXM, LANGUAGE, STATUS, LIMIT_AMT, LIMIT_CCY, TRANSLIT, LAST_MAINT, OBSOLETE, AUTOKEY, MNT_IN_BO, TYPEFLAG, TSTAMP)
+VALUES
+    (1411, 1639, N'0190123626001       ', N'B', N'BPCH    ', N'0190123626001       ', N'ASEGURADORA DEL SUR C.A.           ', N'                                   ', N'Av Amazonas 111                    ', N'                                   ', N'                                   ', N'                                   ', N'                                   ', N'Av Amazonas 111', N'               ', N'                    ', N'                    ', N'                    ', N'        ', N'nibarrer@pichincha.com', N'BPEC    ', N'    ', N'  ', N'  ', N'   ', N'                                   ', N'                                   ', N'                                   ', N'                                   ', N'                                   ', N'', N'EC', N'GW', N'  ', N'A', 10000000, N'USD', N'N', '2024-02-20', N'N', N'1411                ', N'N', 9870, 3);
+--  Program
+INSERT INTO public.SCFPROGRAM
+    (KEY97, STATUS, ID, DESCR, CUST_SBB, CUSTOMER, PROG_TYPE, SUBTYPECAT, AVAIL_AMT, AVAIL_CCY, LAST_MAINT, AUTOKEY, NARRATIVE, INSURANCE, OBSOLETE, SCFPROSTYP, EXPIRYDATE, STARTDATE, SALEREF, FINPRODTYP, UPLOADEDBY, FINCEREQBY, FINCE_DBT, FINCE_TO, BUYACCREQ, CREATEDATE, BHALF_BRN, PRNTGUAREX, MNT_IN_BO, TYPEFLAG, TSTAMP)
+VALUES
+    (1639, N'A', N'ASEGURADORASUR                     ', N'ASEGURADORASUR                                              ', N'BPCH    ', N'0190123626001       ', N'B', N'R', 10000000, N'USD', '2023-12-15', N'1639                ', NULL, NULL, N'N', N'R         ', '2024-11-01', '2023-11-01', N'                                  ', NULL, N'B', N'S', N'B', N'S', N'Y', '2023-12-15', N'BPEC    ', N'N', N'N', 16390, 3);
+
+INSERT INTO public.EXTPROGRAMME (PID, EXFINDAY, EXFINREQ) VALUES (N'ASEGURADORASUR', 60, N'Y');
+--  And finally, INVOICE!
+INSERT INTO public.MASTER (ctrct_date, KEY97, ACTIVE, MASTER_REF) VALUES ('2023-12-19', 4431, N'Y', N'INV00001110BPCH');
+
+INSERT INTO public.INVMASTER
+    (KEY97, INVDATERCD, CUST_PTY, BUYER_PTY, BATCHID, INVOIC_REF, XXXBUYER, FACE_AMT, FACE_CCY, ADJ_AMT, ADJ_CCY, TOTPAYAMT, TOTPAYCCY, OUTS_AMT, OUTS_CCY, DUEDATE, GDSDESC, PAY_INSTR, SEC_DTLS, DISCLOSED, TAX_DTLS, RECOURSE, STATUS, ELIGIBLE, OVR_ELIG, ADJ_DIR, FACTOR_KEY, PFR_CCY, DEFER_CHG, ELIG_DTLS, FINCE_EV, AVAIL_AMT, AVAIL_CCY, CREDN_AMT, CREDN_CCY, EQUIV_AMT, EQUIV_CCY, ADV_INSTR, CUST_NOTES, DISC_AMT, DISC_CCY, DEAL_AMT, DEAL_CCY, APPROVED, VENDORCODE, BUYER, SELLER, PROGRAMME, INVOICEFOR, PROG_TYPE, IBPMASTER)
+VALUES
+    (4431, '2024-02-21', 105511, 105513, N'16880               ', N'001-040-0087565                   ', N'                    ', 3222, N'USD', NULL, N'USD', NULL, N'   ', 3222, N'USD', '2024-03-21', N'', N'', N'', N'Y', N'', N'N', N'O', N'N', N'D', N'    ', NULL, N'   ', N'N', N'Y', 58781, 1038, N'USD', NULL, N'USD', 1038, N'USD', N'', N'', 1038, N'USD', 1038, N'USD', N'Y', N'                                   ', 1411, 1420, 1639, N'R', N'B', NULL);
+
+--INSERT INTO public.invmaster
+--    (adj_amt, adj_ccy, adj_dir, avail_amt, avail_ccy, credn_amt, credn_ccy, deal_amt, deal_ccy, disc_amt, disc_ccy, duedate, elig_dtls, equiv_amt, equiv_ccy, face_amt, face_ccy, invdatercd, invoicefor, outs_amt, outs_ccy, ovr_elig, pfr_ccy, prog_type, status, totpayamt, totpayccy, buyer, buyer_pty, cust_pty, factor_key, fince_ev, ibpmaster, key97, programme, seller, batchid, xxxbuyer, invoic_ref, vendorcode, tax_dtls, gdsdesc, pay_instr, sec_dtls, adv_instr, cust_notes, approved, defer_chg, disclosed, eligible, recourse)
+--VALUES
+--    (100, 'USD', '', 1038, 'USD', 100, 'USD', 1038, 'USD', 1038, 'USD', '2024-03-21', 'Y', 1038, 'USD', 3222, 'USD', '2024-02-21', 'R', 3222, 'USD', 'D', '', 'B', 'O', 0, 'USD', 1411, 105513, 105511, null, 58781, null, 4431, 1639, 1420, '16880', '', '001-040-0087565', '', '', '', '', '', '', '', 'Y', 'N', 'Y', 'N', 'N');
+
+INSERT INTO public.EXTMASTER (KEY29, MASTER, FINACC) VALUES (1266, 4431, N'AH2100170032');

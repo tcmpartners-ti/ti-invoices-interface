@@ -69,6 +69,8 @@ public class CorporateLoanService {
 
       return response;
     } catch (FeignException e) {
+      log.error(e.getMessage());
+
       e.responseBody()
           .ifPresent(
               errorBytes -> {

@@ -3,7 +3,7 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 plugins {
     java
     `jvm-test-suite`
-    id("org.springframework.boot") version "3.2.1"
+    id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.4"
 }
 
@@ -12,7 +12,7 @@ repositories {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.2.1"
+val springbootVersion = "3.2.2"
 val camelVersion = "4.3.0"
 val lombokVersion = "1.18.28"
 val h2Version = "2.2.224"
@@ -73,6 +73,12 @@ dependencies {
     testImplementation("org.apache.camel:camel-test-junit5:$camelVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springbootVersion")
+    testImplementation("com.jayway.jsonpath:json-path:2.9.0") {
+        version {
+            strictly("2.9.0")
+        }
+        because("version 2.8.0 has 1 found vulnerability")
+    }
 }
 
 group = "com.tcmp"
