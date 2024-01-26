@@ -12,6 +12,9 @@ RUN --mount=type=cache,target=$GRADLE_USER_HOME/caches \
 # Runtime Stage
 FROM amazoncorretto:17.0.10-alpine3.16
 
+ARG COMMIT
+ENV COMMIT=${COMMIT}
+
 RUN addgroup -S invoices-group && adduser -S invoices -G invoices-group
 
 WORKDIR /app

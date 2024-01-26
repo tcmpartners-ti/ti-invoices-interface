@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class StartupListener implements ApplicationListener<ApplicationReadyEvent> {
-  @Value("${BITBUCKET_COMMIT:unknown}")
+  @Value("${COMMIT:unknown}")
   private String commitHash;
 
   @Override
