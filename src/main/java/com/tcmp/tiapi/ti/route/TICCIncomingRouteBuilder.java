@@ -21,7 +21,7 @@ public class TICCIncomingRouteBuilder extends RouteBuilder {
   public void configure() {
     from(uriFrom)
         .routeId("ticcIncomingQueue")
-        .threads(3, 6)
+        .threads(2, 5)
         .unmarshal(jaxbDataFormatAckEventRequest)
         .process()
         .body(AckServiceRequest.class, this::handleServiceRequest)

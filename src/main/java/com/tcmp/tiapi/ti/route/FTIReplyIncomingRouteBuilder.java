@@ -22,7 +22,7 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
   public void configure() {
     from(uriFrom)
         .routeId("ftiReplyIncomingQueue")
-        .threads(3, 6)
+        .threads(2, 5)
         .unmarshal(jaxbDataFormatServiceResponse)
         .process()
         .body(ServiceResponse.class, this::handleServiceResponse)
