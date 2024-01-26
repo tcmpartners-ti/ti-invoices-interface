@@ -11,18 +11,31 @@ import feign.FeignException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.retry.support.RetrySynchronizationManager;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class BusinessBankingService {
+  private static final int MAX_ATTEMPTS = 4;
   private static final String REQUEST_PROVIDER = "FTI";
 
   private final HeaderSigner encryptedBodyRequestHeaderSigner;
   private final BusinessBankingClient businessBankingClient;
   private final UUIDGenerator uuidGenerator;
 
+  @Retryable(
+      retryFor = {
+        FeignException.InternalServerError.class,
+        FeignException.GatewayTimeout.class,
+        FeignException.NotFound.class // Somehow the service throws this error.
+      },
+      maxAttempts = MAX_ATTEMPTS,
+      backoff = @Backoff(delay = 1_000))
   public void notifyEvent(OperationalGatewayProcessCode processCode, Object payload) {
     ApiGeeBaseRequest<OperationalGatewayRequest<?>> body =
         ApiGeeBaseRequest.<OperationalGatewayRequest<?>>builder()
@@ -44,7 +57,14 @@ public class BusinessBankingService {
       businessBankingClient.notifyEvent(headers, body);
       log.info("Event notified. {}", body);
     } catch (FeignException e) {
-      log.error(e.getMessage());
+      RetryContext context = RetrySynchronizationManager.getContext();
+      if (context != null) {
+        int currentAttempts = context.getRetryCount() + 1;
+        log.warn("Retrying event notification. Attempt {} of {}.", currentAttempts, MAX_ATTEMPTS);
+      }
+
+      // Spread exception to let Retryable handle retries.
+      throw e;
     }
   }
 }
