@@ -34,8 +34,6 @@ public class TICCIncomingRouteBuilder extends RouteBuilder {
     try {
       TICCIncomingStrategy strategy = ticcIncomingHandlerContext.strategy(operation);
       strategy.handleServiceRequest(serviceRequest);
-    } catch (IllegalArgumentException e) {
-      log.info("Unhandled operation: {}", operation);
     } catch (Exception e) {
       log.error(e.getMessage());
     }

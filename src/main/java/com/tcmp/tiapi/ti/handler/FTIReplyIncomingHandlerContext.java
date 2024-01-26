@@ -17,7 +17,7 @@ public class FTIReplyIncomingHandlerContext {
     return switch (operation) {
       case TIOperation.CREATE_INVOICE_VALUE -> invoiceCreationStatusNotifierStrategy;
       case TIOperation.FINANCE_INVOICE_VALUE -> invoiceFinancingStatusNotifierStrategy;
-      default -> throw new IllegalArgumentException("Unhandled operation: %s" + operation);
+      default -> throw new IllegalArgumentException("Unhandled operation: " + operation);
     };
   }
 }
