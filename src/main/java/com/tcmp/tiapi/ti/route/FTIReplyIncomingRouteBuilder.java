@@ -37,7 +37,8 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
       strategy.handleServiceResponse(serviceResponse);
     } catch (IllegalArgumentException e) {
       log.info("Unhandled operation: {}", operation);
-      log.info("ServiceResponse={}", serviceResponse);
+    } catch (Exception e) {
+      log.error(e.getMessage());
     }
   }
 }
