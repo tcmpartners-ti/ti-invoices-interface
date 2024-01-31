@@ -2,9 +2,9 @@ package com.tcmp.tiapi.ti.config;
 
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
 import com.tcmp.tiapi.ti.handler.TICCIncomingHandlerContext;
-import com.tcmp.tiapi.ti.route.FTIOutgoingRouteBuilder;
-import com.tcmp.tiapi.ti.route.FTIReplyIncomingRouteBuilder;
-import com.tcmp.tiapi.ti.route.TICCIncomingRouteBuilder;
+import com.tcmp.tiapi.ti.route.fti.FTIOutgoingRouteBuilder;
+import com.tcmp.tiapi.ti.route.fti.FTIReplyIncomingRouteBuilder;
+import com.tcmp.tiapi.ti.route.ticc.TICCIncomingRouteBuilder;
 import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.springframework.beans.factory.annotation.Value;

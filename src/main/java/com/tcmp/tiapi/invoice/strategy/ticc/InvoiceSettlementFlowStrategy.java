@@ -15,7 +15,7 @@ import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.ApplicationEnv;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
-import com.tcmp.tiapi.ti.route.TICCIncomingStrategy;
+import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadDetails;

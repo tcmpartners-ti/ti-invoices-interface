@@ -5,7 +5,7 @@ import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCreationResultFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceFinancingFlowStrategy;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
 import com.tcmp.tiapi.ti.dto.TIOperation;
-import com.tcmp.tiapi.ti.route.TICCIncomingStrategy;
+import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
