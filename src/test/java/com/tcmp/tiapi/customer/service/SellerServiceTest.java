@@ -1,8 +1,7 @@
 package com.tcmp.tiapi.customer.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,29 +10,41 @@ import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
+import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
+import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class SellerServiceTest {
   @Mock private CustomerRepository customerRepository;
   @Mock private InvoiceRepository invoiceRepository;
+  @Mock private ProgramRepository programRepository;
   @Mock private InvoiceMapper invoiceMapper;
+  @Spy private ProgramMapper programMapper = Mappers.getMapper(ProgramMapper.class);
+  private final CurrencyAmountMapper currencyAmountMapper =
+      Mappers.getMapper(CurrencyAmountMapper.class);
 
-  private SellerService sellerService;
+  @InjectMocks private SellerService sellerService;
 
   @BeforeEach
-  public void setup() {
-    sellerService = new SellerService(customerRepository, invoiceRepository, invoiceMapper);
+  void setUp() {
+    ReflectionTestUtils.setField(programMapper, "currencyAmountMapper", currencyAmountMapper);
   }
 
   @Test
@@ -81,5 +92,61 @@ class SellerServiceTest {
 
     assertNotNull(invoicesPage);
     verify(invoiceMapper).mapEntitiesToDTOs(any());
+  }
+
+  @Test
+  void getSellerProgramsByMnemonic_itShouldThrowNotFoundException() {
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
+
+    assertThrows(
+        NotFoundHttpException.class,
+        () -> sellerService.getSellerProgramsByMnemonic("123", new PageParams()));
+  }
+
+  @Test
+  void getSellerProgramsByMnemonic_itShouldReturnPrograms() {
+    var programs =
+        List.of(
+            Program.builder().id("Program1").customerMnemonic("1722466420").build(),
+            Program.builder().id("Program2").customerMnemonic("1722466420").build());
+
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(programRepository.findAllBySellerMnemonic(anyString(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(programs));
+
+    var actualProgramsPage = sellerService.getSellerProgramsByMnemonic("123", new PageParams());
+
+    verify(programRepository).findAllBySellerMnemonic(eq("123"), any(Pageable.class));
+
+    assertEquals("Program1", actualProgramsPage.getData().get(0).getId());
+    assertEquals("Program2", actualProgramsPage.getData().get(1).getId());
+  }
+
+  @Test
+  void getSellerProgramsByCif_itShouldThrowNofFoundException() {
+    when(customerRepository.existsByNumber(anyString())).thenReturn(false);
+
+    assertThrows(
+        NotFoundHttpException.class,
+        () -> sellerService.getSellerProgramsByCif("123", new PageParams()));
+  }
+
+  @Test
+  void getSellerProgramsByCif_itShouldReturnProgrammes() {
+    var programs =
+        List.of(
+            Program.builder().id("Program1").customerMnemonic("1722466420").build(),
+            Program.builder().id("Program2").customerMnemonic("1722466420").build());
+
+    when(customerRepository.existsByNumber(anyString())).thenReturn(true);
+    when(programRepository.findAllBySellerCif(anyString(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(programs));
+
+    var actualProgramsPage = sellerService.getSellerProgramsByCif("123", new PageParams());
+
+    verify(programRepository).findAllBySellerCif(eq("123"), any(Pageable.class));
+
+    assertEquals("Program1", actualProgramsPage.getData().get(0).getId());
+    assertEquals("Program2", actualProgramsPage.getData().get(1).getId());
   }
 }
