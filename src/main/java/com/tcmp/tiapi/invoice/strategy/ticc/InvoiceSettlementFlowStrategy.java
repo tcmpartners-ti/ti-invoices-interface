@@ -170,7 +170,13 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             .build();
 
     return Mono.fromRunnable(
-        () -> operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo));
+            () -> operationalGatewayService.sendNotificationRequest(creditedInvoiceInfo))
+        // Keep going if email could not be sent
+        .onErrorResume(
+            e -> {
+              log.error(e.getMessage());
+              return Mono.empty();
+            });
   }
 
   private Mono<Object> handleError(
