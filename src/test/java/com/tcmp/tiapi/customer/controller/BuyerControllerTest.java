@@ -58,7 +58,7 @@ class BuyerControllerTest {
 
   @Test
   void getBuyerProgramsByMnemonic_itShouldReturnNotFoundMessage() throws Exception {
-    String expectedBuyerMnemonic = "a";
+    String expectedBuyerMnemonic = "1722466420001";
     String expectedResponseErrorMessage = String.format("Could not find customer with mnemonic %s.", expectedBuyerMnemonic);
     String expectedResponseBody = "{\"status\":404,\"error\":\"" + expectedResponseErrorMessage + "\"}";
 
