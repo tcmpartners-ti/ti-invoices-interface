@@ -5,8 +5,8 @@ import com.tcmp.tiapi.customer.dto.request.SearchSellerProgramsParams;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
-import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,7 +96,17 @@ public class SellerController {
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<ProgramDTO> getSellerProgramsByIdentifier(
-      @PathVariable String sellerIdentifier,
+      @PathVariable
+          @Valid
+          @NotNull(message = "This field is required.")
+          @Size(max = 13, message = "This field must have up to 13 characters")
+          @Pattern(
+              regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+              message = "Only numeric values are allowed")
+          @Pattern(
+              regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+              message = "Special characters are not allowed")
+          String sellerIdentifier,
       @Parameter(hidden = true) @Valid SearchSellerProgramsParams searchParams,
       @Parameter(hidden = true) @Valid PageParams pageParams) {
     CustomerIdType customerIdType =
