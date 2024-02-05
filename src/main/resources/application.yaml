@@ -1,10 +1,13 @@
+configuration:
+  zone-id: "America/Guayaquil"
+
 server.port: ${APPLICATION_PORT:8080}
 
 logging.level.org.springframework.web.filter.RequestTraceLogLoggingFilter: DEBUG
 
 spring:
   profiles.active: ${APPLICATION_ENV:local}
-  jackson.time-zone: "America/Guayaquil"
+  jackson.time-zone: ${configuration.zone-id}
   jpa.open-in-view: true
 
 ti.queue:
@@ -16,7 +19,7 @@ ti.queue:
       jndi: "queue/digibankInIncomingReply"
   ticc.sub.name: "BP.TICC.TO.DIGIBANK"
   # Custom component
-  scheduler.sub.name: "BP.SCHEDULER.TO.DIGIBANK"
+  scheduler.sub.name: "BP.TI.TO.SCHEDULER"
 
 bp.api-gee.url:
   dev: "https://api-dev.pichincha.com"

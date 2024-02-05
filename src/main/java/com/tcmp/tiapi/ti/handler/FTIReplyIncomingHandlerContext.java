@@ -3,7 +3,7 @@ package com.tcmp.tiapi.ti.handler;
 import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceCreationStatusNotifierStrategy;
 import com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceFinancingStatusNotifierStrategy;
 import com.tcmp.tiapi.ti.dto.TIOperation;
-import com.tcmp.tiapi.ti.route.FTIReplyIncomingStrategy;
+import com.tcmp.tiapi.ti.route.fti.FTIReplyIncomingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

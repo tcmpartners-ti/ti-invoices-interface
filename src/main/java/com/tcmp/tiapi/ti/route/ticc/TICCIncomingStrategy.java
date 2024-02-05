@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.route;
+package com.tcmp.tiapi.ti.route.ticc;
 
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 

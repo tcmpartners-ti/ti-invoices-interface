@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.ti.route;
+package com.tcmp.tiapi.ti.route.fti;
 
 import com.tcmp.tiapi.ti.route.processor.XmlNamespaceFixer;
 import lombok.RequiredArgsConstructor;

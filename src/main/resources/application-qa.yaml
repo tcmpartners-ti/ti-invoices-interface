@@ -1,3 +1,7 @@
+# If set to `true`, the microservice wil store scheduled messages in db (to be processed afterward),
+# otherwise it will send the messages to the processing queue.
+config.schedule-messages: true
+
 spring:
   datasource:
     host: ${DB_HOST}
@@ -56,3 +60,4 @@ ti.route:
       to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
     in-reply.from: "activemq:queue:${ti.queue.fti.reply.name}"
   ticc.in.from: "activemq:queue:${ti.queue.ticc.sub.name}"
+  scheduler.in.from: "activemq:queue:${ti.queue.scheduler.sub.name}"

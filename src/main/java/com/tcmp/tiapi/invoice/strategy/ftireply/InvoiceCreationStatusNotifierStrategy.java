@@ -4,7 +4,7 @@ import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.service.InvoiceEventService;
 import com.tcmp.tiapi.ti.dto.response.ResponseStatus;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
-import com.tcmp.tiapi.ti.route.FTIReplyIncomingStrategy;
+import com.tcmp.tiapi.ti.route.fti.FTIReplyIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingMapper;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
