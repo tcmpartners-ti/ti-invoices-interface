@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.customer.controller;
 
+import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
@@ -51,5 +52,14 @@ public class SellerController {
       @Parameter(hidden = true) @Valid SearchSellerInvoicesParams searchParams,
       @Parameter(hidden = true) @Valid PageParams pageParams) {
     return sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams);
+  }
+
+  @GetMapping(
+      path = "{sellerMnemonic}/outstanding-balance",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get seller's invoices by its mnemonic (ruc).")
+  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(
+      @PathVariable String sellerMnemonic) {
+    return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
   }
 }
