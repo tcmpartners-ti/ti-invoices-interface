@@ -39,8 +39,10 @@ public class PaymentExecutionService {
       return response;
     } catch (FeignException e) {
       log.error("Could not execute transaction. {}", e.getMessage());
-
       TransferResponseError error = tryBuildTransferErrorFromExceptionOrDefault(e);
+
+      tryRequestAndResponseLogging(request, error);
+
       throw new PaymentExecutionException(error.title());
     }
   }
