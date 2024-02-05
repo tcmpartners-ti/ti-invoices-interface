@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.customer.service;
 
+import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
@@ -11,6 +12,8 @@ import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResultMeta;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
+import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,5 +49,20 @@ public class SellerService {
         .data(invoicesDTOs)
         .meta(PaginatedResultMeta.from(sellerInvoicesPage))
         .build();
+  }
+
+  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(String sellerMnemonic) {
+    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
+      throw new NotFoundHttpException(
+          String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
+    }
+
+    BigDecimal outstandingBalance =
+        invoiceRepository
+            .getOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .map(MonetaryAmountUtils::convertCentsToDollars)
+            .orElse(BigDecimal.ZERO);
+
+    return new OutstandingBalanceDTO(outstandingBalance);
   }
 }
