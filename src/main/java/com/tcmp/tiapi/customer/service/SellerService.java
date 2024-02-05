@@ -37,10 +37,7 @@ public class SellerService {
 
   public PaginatedResult<InvoiceDTO> getSellerInvoices(
       String sellerMnemonic, SearchSellerInvoicesParams searchParams, PageParams pageParams) {
-    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
-      throw new NotFoundHttpException(
-          String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
-    }
+    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
 
     Page<InvoiceMaster> sellerInvoicesPage =
         invoiceRepository.findAll(
@@ -59,10 +56,7 @@ public class SellerService {
 
   public PaginatedResult<ProgramDTO> getSellerProgramsByMnemonic(
       String sellerMnemonic, PageParams pageParams) {
-    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
-      throw new NotFoundHttpException(
-          String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));
-    }
+    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
 
     PageRequest pageable = PageRequest.of(pageParams.getPage(), pageParams.getSize());
     Page<Program> programsPage =
@@ -91,10 +85,7 @@ public class SellerService {
   }
 
   public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(String sellerMnemonic) {
-    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
-      throw new NotFoundHttpException(
-          String.format("Could not find a seller with mnemonic %s,", sellerMnemonic));
-    }
+    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
 
     BigDecimal outstandingBalance =
         invoiceRepository
@@ -103,5 +94,12 @@ public class SellerService {
             .orElse(BigDecimal.ZERO);
 
     return new OutstandingBalanceDTO(outstandingBalance);
+  }
+
+  private void checkIfCustomerExistsOrThrowNotFound(String sellerMnemonic) {
+    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
+      throw new NotFoundHttpException(
+          String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));
+    }
   }
 }
