@@ -10,20 +10,25 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
 import com.tcmp.tiapi.invoice.service.InvoiceBatchOperationsService;
 import com.tcmp.tiapi.invoice.service.InvoiceService;
+import com.tcmp.tiapi.shared.FieldValidationRegex;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("invoices")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Invoices", description = "Defines the invoices operations.")
 @Slf4j
 public class InvoiceController {
@@ -32,8 +37,15 @@ public class InvoiceController {
 
   @GetMapping(path = "{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its internal id.")
-  public InvoiceDTO getInvoiceById(@PathVariable Long invoiceId) {
-    return invoiceService.getInvoiceById(invoiceId);
+  public InvoiceDTO getInvoiceById(
+      @PathVariable
+          @Valid
+          @Pattern(
+              regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+              message = "Only numeric values are allowed")
+          @Size(max = 20, message = "This field must have up to 20 characters")
+          String invoiceId) {
+    return invoiceService.getInvoiceById(Long.parseLong(invoiceId));
   }
 
   @GetMapping(path = "search", produces = MediaType.APPLICATION_JSON_VALUE)
