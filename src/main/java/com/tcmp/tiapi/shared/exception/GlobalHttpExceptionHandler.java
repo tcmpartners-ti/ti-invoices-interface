@@ -3,9 +3,12 @@ package com.tcmp.tiapi.shared.exception;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
-import com.tcmp.tiapi.shared.dto.response.error.ErrorDetails;
+import com.tcmp.tiapi.shared.dto.response.error.FieldErrorDetails;
 import com.tcmp.tiapi.shared.dto.response.error.SimpleHttpErrorMessage;
 import com.tcmp.tiapi.shared.dto.response.error.ValidationHttpErrorMessage;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
@@ -15,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
 public class GlobalHttpExceptionHandler {
@@ -32,15 +36,15 @@ public class GlobalHttpExceptionHandler {
                 exception.getFieldErrors().stream().map(this::buildFieldError).toList()));
   }
 
-  private ErrorDetails buildFieldError(FieldError error) {
+  private FieldErrorDetails buildFieldError(FieldError error) {
     // This exception reveals language information.
     if (error.contains(TypeMismatchException.class)) {
       String message =
           "Field has an invalid data type for value '%s'".formatted(error.getRejectedValue());
-      return new ErrorDetails(error.getField(), message);
+      return new FieldErrorDetails(error.getField(), message);
     }
 
-    return new ErrorDetails(error.getField(), error.getDefaultMessage());
+    return new FieldErrorDetails(error.getField(), error.getDefaultMessage());
   }
 
   @ExceptionHandler(CsvValidationException.class)
@@ -54,7 +58,8 @@ public class GlobalHttpExceptionHandler {
                 badRequest.value(),
                 exception.getMessage(),
                 exception.getFieldErrors().stream()
-                    .map(error -> new ErrorDetails(error.getField(), error.getDefaultMessage()))
+                    .map(
+                        error -> new FieldErrorDetails(error.getField(), error.getDefaultMessage()))
                     .toList()));
   }
 
@@ -107,6 +112,28 @@ public class GlobalHttpExceptionHandler {
     return ResponseEntity.status(badRequest)
         .body(
             new ValidationHttpErrorMessage(
-                badRequest.value(), "Fields inconsistencies error.", e.getErrorDetails()));
+                badRequest.value(), "Fields inconsistencies error.", e.getFieldErrorDetails()));
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ResponseEntity<ValidationHttpErrorMessage> handlePathParamValidationException(
+      ConstraintViolationException e) {
+    List<FieldErrorDetails> errors =
+        e.getConstraintViolations().stream().map(this::buildFieldError).toList();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            new ValidationHttpErrorMessage(
+                HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
+  }
+
+  private FieldErrorDetails buildFieldError(ConstraintViolation<?> violation) {
+    String lastPath = "";
+    for (var node : violation.getPropertyPath()) {
+      lastPath = node.toString();
+    }
+
+    return new FieldErrorDetails(lastPath, violation.getMessage());
   }
 }
