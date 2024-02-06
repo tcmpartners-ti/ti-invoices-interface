@@ -47,12 +47,6 @@ definitions:
           - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
           - ./snyk container test $IMAGE:latest --severity-threshold=medium
 
-    - step: &dev-approval
-        name: Developer approval
-        trigger: manual
-        script:
-          - echo "Step approved by developer"
-
     - step: &deploy-dev
         name: Deploy to development
         caches: [ gradle, docker ]
@@ -105,5 +99,4 @@ pipelines:
             - step: *scan-dependencies
             - step: *scan-code
             - step: *scan-image
-      - step: *dev-approval
       - step: *deploy-dev
