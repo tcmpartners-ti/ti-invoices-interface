@@ -1,3 +1,7 @@
+# If set to `true`, the microservice wil store scheduled messages in db (to be processed afterward),
+# otherwise it will send the messages to the processing queue.
+config.schedule-messages: false
+
 spring:
   datasource:
     host: ${DB_HOST}
@@ -30,7 +34,7 @@ bp:
       bgl-account: "259090337001"
 
   api-gee:
-    headers.device: "TradeInnovationInterfaceDEV"
+    headers.device: "TradeInnovationInterface"
 
     credentials:
       app-id: ${API_GEE_APP_ID}
@@ -49,31 +53,11 @@ bp:
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.prod}/domain/corporate-loan/v1"
 
-invoice:
-  route:
-    create:
-      from: "direct:createInvoiceInTI"
+ti.route:
+  fti:
+    out:
+      from: "direct:sendToFtiOutgoingQueue"
       to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
-
-    create-bulk:
-      from: "direct:bulkCreateInvoicesInTi"
-      to: "${invoice.route.create.from}"
-
-    event-listener:
-      max-retries: 3
-      retry-delay: 1000 # ms
-
-      from: "activemq:queue:${ti.queue.fti.reply.name}"
-      to: "direct:sendNotificationToApiGee"
-
-    ack-event-listener:
-      from: "activemq:queue:${ti.queue.ticc.sub.name}"
-      to-finance: "direct:startFinanceFlow"
-      to-settle: "direct:startSettleFlow"
-
-    finance:
-      from: "direct:financeInvoiceInTI"
-      to: "activemq:queue:${ti.queue.fti.pub.name}?replyTo=${ti.queue.fti.reply.jndi}"
-
-    notification-invoice-creation:
-      from: "activemq:queue:${ti.queue.fti.sub.name}"
+    in-reply.from: "activemq:queue:${ti.queue.fti.reply.name}"
+  ticc.in.from: "activemq:queue:${ti.queue.ticc.sub.name}"
+  scheduler.in.from: "activemq:queue:${ti.queue.scheduler.sub.name}"
