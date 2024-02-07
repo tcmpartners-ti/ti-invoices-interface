@@ -1,8 +1,8 @@
 package com.tcmp.tiapi.customer.controller;
 
-import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.CustomerIdType;
 import com.tcmp.tiapi.customer.dto.request.SearchSellerProgramsParams;
+import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
@@ -10,6 +10,7 @@ import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -72,9 +73,10 @@ public class SellerController {
     return sellerService.getSellerInvoices(sellerMnemonic, searchParams, pageParams);
   }
 
-  @GetMapping(
-      path = "{sellerMnemonic}/outstanding-balance",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @Hidden // This is done for production
+  //  @GetMapping(
+  //      path = "{sellerMnemonic}/outstanding-balance",
+  //      produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get seller's invoices by its mnemonic (ruc).")
   public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(
       @PathVariable
@@ -91,7 +93,8 @@ public class SellerController {
     return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
   }
 
-  @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Hidden // This is done for production
+  // @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get seller's programs either by mnemonic (ruc) or cif.")
   @Parameter(
       name = "type",
