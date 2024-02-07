@@ -59,7 +59,8 @@ definitions:
         services: [ docker ]
         script:
           - echo $CR_PASS_DEV | docker login $CR_NAME_DEV -u $CR_USER_DEV --password-stdin
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_DEV/$IMAGE:latest . --build-arg="COMMIT=$BITBUCKET_COMMIT"
+          - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_DEV/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
           - docker push $CR_NAME_DEV/$IMAGE:latest
 
     - step: &deploy-test
