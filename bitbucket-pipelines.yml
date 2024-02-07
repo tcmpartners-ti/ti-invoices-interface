@@ -53,6 +53,12 @@ definitions:
         script:
           - echo "Step approved by developer"
 
+    - step: &approval
+        name: Approval
+        trigger: manual
+        script:
+          - echo "Step approved"
+
     - step: &deploy-dev
         name: Deploy to development
         caches: [ gradle, docker ]
@@ -71,13 +77,33 @@ definitions:
           - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$BITBUCKET_COMMIT"
           - docker push $CR_NAME_TEST/$IMAGE:latest
 
+    - step: &deploy-prod
+        name: Deploy to production
+        caches: [ gradle, docker ]
+        services: [ docker ]
+        script:
+          - echo $CR_PASS | docker login $CR_NAME -u $CR_USER --password-stdin
+          - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME/$IMAGE:$SHORT_COMMIT . --build-arg="COMMIT=$SHORT_COMMIT"
+          - docker push $CR_NAME/$IMAGE:$SHORT_COMMIT
+
 
 pipelines:
   branches:
     # Production Branch
     main:
       - step: *build
-      - step: *unit-tests
+      - parallel:
+          steps:
+            - step: *unit-tests
+            - step: *integration-tests
+      - parallel: # Snyk scans
+          steps:
+            - step: *scan-dependencies
+            - step: *scan-code
+            - step: *scan-image
+      - step: *approval
+      - step: *deploy-prod
 
     # Staging (Test) branch
     develop:
