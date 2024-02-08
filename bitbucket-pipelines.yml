@@ -1,9 +1,15 @@
 image: gradle:8.3.0-jdk17
 
+clone:
+  depth: full
+
 definitions:
   services:
     docker:
       memory: 2048
+
+  caches:
+    sonar: ~/.sonar/cache
 
   steps:
     - step: &build
@@ -46,6 +52,14 @@ definitions:
           - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
           - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
           - ./snyk container test $IMAGE:latest --severity-threshold=medium
+
+    - step: &sonar-scan
+        name: Scan project with sonar
+        caches: [ gradle, sonar ]
+        script:
+          - gradle build sonar
+        artifacts:
+          - build/libs/**
 
     - step: &dev-approval
         name: Developer approval
@@ -96,15 +110,4 @@ pipelines:
 
     # Development Branches
     feat/*:
-      - step: *build
-      - parallel:
-          steps:
-            - step: *unit-tests
-            - step: *integration-tests
-      - parallel: # Snyk scans
-          steps:
-            - step: *scan-dependencies
-            - step: *scan-code
-            - step: *scan-image
-      - step: *dev-approval
-      - step: *deploy-dev
+      - step: *sonar-scan
