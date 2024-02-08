@@ -57,7 +57,8 @@ definitions:
         name: Scan project with sonar
         caches: [ gradle, sonar ]
         script:
-          - gradle build sonar
+          - gradle assemble
+          - gradle sonar
         artifacts:
           - build/libs/**
 
@@ -94,8 +95,8 @@ pipelines:
       - step: *build
       - step: *unit-tests
 
-    # Staging (Test) branch
-    develop:
+    # Staging branches
+    '{develop,hotfix/*,release/*}':
       - step: *build
       - parallel:
           steps:
@@ -110,4 +111,10 @@ pipelines:
 
     # Development Branches
     feat/*:
+      - step: *build
+      - parallel:
+          steps:
+            - step: *unit-tests
+            - step: *integration-tests
       - step: *sonar-scan
+      - step: *deploy-dev
