@@ -62,12 +62,6 @@ definitions:
         artifacts:
           - build/libs/**
 
-    - step: &dev-approval
-        name: Developer approval
-        trigger: manual
-        script:
-          - echo "Step approved by developer"
-
     - step: &deploy-dev
         name: Deploy to development
         caches: [ gradle, docker ]
@@ -84,7 +78,8 @@ definitions:
         services: [ docker ]
         script:
           - echo $CR_PASS_TEST | docker login $CR_NAME_TEST -u $CR_USER_TEST --password-stdin
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$BITBUCKET_COMMIT"
+          - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
           - docker push $CR_NAME_TEST/$IMAGE:latest
 
 
