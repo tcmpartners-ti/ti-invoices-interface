@@ -1,8 +1,8 @@
 package com.tcmp.tiapi.customer.controller;
 
-import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.CustomerIdType;
 import com.tcmp.tiapi.customer.dto.request.SearchSellerProgramsParams;
+import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
@@ -22,6 +22,7 @@ import jakarta.validation.constraints.Size;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("sellers")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Sellers", description = "Defines the sellers operations.")
 public class SellerController {
   private final SellerService sellerService;
