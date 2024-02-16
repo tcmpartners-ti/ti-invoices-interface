@@ -12,6 +12,17 @@ repositories {
     mavenCentral()
 }
 
+sonar {
+    properties {
+        property("sonar.projectKey", "tcmpartners_ti-invoices-interface")
+        property("sonar.organization", "tcmpartners")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.junit.reportPaths", "${project.projectDir}/test-results/test")
+        property("sonar.junit.reportPaths", "**/*Test*/**")
+        property("sonar.gradle.skipCompile", true)
+    }
+}
+
 //<editor-fold desc="Dependencies Versions">
 val springbootVersion = "3.2.2"
 val camelVersion = "4.3.0"

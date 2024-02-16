@@ -57,8 +57,7 @@ definitions:
         name: Scan project with sonar
         caches: [ gradle, sonar ]
         script:
-          - gradle assemble
-          - gradle sonar
+          - gradle build sonar
         artifacts:
           - build/libs/**
 
