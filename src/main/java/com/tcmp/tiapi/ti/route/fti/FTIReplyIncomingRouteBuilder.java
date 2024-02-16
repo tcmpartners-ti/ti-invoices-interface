@@ -2,6 +2,7 @@ package com.tcmp.tiapi.ti.route.fti;
 
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
@@ -31,12 +32,31 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
 
   private void handleServiceResponse(ServiceResponse serviceResponse) {
     String operation = serviceResponse.getResponseHeader().getOperation();
+    printDetailsIfPresent(serviceResponse);
 
     try {
       FTIReplyIncomingStrategy strategy = ftiReplyIncomingHandlerContext.strategy(operation);
       strategy.handleServiceResponse(serviceResponse);
     } catch (Exception e) {
       log.error(e.getMessage());
+    }
+  }
+
+  private void printDetailsIfPresent(ServiceResponse serviceResponse) {
+    List<String> errors = serviceResponse.getResponseHeader().getDetails().getErrors();
+    List<String> warnings = serviceResponse.getResponseHeader().getDetails().getWarnings();
+    List<String> information = serviceResponse.getResponseHeader().getDetails().getInfos();
+
+    if (errors != null && !errors.isEmpty()) {
+      log.error("Errors: {}", errors);
+    }
+
+    if (warnings != null && !warnings.isEmpty()) {
+      log.error("Warnings: {}", warnings);
+    }
+
+    if (information != null && !information.isEmpty()) {
+      log.error("Information: {}", information);
     }
   }
 }
