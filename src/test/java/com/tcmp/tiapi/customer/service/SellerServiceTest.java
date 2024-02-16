@@ -16,7 +16,9 @@ import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -148,5 +150,33 @@ class SellerServiceTest {
 
     assertEquals("Program1", actualProgramsPage.getData().get(0).getId());
     assertEquals("Program2", actualProgramsPage.getData().get(1).getId());
+  }
+
+  @Test
+  void getSellerOutstandingBalanceByMnemonic_itShouldThrowNotFoundExceptionIfCustomerNotFound() {
+    var sellerMnemonic = "1722466420001";
+
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
+
+    var expectedErrorMessage =
+        String.format("Could not find a seller with mnemonic %s.", sellerMnemonic);
+    assertThrows(
+        NotFoundHttpException.class,
+        () -> sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic),
+        expectedErrorMessage);
+  }
+
+  @Test
+  void getSellerOutstandingBalanceByMnemonic_itShouldReturnOutstandingTotal() {
+    var sellerMnemonic = "1722466420001";
+
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(invoiceRepository.getOutstandingBalanceBySellerMnemonic(anyString()))
+        .thenReturn(Optional.of(BigDecimal.valueOf(1000L)));
+
+    var expectedOutstandingBalance = new BigDecimal("10.00");
+    var actualBalanceDto = sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
+
+    assertEquals(expectedOutstandingBalance, actualBalanceDto.balance());
   }
 }
