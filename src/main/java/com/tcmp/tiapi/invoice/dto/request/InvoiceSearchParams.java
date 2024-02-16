@@ -22,11 +22,14 @@ public record InvoiceSearchParams(
         String programme,
     @NotNull(message = "This field is required")
         @NotBlank(message = "This filed should not be blank")
-        @Size(min = 13, max = 13, message = "The seller mnemonic should be 13 characters long")
+        @Size(
+            min = 10,
+            max = 13,
+            message = "The seller mnemonic should be between 10 and 13 characters long")
         @Pattern(
             regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
             message = "This field allows numbers only")
-        @Schema(maxLength = 13, description = "Seller mnemonic (RUC).")
+        @Schema(minLength = 10, maxLength = 13, description = "Seller mnemonic (RUC).")
         String seller,
     @NotNull(message = "This field is required")
         @NotBlank(message = "This filed should not be blank")
