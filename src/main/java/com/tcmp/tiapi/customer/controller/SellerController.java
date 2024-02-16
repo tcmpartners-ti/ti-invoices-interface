@@ -47,14 +47,14 @@ public class SellerController {
       example = "O")
   @Parameter(
       name = "page",
-      description = "Page (0 based). Default: 0.",
-      schema = @Schema(type = "number"),
+      description = "Page (0 based)",
+      schema = @Schema(type = "number", defaultValue = "0"),
       in = ParameterIn.QUERY,
       example = "0")
   @Parameter(
       name = "size",
-      description = "Page size (items per page). Default: 10.",
-      schema = @Schema(type = "number"),
+      description = "Page size (items per page).",
+      schema = @Schema(type = "number", defaultValue = "10"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(
@@ -107,14 +107,14 @@ public class SellerController {
       example = "CIF")
   @Parameter(
       name = "page",
-      description = "Page (0 based). Default: 0.",
-      schema = @Schema(type = "number"),
+      description = "Page (0 based).",
+      schema = @Schema(type = "number", defaultValue = "0"),
       in = ParameterIn.QUERY,
       example = "0")
   @Parameter(
       name = "size",
-      description = "Page size (items per page). Default: 10.",
-      schema = @Schema(type = "number"),
+      description = "Page size (items per page).",
+      schema = @Schema(type = "number", defaultValue = "10"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<ProgramDTO> getSellerProgramsByIdentifier(
