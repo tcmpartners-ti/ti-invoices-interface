@@ -87,13 +87,22 @@ public class SellerService {
   public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(String sellerMnemonic) {
     checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
 
-    BigDecimal outstandingBalance =
+    BigDecimal notFinancedOutstandingBalance =
         invoiceRepository
-            .getOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .getNotFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic)
             .map(MonetaryAmountUtils::convertCentsToDollars)
             .orElse(BigDecimal.ZERO);
 
-    return new OutstandingBalanceDTO(outstandingBalance);
+    BigDecimal financedOutstandingBalance =
+        invoiceRepository
+            .getFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .map(MonetaryAmountUtils::convertCentsToDollars)
+            .orElse(BigDecimal.ZERO);
+
+    BigDecimal totalOutstandingBalance =
+        notFinancedOutstandingBalance.add(financedOutstandingBalance);
+
+    return new OutstandingBalanceDTO(totalOutstandingBalance);
   }
 
   private void checkIfCustomerExistsOrThrowNotFound(String sellerMnemonic) {

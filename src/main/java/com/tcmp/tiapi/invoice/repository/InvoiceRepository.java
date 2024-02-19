@@ -24,21 +24,47 @@ public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
 
   @Query(
       """
+        SELECT
+          SUM(invoice.outstandingAmount - invoice.discountDealAmount)
+        FROM
+          InvoiceMaster invoice
+        LEFT JOIN CounterParty seller ON
+          seller.id = invoice.seller.id
+        LEFT JOIN ProductMaster master ON
+          master.id = invoice.id
+        WHERE
+          invoice.status = 'O'
+          AND master.status = 'LIV'
+          AND (
+              invoice.isDrawDownEligible = false
+              AND invoice.createFinanceEventId IS NOT NULL
+              AND ( invoice.discountDealAmount IS NOT NULL
+                  AND invoice.discountDealAmount != 0 )
+          )
+          AND seller.mnemonic = :sellerMnemonic
+      """)
+  Optional<BigDecimal> getFinancedOutstandingBalanceBySellerMnemonic(String sellerMnemonic);
+
+  @Query(
+      """
     SELECT
-      SUM(invoice.faceValueAmount)
+      SUM(invoice.outstandingAmount)
     FROM
       InvoiceMaster invoice
     LEFT JOIN CounterParty seller ON
       seller.id = invoice.seller.id
+    LEFT JOIN ProductMaster master ON
+      master.id = invoice.id
     WHERE
       invoice.status = 'O'
+      AND master.status = 'LIV'
       AND NOT (
           invoice.isDrawDownEligible = false
           AND invoice.createFinanceEventId IS NOT NULL
           AND ( invoice.discountDealAmount IS NOT NULL
-              AND invoice.discountDealAmount  != 0 )
+              AND invoice.discountDealAmount != 0 )
       )
       AND seller.mnemonic = :sellerMnemonic
   """)
-  Optional<BigDecimal> getOutstandingBalanceBySellerMnemonic(String sellerMnemonic);
+  Optional<BigDecimal> getNotFinancedOutstandingBalanceBySellerMnemonic(String sellerMnemonic);
 }

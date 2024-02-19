@@ -25,6 +25,10 @@ public class ProductMaster {
   @Column(name = "MASTER_REF")
   private String masterReference;
 
+  @Column(name = "STATUS")
+  @Enumerated(EnumType.STRING)
+  private ProductMasterStatus status;
+
   @Column(name = "ACTIVE")
   @Convert(converter = DatabaseBooleanConverter.class)
   private Boolean isActive;
