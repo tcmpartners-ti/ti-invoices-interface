@@ -16,7 +16,9 @@ import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -98,9 +100,10 @@ class SellerServiceTest {
   void getSellerProgramsByMnemonic_itShouldThrowNotFoundException() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
 
+    PageParams pageParams = new PageParams();
     assertThrows(
         NotFoundHttpException.class,
-        () -> sellerService.getSellerProgramsByMnemonic("123", new PageParams()));
+        () -> sellerService.getSellerProgramsByMnemonic("123", pageParams));
   }
 
   @Test
@@ -126,9 +129,9 @@ class SellerServiceTest {
   void getSellerProgramsByCif_itShouldThrowNofFoundException() {
     when(customerRepository.existsByNumber(anyString())).thenReturn(false);
 
+    PageParams pageParams = new PageParams();
     assertThrows(
-        NotFoundHttpException.class,
-        () -> sellerService.getSellerProgramsByCif("123", new PageParams()));
+        NotFoundHttpException.class, () -> sellerService.getSellerProgramsByCif("123", pageParams));
   }
 
   @Test
@@ -148,5 +151,28 @@ class SellerServiceTest {
 
     assertEquals("Program1", actualProgramsPage.getData().get(0).getId());
     assertEquals("Program2", actualProgramsPage.getData().get(1).getId());
+  }
+
+  @Test
+  void getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfCustomerNotFound() {
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
+
+    assertThrows(
+        NotFoundHttpException.class,
+        () -> sellerService.getSellerOutstandingBalanceByMnemonic("1722466420001", null));
+  }
+
+  @Test
+  void getSellerOutstandingBalanceByMnemonic_itShouldReturnOutstandingBalance() {
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(invoiceRepository.getNotFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
+        .thenReturn(Optional.of(BigDecimal.valueOf(100000L)));
+    when(invoiceRepository.getFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
+        .thenReturn(Optional.of(BigDecimal.valueOf(50000L)));
+
+    var actualBalanceDto = sellerService.getSellerOutstandingBalanceByMnemonic("", null);
+
+    var expectedBalance = new BigDecimal("1500.00");
+    assertEquals(expectedBalance, actualBalanceDto.balance());
   }
 }
