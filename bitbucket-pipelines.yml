@@ -53,8 +53,8 @@ definitions:
           - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
           - ./snyk container test $IMAGE:latest --severity-threshold=medium
 
-    - step: &sonar-scan
-        name: Scan project with sonar
+    - step: &sonar-scan-test
+        name: Scan and unit test project with sonar
         caches: [ gradle, sonar ]
         script:
           - gradle build jacocoTestReport sonar
@@ -108,7 +108,6 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *unit-tests
+            - step: *sonar-scan-test
             - step: *integration-tests
-      - step: *sonar-scan
       - step: *deploy-dev
