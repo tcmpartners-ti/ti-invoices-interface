@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class StartupListener implements ApplicationListener<ApplicationReadyEvent> {
-  @Value("${COMMIT:unknown}")
+  @Value("${COMMIT:none}")
   private String commitHash;
 
   @Override
