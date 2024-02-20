@@ -153,30 +153,25 @@ class SellerServiceTest {
   }
 
   @Test
-  void getSellerOutstandingBalanceByMnemonic_itShouldThrowNotFoundExceptionIfCustomerNotFound() {
-    var sellerMnemonic = "1722466420001";
-
+  void getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfCustomerNotFound() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
 
-    var expectedErrorMessage =
-        String.format("Could not find a seller with mnemonic %s.", sellerMnemonic);
     assertThrows(
         NotFoundHttpException.class,
-        () -> sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic),
-        expectedErrorMessage);
+        () -> sellerService.getSellerOutstandingBalanceByMnemonic("1722466420001", null));
   }
 
   @Test
-  void getSellerOutstandingBalanceByMnemonic_itShouldReturnOutstandingTotal() {
-    var sellerMnemonic = "1722466420001";
-
+  void getSellerOutstandingBalanceByMnemonic_itShouldReturnOutstandingBalance() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
-    when(invoiceRepository.getOutstandingBalanceBySellerMnemonic(anyString()))
-        .thenReturn(Optional.of(BigDecimal.valueOf(1000L)));
+    when(invoiceRepository.getNotFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
+        .thenReturn(Optional.of(BigDecimal.valueOf(100000L)));
+    when(invoiceRepository.getFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
+        .thenReturn(Optional.of(BigDecimal.valueOf(50000L)));
 
-    var expectedOutstandingBalance = new BigDecimal("10.00");
-    var actualBalanceDto = sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
+    var actualBalanceDto = sellerService.getSellerOutstandingBalanceByMnemonic("", null);
 
-    assertEquals(expectedOutstandingBalance, actualBalanceDto.balance());
+    var expectedBalance = new BigDecimal("1500.00");
+    assertEquals(expectedBalance, actualBalanceDto.balance());
   }
 }

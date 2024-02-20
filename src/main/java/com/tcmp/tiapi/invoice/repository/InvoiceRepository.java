@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice.repository;
 
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -24,21 +25,55 @@ public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
 
   @Query(
       """
+        SELECT
+          SUM(invoice.outstandingAmount - invoice.discountDealAmount)
+        FROM
+          InvoiceMaster invoice
+        LEFT JOIN CounterParty buyer ON
+          buyer.id = invoice.buyer.id
+        LEFT JOIN CounterParty seller ON
+          seller.id = invoice.seller.id
+        LEFT JOIN ProductMaster master ON
+          master.id = invoice.id
+        WHERE
+          invoice.status = 'O'
+          AND master.status = 'LIV'
+          AND (
+              invoice.isDrawDownEligible = false
+              AND invoice.createFinanceEventId IS NOT NULL
+              AND ( invoice.discountDealAmount IS NOT NULL
+                  AND invoice.discountDealAmount != 0 )
+          )
+          AND (:buyerMnemonic IS NULL OR buyer.mnemonic = :buyerMnemonic)
+          AND seller.mnemonic = :sellerMnemonic
+      """)
+  Optional<BigDecimal> getFinancedOutstandingBalanceBySellerMnemonic(
+      String sellerMnemonic, @Nullable String buyerMnemonic);
+
+  @Query(
+      """
     SELECT
-      SUM(invoice.faceValueAmount)
+      SUM(invoice.outstandingAmount)
     FROM
       InvoiceMaster invoice
+    LEFT JOIN CounterParty buyer ON
+      buyer.id = invoice.buyer.id
     LEFT JOIN CounterParty seller ON
       seller.id = invoice.seller.id
+    LEFT JOIN ProductMaster master ON
+      master.id = invoice.id
     WHERE
       invoice.status = 'O'
+      AND master.status = 'LIV'
       AND NOT (
           invoice.isDrawDownEligible = false
           AND invoice.createFinanceEventId IS NOT NULL
           AND ( invoice.discountDealAmount IS NOT NULL
-              AND invoice.discountDealAmount  != 0 )
+              AND invoice.discountDealAmount != 0 )
       )
+      AND (:buyerMnemonic IS NULL OR buyer.mnemonic = :buyerMnemonic)
       AND seller.mnemonic = :sellerMnemonic
   """)
-  Optional<BigDecimal> getOutstandingBalanceBySellerMnemonic(String sellerMnemonic);
+  Optional<BigDecimal> getNotFinancedOutstandingBalanceBySellerMnemonic(
+      String sellerMnemonic, @Nullable String buyerMnemonic);
 }
