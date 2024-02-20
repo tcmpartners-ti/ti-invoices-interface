@@ -68,7 +68,7 @@ class SellerControllerTest {
   void getSellerOutstandingBalanceByMnemonic_itShouldReturnBalance() throws Exception {
     var sellerMnemonic = "1722466420001";
 
-    when(sellerService.getSellerOutstandingBalanceByMnemonic(anyString()))
+    when(sellerService.getSellerOutstandingBalanceByMnemonic(anyString(), any()))
         .thenReturn(new OutstandingBalanceDTO(BigDecimal.TEN));
 
     var expectedBody = "{\"balance\":10}";
@@ -79,7 +79,7 @@ class SellerControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().json(expectedBody, true));
 
-    verify(sellerService).getSellerOutstandingBalanceByMnemonic(anyString());
+    verify(sellerService).getSellerOutstandingBalanceByMnemonic(anyString(), any());
   }
 
   @Test
