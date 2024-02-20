@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.ti.route.fti;
 
+import com.tcmp.tiapi.ti.dto.response.Details;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
 import java.util.List;
@@ -43,9 +44,12 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
   }
 
   private void printDetailsIfPresent(ServiceResponse serviceResponse) {
-    List<String> errors = serviceResponse.getResponseHeader().getDetails().getErrors();
-    List<String> warnings = serviceResponse.getResponseHeader().getDetails().getWarnings();
-    List<String> information = serviceResponse.getResponseHeader().getDetails().getInfos();
+    Details details = serviceResponse.getResponseHeader().getDetails();
+    if (details == null) return;
+
+    List<String> errors = details.getErrors();
+    List<String> warnings = details.getWarnings();
+    List<String> information = details.getInfos();
 
     if (errors != null && !errors.isEmpty()) {
       log.error("Errors: {}", errors);
