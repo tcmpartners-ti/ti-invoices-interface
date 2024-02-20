@@ -17,6 +17,7 @@ import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResultMeta;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -84,18 +85,19 @@ public class SellerService {
         .build();
   }
 
-  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(String sellerMnemonic) {
+  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(
+      String sellerMnemonic, @Nullable String buyerMnemonic) {
     checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
 
     BigDecimal notFinancedOutstandingBalance =
         invoiceRepository
-            .getNotFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .getNotFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic, buyerMnemonic)
             .map(MonetaryAmountUtils::convertCentsToDollars)
             .orElse(BigDecimal.ZERO);
 
     BigDecimal financedOutstandingBalance =
         invoiceRepository
-            .getFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .getFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic, buyerMnemonic)
             .map(MonetaryAmountUtils::convertCentsToDollars)
             .orElse(BigDecimal.ZERO);
 

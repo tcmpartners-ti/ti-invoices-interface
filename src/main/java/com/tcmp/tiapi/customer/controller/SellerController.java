@@ -23,10 +23,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("sellers")
@@ -89,8 +86,18 @@ public class SellerController {
           @Pattern(
               regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
               message = "Special characters are not allowed")
-          String sellerMnemonic) {
-    return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
+          String sellerMnemonic,
+      @RequestParam(name = "buyer", required = false)
+          @Valid
+          @Size(min = 10, max = 13, message = "This field must have between 10 and 13 characters")
+          @Pattern(
+              regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+              message = "Only numeric values are allowed")
+          @Pattern(
+              regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+              message = "Special characters are not allowed")
+          String buyerMnemonic) {
+    return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic, buyerMnemonic);
   }
 
   @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
