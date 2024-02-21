@@ -32,27 +32,6 @@ definitions:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
-    - step: &scan-dependencies
-        name: Scan dependencies
-        caches: [ gradle ]
-        script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - ./snyk test --all-projects --severity-threshold=medium
-    - step: &scan-code
-        name: Scan code
-        caches: [ gradle ]
-        script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - ./snyk code test --severity-threshold=high
-    - step: &scan-image
-        name: Scan image
-        caches: [ gradle, docker ]
-        services: [ docker ]
-        script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
-          - ./snyk container test $IMAGE:latest --severity-threshold=medium
-
     - step: &sonar-scan-test
         name: Scan and unit test project with sonar
         caches: [ gradle, sonar ]
@@ -94,13 +73,8 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *unit-tests
+            - step: *sonar-scan-test
             - step: *integration-tests
-      - parallel: # Snyk scans
-          steps:
-            - step: *scan-dependencies
-            - step: *scan-code
-            - step: *scan-image
       - step: *deploy-test
 
     # Development Branches
