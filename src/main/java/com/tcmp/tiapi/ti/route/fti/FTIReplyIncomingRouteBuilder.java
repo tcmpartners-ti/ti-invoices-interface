@@ -5,6 +5,7 @@ import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 
@@ -14,6 +15,7 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
  * be received in this route.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
   private final JaxbDataFormat jaxbDataFormatServiceResponse;
   private final FTIReplyIncomingHandlerContext ftiReplyIncomingHandlerContext;
@@ -56,11 +58,11 @@ public class FTIReplyIncomingRouteBuilder extends RouteBuilder {
     }
 
     if (warnings != null && !warnings.isEmpty()) {
-      log.error("Warnings: {}", warnings);
+      log.warn("Warnings: {}", warnings);
     }
 
     if (information != null && !information.isEmpty()) {
-      log.error("Information: {}", information);
+      log.info("Information: {}", information);
     }
   }
 }
