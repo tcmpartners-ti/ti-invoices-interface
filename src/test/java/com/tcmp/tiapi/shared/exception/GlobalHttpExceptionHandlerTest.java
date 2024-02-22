@@ -38,7 +38,7 @@ class GlobalHttpExceptionHandlerTest {
         new ValidationHttpErrorMessage(
             HttpStatus.BAD_REQUEST.value(),
             "Could not validate the provided fields.",
-            List.of(new FieldErrorDetails("field1", "error")));
+            List.of(new FieldErrorDetails("field1", "error"), new FieldErrorDetails(null, null)));
     assertEquals(HttpStatus.BAD_REQUEST, actualResponse.getStatusCode());
     assertEquals(expectedBody, actualResponse.getBody());
   }
