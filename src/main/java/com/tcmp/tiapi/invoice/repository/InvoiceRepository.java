@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.invoice.repository;
 
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -76,4 +77,10 @@ public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
   """)
   Optional<BigDecimal> getNotFinancedOutstandingBalanceBySellerMnemonic(
       String sellerMnemonic, @Nullable String buyerMnemonic);
+
+  boolean existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
+      String sellerMnemonic,
+      String buyerMnemonic,
+      Character invoiceStatus,
+      ProductMasterStatus masterStatus);
 }
