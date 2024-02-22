@@ -47,22 +47,6 @@ public class GlobalHttpExceptionHandler {
     return new FieldErrorDetails(error.getField(), error.getDefaultMessage());
   }
 
-  @ExceptionHandler(CsvValidationException.class)
-  public ResponseEntity<ValidationHttpErrorMessage> handleCsvValidationException(
-      CsvValidationException exception) {
-    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
-
-    return ResponseEntity.status(badRequest)
-        .body(
-            new ValidationHttpErrorMessage(
-                badRequest.value(),
-                exception.getMessage(),
-                exception.getFieldErrors().stream()
-                    .map(
-                        error -> new FieldErrorDetails(error.getField(), error.getDefaultMessage()))
-                    .toList()));
-  }
-
   @ExceptionHandler(NotFoundHttpException.class)
   public ResponseEntity<SimpleHttpErrorMessage> handleNotFoundException(NotFoundHttpException e) {
     HttpStatus notFound = HttpStatus.NOT_FOUND;
