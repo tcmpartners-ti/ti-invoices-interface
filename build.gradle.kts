@@ -122,6 +122,10 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+
+    reports {
+        xml.required = true
+    }
 }
 
 tasks.withType<BootJar> {

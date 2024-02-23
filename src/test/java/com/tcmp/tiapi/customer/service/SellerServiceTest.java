@@ -9,6 +9,7 @@ import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
@@ -100,9 +101,10 @@ class SellerServiceTest {
   void getSellerProgramsByMnemonic_itShouldThrowNotFoundException() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
 
+    var pageParams = new PageParams();
     assertThrows(
         NotFoundHttpException.class,
-        () -> sellerService.getSellerProgramsByMnemonic("123", new PageParams()));
+        () -> sellerService.getSellerProgramsByMnemonic("123", pageParams));
   }
 
   @Test
@@ -128,9 +130,9 @@ class SellerServiceTest {
   void getSellerProgramsByCif_itShouldThrowNofFoundException() {
     when(customerRepository.existsByNumber(anyString())).thenReturn(false);
 
+    var pageParams = new PageParams();
     assertThrows(
-        NotFoundHttpException.class,
-        () -> sellerService.getSellerProgramsByCif("123", new PageParams()));
+        NotFoundHttpException.class, () -> sellerService.getSellerProgramsByCif("123", pageParams));
   }
 
   @Test
@@ -159,6 +161,30 @@ class SellerServiceTest {
     assertThrows(
         NotFoundHttpException.class,
         () -> sellerService.getSellerOutstandingBalanceByMnemonic("1722466420001", null));
+  }
+
+  @Test
+  void getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfBuyerNotFound() {
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true).thenReturn(false);
+
+    assertThrows(
+        NotFoundHttpException.class,
+        () ->
+            sellerService.getSellerOutstandingBalanceByMnemonic("1722466420001", "1722466420002"));
+  }
+
+  @Test
+  void
+      getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfSellerHasNoLinkedInvoicesToBuyer() {
+    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
+            anyString(), anyString(), anyChar(), any(ProductMasterStatus.class)))
+        .thenReturn(false);
+
+    assertThrows(
+        NotFoundHttpException.class,
+        () ->
+            sellerService.getSellerOutstandingBalanceByMnemonic("1722466420001", "1722466420002"));
   }
 
   @Test
