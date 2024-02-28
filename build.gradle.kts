@@ -41,7 +41,7 @@ val retryVersion = "2.0.5"
 val aspectsVersion = "6.1.3"
 
 val junitVersion = "5.10.1"
-val testContainersVersion = "1.26.0"
+val testContainersVersion = "1.19.3"
 val awaitilityVersion = "4.2.0"
 val restAssuredVersion = "5.4.0"
 val mockServerClientVersion = "5.15.0"
