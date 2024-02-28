@@ -12,13 +12,13 @@ repositories {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.2.2"
+val springbootVersion = "3.2.3"
 val camelVersion = "4.3.0"
-val lombokVersion = "1.18.28"
+val lombokVersion = "1.18.30"
 val h2Version = "2.2.224"
-val postgresVersion = "42.7.1"
+val postgresVersion = "42.7.2"
 val mapstructVersion = "1.5.5.Final"
-val jdbcVersion = "12.2.0.jre11"
+val jdbcVersion = "12.4.2.jre11"
 val openCsvVersion = "5.9"
 val commonsCodecVersion = "1.16.0"
 val openApiVersion = "2.3.0"
@@ -28,7 +28,7 @@ val retryVersion = "2.0.5"
 val aspectsVersion = "6.1.3"
 
 val junitVersion = "5.10.1"
-val testContainersVersion = "1.19.3"
+val testContainersVersion = "1.26.0"
 val awaitilityVersion = "4.2.0"
 val restAssuredVersion = "5.4.0"
 val mockServerClientVersion = "5.15.0"
