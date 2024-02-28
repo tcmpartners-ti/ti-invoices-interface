@@ -86,11 +86,10 @@ pipelines:
           steps:
             - step: *unit-tests
             - step: *integration-tests
-      - parallel: # Snyk scans
+      - parallel:
           steps:
-            - step: *scan-dependencies
-            - step: *scan-code
-            - step: *scan-image
+            - step: *sonar-scan-test
+            - step: *integration-tests
       - step: *approval
       - step: *deploy-prod
 
