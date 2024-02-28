@@ -1,9 +1,15 @@
 image: gradle:8.3.0-jdk17
 
+clone:
+  depth: full
+
 definitions:
   services:
     docker:
       memory: 2048
+
+  caches:
+    sonar: ~/.sonar/cache
 
   steps:
     - step: &build
@@ -26,32 +32,13 @@ definitions:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
-    - step: &scan-dependencies
-        name: Scan dependencies
-        caches: [ gradle ]
+    - step: &sonar-scan-test
+        name: Scan and unit test project with sonar
+        caches: [ gradle, sonar ]
         script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - ./snyk test --all-projects --severity-threshold=medium
-    - step: &scan-code
-        name: Scan code
-        caches: [ gradle ]
-        script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - ./snyk code test --severity-threshold=high
-    - step: &scan-image
-        name: Scan image
-        caches: [ gradle, docker ]
-        services: [ docker ]
-        script:
-          - chmod +x ./assets/scripts/install-snyk.sh && ./assets/scripts/install-snyk.sh
-          - DOCKER_BUILDKIT=1 docker build -t $IMAGE:latest .
-          - ./snyk container test $IMAGE:latest --severity-threshold=medium
-
-    - step: &dev-approval
-        name: Developer approval
-        trigger: manual
-        script:
-          - echo "Step approved by developer"
+          - gradle build jacocoTestReport sonar
+        artifacts:
+          - build/libs/**
 
     - step: &approval
         name: Approval
@@ -65,7 +52,8 @@ definitions:
         services: [ docker ]
         script:
           - echo $CR_PASS_DEV | docker login $CR_NAME_DEV -u $CR_USER_DEV --password-stdin
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_DEV/$IMAGE:latest . --build-arg="COMMIT=$BITBUCKET_COMMIT"
+          - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_DEV/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
           - docker push $CR_NAME_DEV/$IMAGE:latest
 
     - step: &deploy-test
@@ -74,7 +62,8 @@ definitions:
         services: [ docker ]
         script:
           - echo $CR_PASS_TEST | docker login $CR_NAME_TEST -u $CR_USER_TEST --password-stdin
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$BITBUCKET_COMMIT"
+          - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
           - docker push $CR_NAME_TEST/$IMAGE:latest
 
     - step: &deploy-prod
@@ -105,18 +94,13 @@ pipelines:
       - step: *approval
       - step: *deploy-prod
 
-    # Staging (Test) branch
-    develop:
+    # Staging branches
+    '{develop,hotfix/*,release/*}':
       - step: *build
       - parallel:
           steps:
-            - step: *unit-tests
+            - step: *sonar-scan-test
             - step: *integration-tests
-      - parallel: # Snyk scans
-          steps:
-            - step: *scan-dependencies
-            - step: *scan-code
-            - step: *scan-image
       - step: *deploy-test
 
     # Development Branches
@@ -124,12 +108,6 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *unit-tests
+            - step: *sonar-scan-test
             - step: *integration-tests
-      - parallel: # Snyk scans
-          steps:
-            - step: *scan-dependencies
-            - step: *scan-code
-            - step: *scan-image
-      - step: *dev-approval
       - step: *deploy-dev

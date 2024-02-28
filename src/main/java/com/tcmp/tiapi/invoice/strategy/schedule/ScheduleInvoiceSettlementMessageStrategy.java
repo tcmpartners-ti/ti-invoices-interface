@@ -28,14 +28,13 @@ public class ScheduleInvoiceSettlementMessageStrategy implements ScheduleIncomin
   // Inject strategy to avoid sending the message to the queue and receiving it back just to be
   // processed by this strategy.
   private final InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
+  private final ScheduledMessageRepository scheduledMessageRepository;
 
   private final UUIDGenerator uuidGenerator;
   private final Clock clock;
 
   @Value("${config.schedule-messages}")
   private Boolean shouldScheduleMessages;
-
-  private final ScheduledMessageRepository scheduledMessageRepository;
 
   @Override
   public void handleIncomingMessage(String message) {

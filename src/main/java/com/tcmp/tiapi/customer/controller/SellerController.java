@@ -23,14 +23,13 @@ import jakarta.validation.constraints.Size;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("sellers")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Sellers", description = "Defines the sellers operations.")
 public class SellerController {
   private final SellerService sellerService;
@@ -46,14 +45,14 @@ public class SellerController {
       example = "O")
   @Parameter(
       name = "page",
-      description = "Page (0 based). Default: 0.",
-      schema = @Schema(type = "number"),
+      description = "Page (0 based)",
+      schema = @Schema(type = "number", defaultValue = "0"),
       in = ParameterIn.QUERY,
       example = "0")
   @Parameter(
       name = "size",
-      description = "Page size (items per page). Default: 10.",
-      schema = @Schema(type = "number"),
+      description = "Page size (items per page).",
+      schema = @Schema(type = "number", defaultValue = "10"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<InvoiceDTO> getSellerInvoicesByMnemonic(
@@ -89,8 +88,18 @@ public class SellerController {
           @Pattern(
               regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
               message = "Special characters are not allowed")
-          String sellerMnemonic) {
-    return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
+          String sellerMnemonic,
+      @RequestParam(name = "buyer", required = false)
+          @Valid
+          @Size(min = 10, max = 13, message = "This field must have between 10 and 13 characters")
+          @Pattern(
+              regexp = FieldValidationRegex.ONLY_NUMERIC_VALUES,
+              message = "Only numeric values are allowed")
+          @Pattern(
+              regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+              message = "Special characters are not allowed")
+          String buyerMnemonic) {
+    return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic, buyerMnemonic);
   }
 
   @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -107,14 +116,14 @@ public class SellerController {
       example = "CIF")
   @Parameter(
       name = "page",
-      description = "Page (0 based). Default: 0.",
-      schema = @Schema(type = "number"),
+      description = "Page (0 based).",
+      schema = @Schema(type = "number", defaultValue = "0"),
       in = ParameterIn.QUERY,
       example = "0")
   @Parameter(
       name = "size",
-      description = "Page size (items per page). Default: 10.",
-      schema = @Schema(type = "number"),
+      description = "Page size (items per page).",
+      schema = @Schema(type = "number", defaultValue = "10"),
       in = ParameterIn.QUERY,
       example = "10")
   public PaginatedResult<ProgramDTO> getSellerProgramsByIdentifier(

@@ -6,6 +6,7 @@ import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceSpecifications;
 import com.tcmp.tiapi.program.ProgramMapper;
@@ -17,6 +18,7 @@ import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResultMeta;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +39,7 @@ public class SellerService {
 
   public PaginatedResult<InvoiceDTO> getSellerInvoices(
       String sellerMnemonic, SearchSellerInvoicesParams searchParams, PageParams pageParams) {
-    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
+    checkIfSellerExistsOrThrowNotFound(sellerMnemonic);
 
     Page<InvoiceMaster> sellerInvoicesPage =
         invoiceRepository.findAll(
@@ -56,7 +58,7 @@ public class SellerService {
 
   public PaginatedResult<ProgramDTO> getSellerProgramsByMnemonic(
       String sellerMnemonic, PageParams pageParams) {
-    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
+    checkIfSellerExistsOrThrowNotFound(sellerMnemonic);
 
     PageRequest pageable = PageRequest.of(pageParams.getPage(), pageParams.getSize());
     Page<Program> programsPage =
@@ -84,22 +86,58 @@ public class SellerService {
         .build();
   }
 
-  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(String sellerMnemonic) {
-    checkIfCustomerExistsOrThrowNotFound(sellerMnemonic);
+  public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(
+      String sellerMnemonic, @Nullable String buyerMnemonic) {
+    checkIfSellerExistsOrThrowNotFound(sellerMnemonic);
+    checkIfBuyerExistsOrThrowNotFound(buyerMnemonic);
 
-    BigDecimal outstandingBalance =
+    checkIfSellerHasLinkedInvoicesToBuyer(sellerMnemonic, buyerMnemonic);
+
+    BigDecimal notFinancedOutstandingBalance =
         invoiceRepository
-            .getOutstandingBalanceBySellerMnemonic(sellerMnemonic)
+            .getNotFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic, buyerMnemonic)
             .map(MonetaryAmountUtils::convertCentsToDollars)
             .orElse(BigDecimal.ZERO);
 
-    return new OutstandingBalanceDTO(outstandingBalance);
+    BigDecimal financedOutstandingBalance =
+        invoiceRepository
+            .getFinancedOutstandingBalanceBySellerMnemonic(sellerMnemonic, buyerMnemonic)
+            .map(MonetaryAmountUtils::convertCentsToDollars)
+            .orElse(BigDecimal.ZERO);
+
+    BigDecimal totalOutstandingBalance =
+        notFinancedOutstandingBalance.add(financedOutstandingBalance);
+
+    return new OutstandingBalanceDTO(totalOutstandingBalance);
   }
 
-  private void checkIfCustomerExistsOrThrowNotFound(String sellerMnemonic) {
+  private void checkIfSellerExistsOrThrowNotFound(String sellerMnemonic) {
     if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));
+    }
+  }
+
+  private void checkIfBuyerExistsOrThrowNotFound(@Nullable String buyerMnemonic) {
+    if (buyerMnemonic == null) return;
+
+    if (!customerRepository.existsByIdMnemonic(buyerMnemonic)) {
+      throw new NotFoundHttpException(
+          String.format("Could not find a buyer with mnemonic %s.", buyerMnemonic));
+    }
+  }
+
+  private void checkIfSellerHasLinkedInvoicesToBuyer(String sellerMnemonic, String buyerMnemonic) {
+    if (buyerMnemonic == null) return;
+
+    boolean sellerHasInvoicesLinkedToBuyer =
+        invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
+            sellerMnemonic, buyerMnemonic, 'O', ProductMasterStatus.LIV);
+    if (!sellerHasInvoicesLinkedToBuyer) {
+      throw new NotFoundHttpException(
+          String.format(
+              "Could not find any invoices linked to seller %s and buyer %s.",
+              sellerMnemonic, buyerMnemonic));
     }
   }
 }

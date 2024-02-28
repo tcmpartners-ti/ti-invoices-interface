@@ -2,13 +2,26 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
     java
+    jacoco // Required by SonarCloud
     `jvm-test-suite`
     id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.4"
+    id("org.sonarqube") version "4.4.1.3373"
 }
 
 repositories {
     mavenCentral()
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "tcmpartners_ti-invoices-interface")
+        property("sonar.organization", "tcmpartners")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.junit.reportPaths", "${project.projectDir}/test-results/test")
+        property("sonar.junit.reportPaths", "**/*Test*/**")
+        property("sonar.gradle.skipCompile", true)
+    }
 }
 
 //<editor-fold desc="Dependencies Versions">
@@ -18,7 +31,7 @@ val lombokVersion = "1.18.30"
 val h2Version = "2.2.224"
 val postgresVersion = "42.7.2"
 val mapstructVersion = "1.5.5.Final"
-val jdbcVersion = "12.4.2.jre11"
+val jdbcVersion = "12.6.0.jre11"
 val openCsvVersion = "5.9"
 val commonsCodecVersion = "1.16.0"
 val openApiVersion = "2.3.0"
@@ -101,6 +114,18 @@ tasks.withType<Test> {
     }
 
     systemProperty("spring.profiles.active", "test")
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required = true
+    }
 }
 
 tasks.withType<BootJar> {
