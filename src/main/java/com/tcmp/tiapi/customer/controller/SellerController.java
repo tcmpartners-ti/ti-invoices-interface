@@ -93,8 +93,7 @@ public class SellerController {
     return sellerService.getSellerOutstandingBalanceByMnemonic(sellerMnemonic);
   }
 
-  @Hidden // This is done for production
-  // @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "{sellerIdentifier}/programs", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get seller's programs either by mnemonic (ruc) or cif.")
   @Parameter(
       name = "type",
