@@ -27,7 +27,10 @@ public abstract class ProgramMapper {
       expression = "java(StringMappingUtils.trimNullable(program.getDescription()))")
   @Mapping(
       target = "customer.mnemonic",
-      expression = "java(StringMappingUtils.trimNullable(program.getCustomerMnemonic()))")
+      expression = "java(StringMappingUtils.trimNullable(customer.getId().getMnemonic()))")
+  @Mapping(
+      target = "customer.commercialTradeCode",
+      expression = "java(StringMappingUtils.trimNullable(customer.getType()))")
   @Mapping(source = "startDate", target = "startDate")
   @Mapping(source = "expiryDate", target = "expiryDate")
   @Mapping(source = "type", target = "type")
