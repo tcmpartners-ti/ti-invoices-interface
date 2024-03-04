@@ -118,5 +118,6 @@ public class Program {
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = "CUSTOMER", referencedColumnName = "GFCUS1", insertable = false, updatable = false)
+  @JoinColumn(name = "CUST_SBB", referencedColumnName = "GFCUS1_SBB", insertable = false, updatable = false)
   private Customer customer;
 }
