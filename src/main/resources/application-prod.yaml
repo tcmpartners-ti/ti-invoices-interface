@@ -1,6 +1,6 @@
-# If set to `true`, the microservice wil store scheduled messages in db (to be processed afterward),
+# If set to `true`, the microservice will store scheduled messages in db (to be processed afterward),
 # otherwise it will send the messages to the processing queue.
-config.schedule-messages: false
+config.schedule-messages: true
 
 spring:
   datasource:
