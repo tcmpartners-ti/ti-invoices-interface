@@ -293,6 +293,7 @@ class InvoiceSettlementFlowStrategyTest {
 
   private InvoiceSettlementEventMessage buildMockSettlementMessage() {
     return InvoiceSettlementEventMessage.builder()
+        .invoiceNumber("701-173-980660251--6243--4")
         .buyerIdentifier("B123")
         .sellerIdentifier("")
         .programme("P123")
