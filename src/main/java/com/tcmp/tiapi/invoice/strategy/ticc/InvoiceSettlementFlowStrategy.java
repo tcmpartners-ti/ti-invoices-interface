@@ -358,7 +358,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
       throws PaymentExecutionException {
     log.info("Started buyer to seller transaction.");
 
-    String invoiceReference = message.getInvoiceNumber();
+    String invoiceReference = message.getInvoiceNumber().split("--")[0];
     String debitConcept =
         String.format("Descuento Factura %s %s", invoiceReference, seller.getFullName().trim());
     String creditConcept =
