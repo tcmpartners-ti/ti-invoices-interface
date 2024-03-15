@@ -288,10 +288,10 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       DistributorCreditResponse distributorCreditResponse,
       FinanceAckMessage financeMessage,
       EncodedAccountParser buyerAccount) {
+
+    String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String concept =
-        String.format(
-            "Descuento Factura %s %s",
-            financeMessage.getTheirRef(), financeMessage.getSellerName());
+        String.format("Descuento Factura %s %s", invoiceNumber, financeMessage.getSellerName());
     String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
@@ -308,9 +308,10 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       DistributorCreditResponse distributorCreditResponse,
       FinanceAckMessage financeMessage,
       EncodedAccountParser sellerAccount) {
+
+    String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String concept =
-        String.format(
-            "Pago Factura %s %s", financeMessage.getTheirRef(), financeMessage.getBuyerName());
+        String.format("Pago Factura %s %s", invoiceNumber, financeMessage.getBuyerName());
     String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount = BigDecimal.valueOf(distributorCreditResponse.data().disbursementAmount());
 
@@ -439,10 +440,10 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       FinanceAckMessage financeMessage,
       EncodedAccountParser sellerAccount) {
 
+    String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String concept =
         String.format(
-            "Intereses y Solca Factura %s %s",
-            financeMessage.getTheirRef(), financeMessage.getBuyerName());
+            "Intereses y Solca Factura %s %s", invoiceNumber, financeMessage.getBuyerName());
     String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount =
         calculateSolcaAndTaxesFromCreditResponse(sellerCreditResponse, financeMessage);
@@ -461,10 +462,10 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       FinanceAckMessage financeMessage,
       EncodedAccountParser buyerAccount) {
 
+    String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String concept =
         String.format(
-            "Intereses y Solca Factura %s %s",
-            financeMessage.getTheirRef(), financeMessage.getSellerName());
+            "Intereses y Solca Factura %s %s", invoiceNumber, financeMessage.getSellerName());
     String currency = financeMessage.getPaymentDetails().getCurrency();
     BigDecimal amount =
         calculateSolcaAndTaxesFromCreditResponse(sellerCreditResponse, financeMessage);
