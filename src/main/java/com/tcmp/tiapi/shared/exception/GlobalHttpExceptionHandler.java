@@ -3,6 +3,7 @@ package com.tcmp.tiapi.shared.exception;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
+import com.tcmp.tiapi.shared.dto.response.error.CSVErrorsDetails;
 import com.tcmp.tiapi.shared.dto.response.error.FieldErrorDetails;
 import com.tcmp.tiapi.shared.dto.response.error.SimpleHttpErrorMessage;
 import com.tcmp.tiapi.shared.dto.response.error.ValidationHttpErrorMessage;
@@ -119,5 +120,13 @@ public class GlobalHttpExceptionHandler {
     }
 
     return new FieldErrorDetails(lastPath, violation.getMessage());
+  }
+
+  @ExceptionHandler(CsvValidationException.class)
+  public ResponseEntity<CSVErrorsDetails> handleCsvValidationException(CsvValidationException e) {
+    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity.status(badRequest)
+        .body(new CSVErrorsDetails(badRequest.value(), e.getMessage(), e.getFieldErrors()));
   }
 }
