@@ -15,7 +15,10 @@ public enum TIOperation {
   CANCEL_INVOICE_RESULT(TIOperation.CANCEL_INVOICE_RESULT_VALUE),
   FINANCE_INVOICE(TIOperation.FINANCE_INVOICE_VALUE),
   FINANCE_INVOICE_RESULT(TIOperation.FINANCE_INVOICE_RESULT_VALUE),
-  SETTLE_INVOICE_RESULT(TIOperation.SETTLE_INVOICE_RESULT_VALUE);
+  SETTLE_INVOICE_RESULT(TIOperation.SETTLE_INVOICE_RESULT_VALUE),
+  CREATE_CUSTOMER(TIOperation.CREATE_CUSTOMER_VALUE),
+  CREATE_ACCOUNT(TIOperation.CREATE_ACCOUNT_VALUE),
+  ITEM("Item");
 
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
   public static final String CREATE_INVOICE_RESULT_VALUE = "TFINVACK";
@@ -23,6 +26,8 @@ public enum TIOperation {
   public static final String FINANCE_INVOICE_VALUE = "TFBUYFIN";
   public static final String FINANCE_INVOICE_RESULT_VALUE = "TFBCFCRE";
   public static final String SETTLE_INVOICE_RESULT_VALUE = "TFINVSETCU";
+  public static final String CREATE_CUSTOMER_VALUE = "Customer";
+  public static final String CREATE_ACCOUNT_VALUE = "Account";
 
   private final String value;
 }

@@ -1,5 +1,8 @@
 package com.tcmp.tiapi.ti.dto.request;
 
+import com.tcmp.tiapi.customer.dto.ti.Account;
+import com.tcmp.tiapi.customer.dto.ti.Customer;
+import com.tcmp.tiapi.customer.dto.ti.CustomerItemRequest;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.ti.dto.TINamespace;
@@ -16,7 +19,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @XmlRootElement(name = "ServiceRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso({CreateInvoiceEventMessage.class, FinanceBuyerCentricInvoiceEventMessage.class})
+@XmlSeeAlso({
+  CreateInvoiceEventMessage.class,
+  FinanceBuyerCentricInvoiceEventMessage.class,
+  Customer.class,
+  Account.class
+})
 public class ServiceRequest<T> {
   // Missing namespaces
   @XmlAttribute(namespace = TINamespace.SCHEMA)
@@ -36,6 +44,18 @@ public class ServiceRequest<T> {
     @XmlElement(
         name = TIOperation.FINANCE_INVOICE_VALUE,
         type = FinanceBuyerCentricInvoiceEventMessage.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.CREATE_CUSTOMER_VALUE,
+        type = Customer.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.CREATE_ACCOUNT_VALUE,
+        type = Account.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = "ItemRequest",
+        type = CustomerItemRequest.class,
         namespace = TINamespace.MESSAGES)
   })
   private T body;
