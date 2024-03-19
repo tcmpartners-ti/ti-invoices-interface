@@ -268,6 +268,7 @@ class InvoiceFinancingFlowStrategyTest {
   private FinanceAckMessage buildMockMessage() {
     return FinanceAckMessage.builder()
         .programme("P123")
+        .theirRef("701-173-980660251--6243--4")
         .buyerIdentifier("B123")
         .sellerIdentifier("S123")
         .financeDealCurrency("USD")

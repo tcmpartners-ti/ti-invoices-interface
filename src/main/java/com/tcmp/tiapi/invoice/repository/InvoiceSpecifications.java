@@ -39,6 +39,8 @@ public class InvoiceSpecifications {
       if (status.equals("O")) predicates.add(cb.not(invoiceHasBeenFinanced));
       if (status.equals("F")) predicates.add(invoiceHasBeenFinanced);
 
+      query.orderBy(cb.asc(root.get("reference")));
+
       return cb.and(predicates.toArray(new Predicate[0]));
     };
   }
