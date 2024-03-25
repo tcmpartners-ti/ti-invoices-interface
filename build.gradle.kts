@@ -26,8 +26,8 @@ sonar {
 
 //<editor-fold desc="Dependencies Versions">
 val springbootVersion = "3.2.2"
-val camelVersion = "4.3.0"
-val lombokVersion = "1.18.30"
+val camelVersion = "4.4.1"
+val lombokVersion = "1.18.32"
 val h2Version = "2.2.224"
 val postgresVersion = "42.7.1"
 val mapstructVersion = "1.5.5.Final"
@@ -38,7 +38,7 @@ val openApiVersion = "2.3.0"
 val woodStoxVersion = "4.4.1"
 val openFeignVersion = "4.1.0"
 val retryVersion = "2.0.5"
-val aspectsVersion = "6.1.3"
+val aspectsVersion = "6.1.5"
 
 val junitVersion = "5.10.1"
 val testContainersVersion = "1.19.3"
