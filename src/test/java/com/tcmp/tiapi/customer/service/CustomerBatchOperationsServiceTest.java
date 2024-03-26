@@ -65,7 +65,8 @@ class CustomerBatchOperationsServiceTest {
             "[Row #1] Mnemonic must be between 10 and 13 characters");
 
     assertEquals(expectedErrorMessage, csvValidationException.getMessage());
-    assertEquals(expectedFieldErrors, csvValidationException.getFieldErrors());
+    assertArrayEquals(
+        expectedFieldErrors.toArray(), csvValidationException.getFieldErrors().toArray());
   }
 
   @Test
@@ -116,7 +117,8 @@ class CustomerBatchOperationsServiceTest {
             "[Row #1] Mnemonic must be between 10 and 13 characters");
 
     assertEquals(expectedErrorMessage, csvValidationException.getMessage());
-    assertEquals(expectedFieldErrors, csvValidationException.getFieldErrors());
+    assertArrayEquals(
+        expectedFieldErrors.toArray(), csvValidationException.getFieldErrors().toArray());
   }
 
   @Test
