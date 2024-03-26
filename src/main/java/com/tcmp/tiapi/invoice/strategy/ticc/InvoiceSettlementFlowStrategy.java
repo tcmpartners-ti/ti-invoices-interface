@@ -157,6 +157,8 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
       Customer customer,
       BigDecimal paymentAmount) {
 
+    String invoiceNumber = message.getInvoiceNumber().split("--")[0];
+
     InvoiceEmailInfo creditedInvoiceInfo =
         InvoiceEmailInfo.builder()
             .customerMnemonic(message.getBuyerIdentifier())
@@ -165,7 +167,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             .date(message.getPaymentValueDate())
             .action(event.getValue())
             .invoiceCurrency(message.getPaymentCurrency().trim())
-            .invoiceNumber(message.getInvoiceNumber())
+            .invoiceNumber(invoiceNumber)
             .amount(paymentAmount)
             .build();
 

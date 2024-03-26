@@ -138,6 +138,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       FinanceAckMessage invoiceFinanceAck,
       Customer customer,
       BigDecimal amount) {
+
+    String invoiceNumber = invoiceFinanceAck.getTheirRef().split("--")[0];
+
     return InvoiceEmailInfo.builder()
         .customerMnemonic(invoiceFinanceAck.getSellerIdentifier())
         .customerEmail(customer.getAddress().getCustomerEmail().trim())
@@ -145,7 +148,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
         .date(invoiceFinanceAck.getStartDate())
         .action(event.getValue())
         .invoiceCurrency(invoiceFinanceAck.getFinanceDealCurrency())
-        .invoiceNumber(invoiceFinanceAck.getTheirRef())
+        .invoiceNumber(invoiceNumber)
         .amount(amount)
         .build();
   }
