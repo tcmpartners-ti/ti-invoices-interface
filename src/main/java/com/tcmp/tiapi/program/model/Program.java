@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.program.model;
 
+import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -114,4 +115,9 @@ public class Program {
 
   @Column(name = "TSTAMP")
   private Integer timeStamp;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "CUSTOMER", referencedColumnName = "GFCUS1", insertable = false, updatable = false)
+  @JoinColumn(name = "CUST_SBB", referencedColumnName = "GFCUS1_SBB", insertable = false, updatable = false)
+  private Customer customer;
 }
