@@ -1,8 +1,9 @@
 # If set to `true`, the microservice wil store scheduled messages in db (to be processed afterward),
 # otherwise it will send the messages to the processing queue.
-config.schedule-messages: ${SCHEDULE_MESSAGES}
+config.schedule-messages: false
 
 spring:
+  jpa.show-sql: true
   output.ansi.enabled: ALWAYS
 
   datasource:
@@ -24,8 +25,7 @@ spring:
     user: ${MQ_USER}
     password: ${MQ_PASS}
     broker-url: "tcp://${spring.activemq.host}:${spring.activemq.port}"
-    packages:
-      trust-all: true
+    packages.trust-all: true
 
 bp:
   service:
@@ -54,6 +54,29 @@ bp:
         user: ${CL_USER}
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
+
+fcm:
+  activemq:
+    host: ${FCM_MQ_HOST}
+    port: ${FCM_MQ_PORT}
+    user: ${FCM_MQ_USER}
+    password: ${FCM_MQ_PASS}
+    broker-url: "tcp://${fcm.activemq.host}:${fcm.activemq.port}"
+    packages.trust-all: true
+
+  config:
+    debtor-id: ${FCM_DEBTOR_ID}
+    short-name: ${FCM_SHORT_NAME}
+
+  api:
+    headers.user-id: ${FCM_USER_ID}
+
+    services:
+      single-electronic-payment:
+        url: "${fmc.api.url.dev}/fcmclient/services/openapi/electronic"
+
+  route:
+    payment-result.from: "activemqFcm:queue:TRADE_INNOVATION_NOT"
 
 ti.route:
   fti:
