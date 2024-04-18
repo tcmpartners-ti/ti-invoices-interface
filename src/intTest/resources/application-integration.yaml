@@ -42,6 +42,30 @@ bp:
         operation-token: ""
         url: "${bp.api-gee.base-url}/domain/corporate-loan/v1"
 
+fcm:
+  activemq:
+    host: "localhost"
+    port: "61616"
+    user: "admin"
+    password: "admin"
+    broker-url: ""
+    packages.trust-all: true
+
+  config:
+    debtor-id: "1182146"
+    short-name: "20100105862"
+
+  api:
+    # Todo: don't upload this info
+    headers.user-id: "171721"
+
+    services:
+      single-electronic-payment:
+        url: "${fmc.api.url.dev}/fcmclient/services/openapi/electronic"
+
+  route:
+    payment-result.from: "activemqFcm:queue:TRADE_INNOVATION_NOT"
+
 ti.route:
   fti:
     out:

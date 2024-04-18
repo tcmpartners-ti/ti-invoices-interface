@@ -103,6 +103,7 @@ public abstract class AbstractIntegrationTest {
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     registry.add("spring.activemq.broker-url", activemq::brokerUrl);
+    registry.add("fcm.activemq.broker-url", activemq::brokerUrl);
     registry.add("bp.api-gee.base-url", () -> mockServerUrl);
   }
 
