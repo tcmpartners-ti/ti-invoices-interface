@@ -1,8 +1,7 @@
 package com.tcmp.tiapi.invoice.repository;
 
-import static com.tcmp.tiapi.invoice.model.ProductMasterStatus.LIV;
-
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Predicate;
@@ -20,7 +19,8 @@ public class InvoiceSpecifications {
       List<Predicate> predicates = new ArrayList<>();
 
       predicates.add(cb.equal(root.get("seller").get("mnemonic"), sellerMnemonic));
-      predicates.add(cb.equal(root.get("productMaster").get("status"), LIV.name()));
+      predicates.add(
+          cb.equal(root.get("productMaster").get("status"), ProductMasterStatus.LIV.name()));
 
       if (status == null) return cb.and(predicates.toArray(new Predicate[0]));
 
