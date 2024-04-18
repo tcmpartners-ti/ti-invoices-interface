@@ -4,7 +4,7 @@ plugins {
     java
     jacoco // Required by SonarCloud
     `jvm-test-suite`
-    id("org.springframework.boot") version "3.2.2"
+    id("org.springframework.boot") version "3.2.4"
     id("io.spring.dependency-management") version "1.1.4"
     id("org.sonarqube") version "4.4.1.3373"
 }
@@ -25,22 +25,23 @@ sonar {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.2.2"
-val camelVersion = "4.4.1"
+val springbootVersion = "3.2.4"
+val camelVersion = "4.5.0"
 val lombokVersion = "1.18.32"
 val h2Version = "2.2.224"
 val postgresVersion = "42.7.1"
-val mapstructVersion = "1.5.5.Final"
-val jdbcVersion = "12.6.0.jre11"
+val mapstructVersion = "1.6.0.Beta1"
+val jdbcVersion = "12.7.0.jre8-preview"
 val openCsvVersion = "5.9"
-val commonsCodecVersion = "1.16.0"
+val commonsCodecVersion = "1.16.1"
 val openApiVersion = "2.3.0"
 val woodStoxVersion = "4.4.1"
-val openFeignVersion = "4.1.0"
+val openFeignVersion = "4.1.1"
 val retryVersion = "2.0.5"
-val aspectsVersion = "6.1.5"
+val aspectsVersion = "6.1.6"
+val lombokMapstructBindingVersion = "0.2.0"
 
-val junitVersion = "5.10.1"
+val junitVersion = "5.10.2"
 val testContainersVersion = "1.19.3"
 val awaitilityVersion = "4.2.0"
 val restAssuredVersion = "5.4.0"
@@ -71,6 +72,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     implementation("org.projectlombok:lombok:$lombokVersion")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openApiVersion") // Documentation
+    implementation("org.projectlombok:lombok-mapstruct-binding:$lombokMapstructBindingVersion")
 
     // Annotation Processors
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
@@ -86,12 +88,6 @@ dependencies {
     testImplementation("org.apache.camel:camel-test-junit5:$camelVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springbootVersion")
-    testImplementation("com.jayway.jsonpath:json-path:2.9.0") {
-        version {
-            strictly("2.9.0")
-        }
-        because("version 2.8.0 has 1 found vulnerability")
-    }
 }
 
 group = "com.tcmp"
