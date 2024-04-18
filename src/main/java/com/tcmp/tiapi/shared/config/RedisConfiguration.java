@@ -1,5 +1,7 @@
-package com.tcmp.tiapi.shared;
+package com.tcmp.tiapi.shared.config;
 
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
+import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -9,7 +11,11 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 
 @Configuration
 @Profile("!test")
-@EnableRedisRepositories(basePackages = {"com.tcmp.tiapi.invoice.repository.redis"})
+@EnableRedisRepositories(
+    basePackageClasses = {
+      InvoiceEventRepository.class,
+      InvoicePaymentCorrelationInfoRepository.class
+    })
 public class RedisConfiguration {
   @Bean
   public RedisTemplate<String, Object> redisTemplate(

@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.shared;
+package com.tcmp.tiapi.shared.config;
 
 import java.time.Clock;
 import java.time.ZoneId;
