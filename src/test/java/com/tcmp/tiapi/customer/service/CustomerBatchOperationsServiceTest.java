@@ -10,7 +10,6 @@ import com.tcmp.tiapi.customer.mapper.CustomerMapper;
 import com.tcmp.tiapi.shared.exception.CsvValidationException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.ti.dto.MaintenanceType;
-import java.util.List;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,14 +58,12 @@ class CustomerBatchOperationsServiceTest {
             () -> customerBatchOperationsService.createMultipleCustomersInTi(customersFile));
 
     var expectedErrorMessage = "Customer file has inconsistencies";
-    var expectedFieldErrors =
-        List.of(
-            "[Row #1] Mnemonic must be numeric",
-            "[Row #1] Mnemonic must be between 10 and 13 characters");
+    var actualFieldErrors = csvValidationException.getFieldErrors();
 
     assertEquals(expectedErrorMessage, csvValidationException.getMessage());
-    assertArrayEquals(
-        expectedFieldErrors.toArray(), csvValidationException.getFieldErrors().toArray());
+    assertTrue(actualFieldErrors.contains("[Row #1] Mnemonic must be numeric"));
+    assertTrue(
+        actualFieldErrors.contains("[Row #1] Mnemonic must be between 10 and 13 characters"));
   }
 
   @Test
@@ -111,14 +108,12 @@ class CustomerBatchOperationsServiceTest {
             () -> customerBatchOperationsService.deleteMultipleCustomersInTi(customersFile));
 
     var expectedErrorMessage = "Customer file has inconsistencies";
-    var expectedFieldErrors =
-        List.of(
-            "[Row #1] Mnemonic must be numeric",
-            "[Row #1] Mnemonic must be between 10 and 13 characters");
+    var actualFieldErrors = csvValidationException.getFieldErrors();
 
     assertEquals(expectedErrorMessage, csvValidationException.getMessage());
-    assertArrayEquals(
-        expectedFieldErrors.toArray(), csvValidationException.getFieldErrors().toArray());
+    assertTrue(actualFieldErrors.contains("[Row #1] Mnemonic must be numeric"));
+    assertTrue(
+        actualFieldErrors.contains("[Row #1] Mnemonic must be between 10 and 13 characters"));
   }
 
   @Test

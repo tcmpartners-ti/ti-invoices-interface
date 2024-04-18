@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.ti.route;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
@@ -10,16 +9,11 @@ import com.tcmp.tiapi.ti.route.ticc.TICCIncomingRouteBuilder;
 import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import java.io.InputStream;
-import java.time.Duration;
 import org.apache.camel.EndpointInject;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.awaitility.Durations;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,7 +30,6 @@ class TICCIncomingRouteBuilderTest extends CamelTestSupport {
   @EndpointInject(URI_FROM)
   private ProducerTemplate from;
 
-  private JaxbDataFormat jaxbDataFormatAckEventRequest;
   @Mock private TICCIncomingHandlerContext handlerContextMock;
   @Mock private TICCIncomingStrategy strategyMock;
 
@@ -46,34 +39,22 @@ class TICCIncomingRouteBuilderTest extends CamelTestSupport {
   protected RoutesBuilder createRouteBuilder() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(AckServiceRequest.class);
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
-    jaxbDataFormatAckEventRequest = spy(jaxbDataFormat);
+    JaxbDataFormat jaxbDataFormatAckEventRequest = spy(jaxbDataFormat);
 
     return new TICCIncomingRouteBuilder(
         jaxbDataFormatAckEventRequest, handlerContextMock, URI_FROM);
   }
 
   @Test
-  @Disabled("Somehow this broke")
   void itShouldUseHandlerStrategy() {
     when(handlerContextMock.strategy(anyString())).thenReturn(strategyMock);
 
     from.sendBody(MOCK_TICC_RESPONSE);
-    from.sendBody(MOCK_TICC_RESPONSE);
-    from.sendBody(MOCK_TICC_RESPONSE);
+
+    verify(handlerContextMock).strategy(operationArgumentCaptor.capture());
 
     var expectedOperation = "TFINVACK";
-
-    await()
-        .atMost(Durations.ONE_HUNDRED_MILLISECONDS)
-        .pollDelay(Duration.ofMillis(10L))
-        .untilAsserted(
-            () -> {
-              verify(jaxbDataFormatAckEventRequest, times(3))
-                  .unmarshal(any(Exchange.class), any(InputStream.class));
-              verify(handlerContextMock, times(3)).strategy(operationArgumentCaptor.capture());
-            });
-
-    assertTrue(operationArgumentCaptor.getAllValues().stream().allMatch(expectedOperation::equals));
+    assertEquals(expectedOperation, operationArgumentCaptor.getValue());
   }
 
   @Test

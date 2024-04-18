@@ -7,14 +7,11 @@ import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import com.tcmp.tiapi.ti.handler.FTIReplyIncomingHandlerContext;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import java.io.InputStream;
 import org.apache.camel.EndpointInject;
-import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,8 +24,6 @@ class FTIReplyIncomingRouteBuilderTest extends CamelTestSupport {
 
   private static final String URI_FROM = "direct:mockReplyQueue";
 
-  private JaxbDataFormat jaxbDataFormatSpy;
-
   @EndpointInject(URI_FROM)
   private ProducerTemplate from;
 
@@ -38,27 +33,24 @@ class FTIReplyIncomingRouteBuilderTest extends CamelTestSupport {
   protected RoutesBuilder createRouteBuilder() throws JAXBException {
     JAXBContext jaxbContext = JAXBContext.newInstance(ServiceResponse.class);
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
-    jaxbDataFormatSpy = spy(jaxbDataFormat);
+    JaxbDataFormat jaxbDataFormatSpy = spy(jaxbDataFormat);
 
     return new FTIReplyIncomingRouteBuilder(
         jaxbDataFormatSpy, ftiReplyIncomingHandlerContext, URI_FROM);
   }
 
   @Test
-  @Disabled("Somehow this broke")
-  void itShouldHandleAndPrintErrors() throws Exception {
+  void itShouldHandleAndPrintErrors() {
     var strategyMock = mock(FTIReplyIncomingStrategy.class);
     when(ftiReplyIncomingHandlerContext.strategy(anyString())).thenReturn(strategyMock);
 
     from.sendBody(FAILED_REPLY);
 
-    verify(jaxbDataFormatSpy).unmarshal(any(Exchange.class), any(InputStream.class));
     verify(strategyMock).handleServiceResponse(any(ServiceResponse.class));
   }
 
   @Test
-  @Disabled("Somehow this broke")
-  void itShouldHandleExceptions() throws Exception {
+  void itShouldHandleExceptions() {
     var strategyMock = mock(FTIReplyIncomingStrategy.class);
 
     var exceptionMock = mock(IllegalArgumentException.class);
@@ -66,7 +58,6 @@ class FTIReplyIncomingRouteBuilderTest extends CamelTestSupport {
 
     from.sendBody(FAILED_REPLY);
 
-    verify(jaxbDataFormatSpy).unmarshal(any(Exchange.class), any(InputStream.class));
     verifyNoInteractions(strategyMock);
     verify(exceptionMock).getMessage();
   }

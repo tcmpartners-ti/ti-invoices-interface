@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Address;
 import com.tcmp.tiapi.customer.model.Customer;
@@ -18,6 +19,7 @@ import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
@@ -31,57 +33,78 @@ import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
-import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionRequest;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.TransferResponseData;
-import java.lang.reflect.Field;
+import com.tcmp.tiapi.titofcm.dto.SinglePaymentMapper;
+import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
+import com.tcmp.tiapi.titofcm.dto.response.SinglePaymentResponse;
+import com.tcmp.tiapi.titofcm.exception.SinglePaymentException;
+import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
+import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceSettlementFlowStrategyTest {
   private static final String MOCK_BGL_ACCOUNT = "2374910290";
+  private static final String DEBTOR_ID = "1182150";
+
+  @Mock private UUIDGenerator uuidGenerator;
+  @Mock private ObjectMapper objectMapper;
 
   @Mock private CorporateLoanService corporateLoanService;
-  @Mock private PaymentExecutionService paymentExecutionService;
   @Mock private OperationalGatewayService operationalGatewayService;
   @Mock private BusinessBankingService businessBankingService;
+  @Mock private SingleElectronicPaymentService singleElectronicPaymentService;
 
   @Mock private AccountRepository accountRepository;
   @Mock private CustomerRepository customerRepository;
+  @Mock private InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   @Mock private InvoiceRepository invoiceRepository;
   @Mock private ProductMasterExtensionRepository productMasterExtensionRepository;
   @Mock private ProgramExtensionRepository programExtensionRepository;
 
   @Captor private ArgumentCaptor<InvoiceEmailInfo> invoiceEmailInfoArgumentCaptor;
   @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
-  @Captor private ArgumentCaptor<TransactionRequest> transactionRequestArgumentCaptor;
+  @Captor private ArgumentCaptor<SinglePaymentRequest> singlePaymentRequestArgumentCaptor;
   @Captor private ArgumentCaptor<DistributorCreditRequest> creditRequestArgumentCaptor;
 
-  @InjectMocks private InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
+  private InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
 
   private Customer buyer;
   private Customer seller;
 
   @BeforeEach
-  void setUp() throws NoSuchFieldException, IllegalAccessException {
-    // Mock injected fields
-    Field activeProfile = InvoiceSettlementFlowStrategy.class.getDeclaredField("activeProfile");
-    Field bglAccount = InvoiceSettlementFlowStrategy.class.getDeclaredField("bglAccount");
-    activeProfile.setAccessible(true);
-    bglAccount.setAccessible(true);
-    activeProfile.set(invoiceSettlementFlowStrategy, "prod");
-    bglAccount.set(invoiceSettlementFlowStrategy, MOCK_BGL_ACCOUNT);
+  void setUp() {
+    var singlePaymentMapper = Mappers.getMapper(SinglePaymentMapper.class);
+    ReflectionTestUtils.setField(singlePaymentMapper, "bglAccount", MOCK_BGL_ACCOUNT);
+    ReflectionTestUtils.setField(singlePaymentMapper, "debtorId", DEBTOR_ID);
 
+    invoiceSettlementFlowStrategy =
+        new InvoiceSettlementFlowStrategy(
+            uuidGenerator,
+            objectMapper,
+            corporateLoanService,
+            operationalGatewayService,
+            businessBankingService,
+            singleElectronicPaymentService,
+            accountRepository,
+            customerRepository,
+            invoicePaymentCorrelationInfoRepository,
+            invoiceRepository,
+            productMasterExtensionRepository,
+            programExtensionRepository,
+            singlePaymentMapper);
+
+    ReflectionTestUtils.setField(invoiceSettlementFlowStrategy, "activeProfile", "prod");
+    // Mock injected fields
     buyer =
         Customer.builder()
             .id(CustomerId.builder().mnemonic("1722466420   ").build())
@@ -192,13 +215,8 @@ class InvoiceSettlementFlowStrategyTest {
     when(corporateLoanService.createCredit(any()))
         .thenReturn(
             new DistributorCreditResponse(Data.builder().error(new Error("", "", "INFO")).build()));
-    when(paymentExecutionService.makeTransactionRequest(any()))
-        .thenReturn(
-            new BusinessAccountTransfersResponse(
-                TransferResponseData.builder().status("OK").build()))
-        .thenReturn(
-            new BusinessAccountTransfersResponse(
-                TransferResponseData.builder().status("NOT_OK").build()));
+    when(singleElectronicPaymentService.createSinglePayment(any()))
+        .thenThrow(new SinglePaymentException("Payment failed"));
 
     invoiceSettlementFlowStrategy.handleServiceRequest(
         new AckServiceRequest<>(null, buildMockSettlementMessage()));
@@ -223,6 +241,7 @@ class InvoiceSettlementFlowStrategyTest {
             .discountDealAmount(BigDecimal.TEN)
             .build();
 
+    when(uuidGenerator.getNewId()).thenReturn("001-001-001");
     when(programExtensionRepository.findByProgrammeId(anyString()))
         .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
@@ -235,22 +254,18 @@ class InvoiceSettlementFlowStrategyTest {
     when(corporateLoanService.createCredit(any()))
         .thenReturn(
             new DistributorCreditResponse(Data.builder().error(new Error("", "", "INFO")).build()));
-    when(paymentExecutionService.makeTransactionRequest(any()))
-        .thenReturn(
-            new BusinessAccountTransfersResponse(
-                TransferResponseData.builder().status("OK").build()));
+    when(singleElectronicPaymentService.createSinglePayment(any()))
+        .thenReturn(new SinglePaymentResponse(new SinglePaymentResponse.Data("Reference123")));
 
     invoiceSettlementFlowStrategy.handleServiceRequest(
         new AckServiceRequest<>(null, buildMockSettlementMessage()));
 
     verify(corporateLoanService).createCredit(creditRequestArgumentCaptor.capture());
-    verify(paymentExecutionService, times(2))
-        .makeTransactionRequest(transactionRequestArgumentCaptor.capture());
+    verify(singleElectronicPaymentService)
+        .createSinglePayment(singlePaymentRequestArgumentCaptor.capture());
 
-    verify(operationalGatewayService, times(3))
+    verify(operationalGatewayService, times(2))
         .sendNotificationRequest(invoiceEmailInfoArgumentCaptor.capture());
-    verify(businessBankingService)
-        .notifyEvent(eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT), any());
 
     assertCreditValues();
     assertTransactionsValues();
@@ -273,12 +288,12 @@ class InvoiceSettlementFlowStrategyTest {
   }
 
   private void assertTransactionsValues() {
-    var debitTransaction = transactionRequestArgumentCaptor.getAllValues().get(0);
-    var creditTransaction = transactionRequestArgumentCaptor.getAllValues().get(1);
-    assertEquals(MOCK_BGL_ACCOUNT, debitTransaction.creditor().account().accountId());
-    assertEquals("9278281280", debitTransaction.debtor().account().accountId());
-    assertEquals("9278281281", creditTransaction.creditor().account().accountId());
-    assertEquals(MOCK_BGL_ACCOUNT, creditTransaction.debtor().account().accountId());
+    var transaction = singlePaymentRequestArgumentCaptor.getValue();
+
+    assertEquals(MOCK_BGL_ACCOUNT, transaction.getDebtorAccount().getId().getOther().getId());
+    assertEquals(
+        "9278281281", transaction.getCreditorDetails().getAccount().getId().getOther().getId());
+    assertEquals("9278281280", transaction.getRemittanceInformation().getInformation4());
   }
 
   private void assertEmailsValues() {
@@ -287,8 +302,6 @@ class InvoiceSettlementFlowStrategyTest {
     assertEquals(InvoiceEmailEvent.SETTLED.getValue(), emailEvents.get(0).action());
     assertEquals("Buyer", emailEvents.get(1).customerName());
     assertEquals(InvoiceEmailEvent.CREDITED.getValue(), emailEvents.get(1).action());
-    assertEquals(seller.getFullName(), emailEvents.get(2).customerName());
-    assertEquals(InvoiceEmailEvent.PROCESSED.getValue(), emailEvents.get(2).action());
   }
 
   private InvoiceSettlementEventMessage buildMockSettlementMessage() {
