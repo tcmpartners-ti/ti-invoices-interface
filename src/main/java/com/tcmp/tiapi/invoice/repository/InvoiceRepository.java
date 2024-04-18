@@ -46,8 +46,7 @@ public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
                   AND invoice.discountDealAmount != 0 )
           )
           AND (:buyerMnemonic IS NULL OR buyer.mnemonic = :buyerMnemonic)
-          AND seller.mnemonic = :sellerMnemonic
-      """)
+          AND seller.mnemonic = :sellerMnemonic""")
   Optional<BigDecimal> getFinancedOutstandingBalanceBySellerMnemonic(
       String sellerMnemonic, @Nullable String buyerMnemonic);
 
@@ -73,8 +72,7 @@ public interface InvoiceRepository extends JpaRepository<InvoiceMaster, Long> {
               AND invoice.discountDealAmount != 0 )
       )
       AND (:buyerMnemonic IS NULL OR buyer.mnemonic = :buyerMnemonic)
-      AND seller.mnemonic = :sellerMnemonic
-  """)
+      AND seller.mnemonic = :sellerMnemonic""")
   Optional<BigDecimal> getNotFinancedOutstandingBalanceBySellerMnemonic(
       String sellerMnemonic, @Nullable String buyerMnemonic);
 
