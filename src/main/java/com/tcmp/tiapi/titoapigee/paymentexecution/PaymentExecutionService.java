@@ -40,7 +40,6 @@ public class PaymentExecutionService {
     } catch (FeignException e) {
       log.error("Could not execute transaction. {}", e.getMessage());
       TransferResponseError error = tryBuildTransferErrorFromExceptionOrDefault(e);
-
       tryRequestAndResponseLogging(request, error);
 
       throw new PaymentExecutionException(error.title());
@@ -57,14 +56,11 @@ public class PaymentExecutionService {
   }
 
   private TransferResponseError tryBuildTransferErrorFromExceptionOrDefault(FeignException e) {
-    final TransferResponseError defaultResponseError =
-        TransferResponseError.builder().title(DEFAULT_ERROR_MESSAGE).build();
-
     try {
       ByteBuffer body = e.responseBody().orElseThrow(IOException::new);
       return objectMapper.readValue(body.array(), TransferResponseError.class);
     } catch (IOException ex) {
-      return defaultResponseError;
+      return TransferResponseError.builder().title(DEFAULT_ERROR_MESSAGE).build();
     }
   }
 }
