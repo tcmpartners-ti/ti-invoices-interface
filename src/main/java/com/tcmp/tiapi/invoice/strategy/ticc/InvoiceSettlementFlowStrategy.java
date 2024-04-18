@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.invoice.strategy.ticc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
@@ -9,10 +11,12 @@ import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
+import com.tcmp.tiapi.invoice.strategy.payment.SettlementPaymentResultStrategy;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.ApplicationEnv;
+import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
 import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
@@ -29,11 +33,13 @@ import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
-import com.tcmp.tiapi.titoapigee.paymentexecution.PaymentExecutionService;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionRequest;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.request.TransactionType;
-import com.tcmp.tiapi.titoapigee.paymentexecution.dto.response.BusinessAccountTransfersResponse;
-import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
+import com.tcmp.tiapi.titofcm.dto.SinglePaymentMapper;
+import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
+import com.tcmp.tiapi.titofcm.dto.response.PaymentResultResponse;
+import com.tcmp.tiapi.titofcm.exception.SinglePaymentException;
+import com.tcmp.tiapi.titofcm.model.InvoicePaymentCorrelationInfo;
+import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
+import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
@@ -45,28 +51,31 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple5;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
+  private final UUIDGenerator uuidGenerator;
+  private final ObjectMapper objectMapper;
+
   private final CorporateLoanService corporateLoanService;
-  private final PaymentExecutionService paymentExecutionService;
   private final OperationalGatewayService operationalGatewayService;
   private final BusinessBankingService businessBankingService;
+  private final SingleElectronicPaymentService singleElectronicPaymentService;
 
   private final AccountRepository accountRepository;
   private final CustomerRepository customerRepository;
+  private final InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   private final InvoiceRepository invoiceRepository;
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
   private final ProgramExtensionRepository programExtensionRepository;
+  private final SinglePaymentMapper singlePaymentMapper;
 
   @Value("${spring.profiles.active}")
   private String activeProfile;
-
-  @Value("${bp.service.payment-execution.bgl-account}")
-  private String bglAccount;
 
   /**
    * This function handles the settlement message sent by TI. It notifies to Business Banking the
@@ -102,9 +111,9 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
               boolean hasBeenFinanced = invoiceHasLinkedFinanceEvent(invoice);
               if (hasBeenFinanced) return handleFinancedInvoice(message, tuple);
 
-              return handleNotFinancedInvoice(message, tuple, invoice);
+              return handleNotFinancedInvoice(message, tuple);
             })
-        .doOnSuccess(success -> log.info("Invoice settlement flow completed successfully."))
+        .doOnSuccess(success -> log.info("Invoice settlement flow completed."))
         .onErrorResume(error -> handleError(error, message, invoice))
         .subscribe();
   }
@@ -119,17 +128,12 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
       InvoiceSettlementEventMessage message,
       Tuple5<Customer, Customer, ProgramExtension, ProductMasterExtension, Account> tuple) {
     Customer buyer = tuple.getT1();
-
-    BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
-    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
-
-    return sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount);
+    return sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer);
   }
 
   private Mono<Object> handleNotFinancedInvoice(
       InvoiceSettlementEventMessage message,
-      Tuple5<Customer, Customer, ProgramExtension, ProductMasterExtension, Account> tuple,
-      InvoiceMaster invoice) {
+      Tuple5<Customer, Customer, ProgramExtension, ProductMasterExtension, Account> tuple) {
     Customer buyer = tuple.getT1();
     Customer seller = tuple.getT2();
     ProgramExtension programExtension = tuple.getT3();
@@ -138,26 +142,52 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     EncodedAccountParser sellerAccount =
         new EncodedAccountParser(tuple.getT5().getExternalAccountNumber());
 
-    BigDecimal paymentAmountInCents = new BigDecimal(message.getPaymentAmount());
-    BigDecimal paymentAmount = MonetaryAmountUtils.convertCentsToDollars(paymentAmountInCents);
-
-    return sendEmailToCustomer(InvoiceEmailEvent.SETTLED, message, seller, paymentAmount)
+    return sendEmailToCustomer(InvoiceEmailEvent.SETTLED, message, seller)
         .then(createBuyerCredit(message, buyer, programExtension, buyerAccount))
-        .then(sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer, paymentAmount))
+        .then(sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer))
         .then(
             transferPaymentAmountFromBuyerToSeller(
-                message, buyer, seller, buyerAccount, sellerAccount))
-        .then(sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller, paymentAmount))
-        .then(notifySettlementStatusExternally(PayloadStatus.SUCCEEDED, message, invoice, null));
+                    message, buyer, seller, buyerAccount, sellerAccount)
+                .map(this::handleBuyerToSellerTransaction));
   }
 
-  private Mono<Object> sendEmailToCustomer(
-      InvoiceEmailEvent event,
-      InvoiceSettlementEventMessage message,
-      Customer customer,
-      BigDecimal paymentAmount) {
+  /**
+   * This function stores required invoice info to be processed when the payment result is received
+   * in the queue (TRADE_INNOVATION_NOT).
+   *
+   * @see SettlementPaymentResultStrategy#handleResult(InvoicePaymentCorrelationInfo,
+   *     PaymentResultResponse)
+   * @param tuple Correlation information.
+   * @return Empty mono if data was saved successfully.
+   */
+  private Mono<Object> handleBuyerToSellerTransaction(
+      Tuple2<String, InvoiceSettlementEventMessage> tuple) {
+    try {
+      InvoiceSettlementEventMessage message = tuple.getT2();
+      String eventPayload = objectMapper.writeValueAsString(message);
+
+      InvoicePaymentCorrelationInfo invoicePaymentCorrelationInfo =
+          InvoicePaymentCorrelationInfo.builder()
+              .id(uuidGenerator.getNewId())
+              .paymentReference(tuple.getT1())
+              .initialEvent(InvoicePaymentCorrelationInfo.InitialEvent.SETTLEMENT)
+              .eventPayload(eventPayload)
+              .build();
+
+      invoicePaymentCorrelationInfoRepository.save(invoicePaymentCorrelationInfo);
+      log.info("Payment correlation info saved. Id={}", invoicePaymentCorrelationInfo.getId());
+
+      return Mono.empty();
+    } catch (JsonProcessingException e) {
+      return Mono.error(e);
+    }
+  }
+
+  public Mono<Object> sendEmailToCustomer(
+      InvoiceEmailEvent event, InvoiceSettlementEventMessage message, Customer customer) {
 
     String invoiceNumber = message.getInvoiceNumber().split("--")[0];
+    BigDecimal paymentAmount = getPaymentAmountFromMessage(message);
 
     InvoiceEmailInfo creditedInvoiceInfo =
         InvoiceEmailInfo.builder()
@@ -181,18 +211,18 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             });
   }
 
-  private Mono<Object> handleError(
+  public Mono<Object> handleError(
       Throwable e, InvoiceSettlementEventMessage message, InvoiceMaster invoice) {
     log.error(e.getMessage());
 
     boolean isNotifiableError =
-        e instanceof CreditCreationException || e instanceof PaymentExecutionException;
+        e instanceof CreditCreationException || e instanceof SinglePaymentException;
     if (!isNotifiableError) return Mono.empty();
 
     return notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, e.getMessage());
   }
 
-  private Mono<Object> notifySettlementStatusExternally(
+  public Mono<Object> notifySettlementStatusExternally(
       PayloadStatus status,
       InvoiceSettlementEventMessage message,
       InvoiceMaster invoice,
@@ -351,13 +381,14 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     return currentDate.format(formatter);
   }
 
-  private Mono<Object> transferPaymentAmountFromBuyerToSeller(
-      InvoiceSettlementEventMessage message,
-      Customer buyer,
-      Customer seller,
-      EncodedAccountParser buyerAccountParser,
-      EncodedAccountParser sellerAccountParser)
-      throws PaymentExecutionException {
+  private Mono<Tuple2<String, InvoiceSettlementEventMessage>>
+      transferPaymentAmountFromBuyerToSeller(
+          InvoiceSettlementEventMessage message,
+          Customer buyer,
+          Customer seller,
+          EncodedAccountParser buyerAccount,
+          EncodedAccountParser sellerAccount)
+          throws SinglePaymentException {
     log.info("Started buyer to seller transaction.");
 
     String invoiceReference = message.getInvoiceNumber().split("--")[0];
@@ -365,42 +396,20 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         String.format("Descuento Factura %s %s", invoiceReference, seller.getFullName().trim());
     String creditConcept =
         String.format("Pago Factura %s %s", invoiceReference, buyer.getFullName().trim());
-    String currency = message.getPaymentCurrency();
-    BigDecimal amount = getPaymentAmountFromMessage(message);
 
-    TransactionRequest debitRequest =
-        TransactionRequest.from(
-            TransactionType.CLIENT_TO_BGL,
-            buyerAccountParser.getAccount(),
-            bglAccount,
-            debitConcept,
-            currency,
-            amount);
-    TransactionRequest creditRequest =
-        TransactionRequest.from(
-            TransactionType.BGL_TO_CLIENT,
-            bglAccount,
-            sellerAccountParser.getAccount(),
-            creditConcept,
-            currency,
-            amount);
+    SinglePaymentRequest creditAndDebitRequest =
+        singlePaymentMapper.mapCustomerToCustomerSettlementTransaction(
+            message, buyer, seller, buyerAccount, sellerAccount, debitConcept, creditConcept);
 
-    return Mono.zip(
-            Mono.fromCallable(() -> paymentExecutionService.makeTransactionRequest(debitRequest)),
-            Mono.fromCallable(() -> paymentExecutionService.makeTransactionRequest(creditRequest)))
+    return Mono.fromCallable(
+            () -> singleElectronicPaymentService.createSinglePayment(creditAndDebitRequest))
         .flatMap(
-            tuple -> {
-              BusinessAccountTransfersResponse buyerToBglTransfer = tuple.getT1();
-              BusinessAccountTransfersResponse bglToSellerTransfer = tuple.getT2();
+            singlePaymentResponse -> {
+              String creditAndDebitReference =
+                  singlePaymentResponse.data().paymentReferenceNumber();
+              log.info("Credit And Debit Reference: {}", creditAndDebitReference);
 
-              boolean isTransactionOk = buyerToBglTransfer.isOk() && bglToSellerTransfer.isOk();
-              if (!isTransactionOk) {
-                return Mono.error(
-                    new PaymentExecutionException(
-                        "Could not transfer invoice payment amount from buyer to seller."));
-              }
-
-              return Mono.empty();
+              return Mono.zip(Mono.just(creditAndDebitReference), Mono.just(message));
             });
   }
 
