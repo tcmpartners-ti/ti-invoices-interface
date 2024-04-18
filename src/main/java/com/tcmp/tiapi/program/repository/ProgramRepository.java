@@ -15,34 +15,30 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
   Page<Program> findAllByCustomerMnemonic(String customerMnemonic, Pageable pageable);
 
   @Query(
-      value =
-          """
+      """
     SELECT
-    	program
+      program
     FROM
-    	Program program
+      Program program
     LEFT JOIN CounterParty counterParty ON
-    	counterParty.programmePk = program.pk
+      counterParty.programmePk = program.pk
     WHERE
-    	counterParty.role = 'S'
-    	AND counterParty.mnemonic = :sellerMnemonic
-  """)
+      counterParty.role = 'S'
+      AND counterParty.mnemonic = :sellerMnemonic""")
   Page<Program> findAllBySellerMnemonic(String sellerMnemonic, Pageable pageable);
 
   @Query(
-      value =
-          """
+      """
     SELECT
-    	program
+      program
     FROM
-    	Program program
+      Program program
     LEFT JOIN CounterParty counterParty ON
-    	counterParty.programmePk = program.pk
+      counterParty.programmePk = program.pk
     LEFT JOIN Customer customer ON
-    	customer.id.mnemonic = counterParty.customerMnemonic
+      customer.id.mnemonic = counterParty.customerMnemonic
     WHERE
-    	counterParty.role = 'S'
-    	AND customer.number = :sellerCif
-  """)
+      counterParty.role = 'S'
+      AND customer.number = :sellerCif""")
   Page<Program> findAllBySellerCif(String sellerCif, Pageable pageable);
 }
