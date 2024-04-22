@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.program.model.ProgramExtension;
+import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.program.repository.ProgramRepository;
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +19,9 @@ import org.springframework.data.domain.PageRequest;
 
 @DataJpaTest
 class ProgramRepositoryTest {
-  @Autowired
-  private ProgramRepository testedProgramRepository;
+  @Autowired private ProgramRepository testedProgramRepository;
+
+  @Autowired private ProgramExtensionRepository programExtensionRepository;
 
   @AfterEach
   void tearDown() {
@@ -27,15 +30,15 @@ class ProgramRepositoryTest {
 
   @Test
   void findById_itShouldFindProgramByIdWhenProgramExists() {
-    Long expectedPk = 10_000L;
-    String expectedId = "f47ac10b-58cc-4372-a567-0e02b2";
-    Program expectedProgram = Program.builder()
-      .pk(expectedPk)
-      .id(expectedId)
-      .build();
+    var expectedPk = 10_000L;
+    var expectedId = "f47ac10b-58cc-4372-a567-0e02b2";
+    var expectedProgram = Program.builder().pk(expectedPk).id(expectedId).build();
+    var extension =
+        ProgramExtension.builder().programmeId(expectedId).extraFinancingDays(30).build();
+    programExtensionRepository.save(extension);
     testedProgramRepository.save(expectedProgram);
 
-    Optional<Program> actualResult = testedProgramRepository.findById(expectedId);
+    var actualResult = testedProgramRepository.findById(expectedId);
 
     assertTrue(actualResult.isPresent());
     assertEquals(expectedId, actualResult.get().getId());
@@ -53,36 +56,51 @@ class ProgramRepositoryTest {
 
   @Test
   void findAllByCustomerMnemonic_itShouldHaveContentsWhenProgramsAreFound() {
-    List<Program> programs = List.of(
-      Program.builder()
-        .pk(10_000L)
-        .id("f47ac10b-58cc-4372-a567-0e02b1")
-        .customerMnemonic("SUPER")
-        .build(),
-      Program.builder()
-        .pk(10_001L)
-        .id("f47ac10b-58cc-4372-a567-0e02b2")
-        .customerMnemonic("SUPER")
-        .build(),
-      Program.builder()
-        .pk(10_002L)
-        .id("f47ac10b-58cc-4372-a567-0e02b2")
-        .customerMnemonic("TIA")
-        .build()
-    );
+    var programs =
+        List.of(
+            Program.builder()
+                .pk(10_000L)
+                .id("f47ac10b-58cc-4372-a567-0e02b1")
+                .customerMnemonic("SUPER")
+                .build(),
+            Program.builder()
+                .pk(10_001L)
+                .id("f47ac10b-58cc-4372-a567-0e02b2")
+                .customerMnemonic("SUPER")
+                .build(),
+            Program.builder()
+                .pk(10_002L)
+                .id("f47ac10b-58cc-4372-a567-0e02b3")
+                .customerMnemonic("TIA")
+                .build());
+    var extensions =
+        List.of(
+            ProgramExtension.builder()
+                .programmeId("f47ac10b-58cc-4372-a567-0e02b1")
+                .extraFinancingDays(30)
+                .build(),
+            ProgramExtension.builder()
+                .programmeId("f47ac10b-58cc-4372-a567-0e02b2")
+                .extraFinancingDays(30)
+                .build(),
+            ProgramExtension.builder()
+                .programmeId("f47ac10b-58cc-4372-a567-0e02b3")
+                .extraFinancingDays(30)
+                .build());
+    programExtensionRepository.saveAll(extensions);
     testedProgramRepository.saveAll(programs);
 
-    Page<Program> programsPage = testedProgramRepository.findAllByCustomerMnemonic(
-      "SUPER", PageRequest.of(0, 5));
+    var programsPage =
+        testedProgramRepository.findAllByCustomerMnemonic("SUPER", PageRequest.of(0, 5));
 
-    int expectedContentSize = 2;
+    var expectedContentSize = 2;
     assertEquals(expectedContentSize, programsPage.getContent().size());
   }
 
   @Test
   void findAllByCustomerMnemonic_itShouldHaveEmptyContentsIfNoProgramsAreFound() {
-    Page<Program> programsPage = testedProgramRepository.findAllByCustomerMnemonic(
-      "SUPER", PageRequest.of(0, 5));
+    Page<Program> programsPage =
+        testedProgramRepository.findAllByCustomerMnemonic("SUPER", PageRequest.of(0, 5));
 
     int expectedContentSize = 0;
     assertEquals(expectedContentSize, programsPage.getContent().size());

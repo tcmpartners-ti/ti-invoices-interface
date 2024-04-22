@@ -103,7 +103,7 @@ class SellerControllerTest {
                 .build());
 
     var expectedBody =
-        "{\"data\":[{\"id\":\"Program1\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null},{\"id\":\"Program2\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null}],\"meta\":{\"isLastPage\":true,\"totalPages\":1,\"totalItems\":2}}";
+        "{\"data\":[{\"id\":\"Program1\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null},{\"id\":\"Program2\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null}],\"meta\":{\"isLastPage\":true,\"totalPages\":1,\"totalItems\":2}}";
     mockMvc
         .perform(
             get(String.format("/sellers/%s/programs", sellerCif))
@@ -136,7 +136,7 @@ class SellerControllerTest {
                 .build());
 
     var expectedBody =
-        "{\"data\":[{\"id\":\"Program1\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null},{\"id\":\"Program2\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null}],\"meta\":{\"isLastPage\":true,\"totalPages\":1,\"totalItems\":2}}";
+        "{\"data\":[{\"id\":\"Program1\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null},{\"id\":\"Program2\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null}],\"meta\":{\"isLastPage\":true,\"totalPages\":1,\"totalItems\":2}}";
     mockMvc
         .perform(
             get(String.format("/sellers/%s/programs", sellerMnemonic))

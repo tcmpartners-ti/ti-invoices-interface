@@ -47,7 +47,8 @@ class ProgramControllerTest {
   @Test
   void getProgramById_itShouldReturnProgram() throws Exception {
     String programId = "123";
-    String expectedBody = "{\"id\":\"123\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null}";
+    String expectedBody =
+        "{\"id\":\"123\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null}";
 
     when(programService.getProgramById(anyString()))
       .thenReturn(ProgramDTO.builder()
