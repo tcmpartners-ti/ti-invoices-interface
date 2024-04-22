@@ -14,6 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 public class Program {
   @Id
   @Column(name = "KEY97", nullable = false)
@@ -117,7 +118,19 @@ public class Program {
   private Integer timeStamp;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = "CUSTOMER", referencedColumnName = "GFCUS1", insertable = false, updatable = false)
-  @JoinColumn(name = "CUST_SBB", referencedColumnName = "GFCUS1_SBB", insertable = false, updatable = false)
+  @JoinColumn(
+      name = "CUSTOMER",
+      referencedColumnName = "GFCUS1",
+      insertable = false,
+      updatable = false)
+  @JoinColumn(
+      name = "CUST_SBB",
+      referencedColumnName = "GFCUS1_SBB",
+      insertable = false,
+      updatable = false)
   private Customer customer;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "ID", referencedColumnName = "PID", insertable = false, updatable = false)
+  private ProgramExtension extension;
 }

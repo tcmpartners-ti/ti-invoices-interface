@@ -48,4 +48,11 @@ public class ProgramDTO {
       maxLength = 1,
       example = "A")
   private Character status;
+
+  @Schema(
+      description = "Program extra financing days.",
+      minimum = "0",
+      defaultValue = "0",
+      example = "30")
+  private Integer extraFinancingDays;
 }
