@@ -64,7 +64,7 @@ public class CorporateLoanService {
       response = corporateLoanClient.createCredit(headers, request);
       log.info(
           "Credit created. Amount $ {}. Disbursement Amount $ {}.",
-          distributorCreditRequest.amount(),
+          distributorCreditRequest.getAmount(),
           response.data().disbursementAmount());
 
       return response;

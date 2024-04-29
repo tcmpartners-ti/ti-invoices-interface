@@ -23,11 +23,11 @@ public class EncodedAccountParser {
 
     String trimmedAccount = encodedAccount.trim();
     if (trimmedAccount.length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
-      throw new AccountDecodingException("Invalid account length.");
+      throw new AccountDecodingException("Invalid account length. " + encodedAccount);
     }
 
     if (!hasCorrectFormat(trimmedAccount)) {
-      throw new AccountDecodingException("Account is not in format ^(AH|CC)\\d{10}$.");
+      throw new AccountDecodingException("Account is not in format ^(AH|CC)\\d{10}$. " + encodedAccount);
     }
 
     this.encodedAccount = trimmedAccount;
