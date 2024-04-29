@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SinglePaymentRequest {
   private String debtorIdentification;
@@ -24,7 +25,7 @@ public class SinglePaymentRequest {
 
   private String chargeBearer;
   private Account debtorAccount;
-  private InstructedAmountCurrencyOfTransfer2 instructedAmountCurrencyOfTransfer2;
+  private InstructedAmountCurrencyOfTransfer2 instructedAmount;
   private CreditorDetails creditorDetails;
   private CreditorAgent creditorAgent;
   private RemittanceInformation remittanceInformation;
