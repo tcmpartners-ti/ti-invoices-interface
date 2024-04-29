@@ -33,14 +33,18 @@ public class PaymentResultRouteBuilder extends RouteBuilder {
       InvoicePaymentCorrelationInfo invoicePaymentCorrelationInfo =
           invoicePaymentCorrelationInfoRepository
               .findByPaymentReference(paymentResultResponse.paymentReference())
-              .orElseThrow(EntityNotFoundException::new);
+              .orElseThrow(
+                  () ->
+                      new EntityNotFoundException(
+                          "Could not find invoice correlation info with payment reference: "
+                              + paymentResultResponse.paymentReference()));
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
 
       PaymentResultStrategy strategy =
           handler.getStrategy(invoicePaymentCorrelationInfo.getInitialEvent());
       strategy.handleResult(invoicePaymentCorrelationInfo, paymentResultResponse);
     } catch (Exception e) {
-      log.error(e.getMessage());
+      log.error("{}: {}", e.getClass().getName(), e.getMessage());
     }
   }
 }

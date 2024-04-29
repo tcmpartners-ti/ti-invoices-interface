@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InvoicePaymentCorrelationInfoRepository
     extends CrudRepository<InvoicePaymentCorrelationInfo, String> {
-  Optional<InvoicePaymentCorrelationInfo> findByPaymentReference(
-      String paymentReference);
+  Optional<InvoicePaymentCorrelationInfo> findByPaymentReference(String paymentReference);
+
+  void deleteByPaymentReference(String paymentReference);
 }

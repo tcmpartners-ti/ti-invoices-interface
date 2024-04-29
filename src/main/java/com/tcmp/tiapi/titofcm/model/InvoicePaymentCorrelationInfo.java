@@ -22,6 +22,7 @@ public class InvoicePaymentCorrelationInfo {
 
   public enum InitialEvent {
     SETTLEMENT,
-    BUYER_CENTRIC_FINANCE
+    BUYER_CENTRIC_FINANCE_0,
+    BUYER_CENTRIC_FINANCE_1,
   }
 }
