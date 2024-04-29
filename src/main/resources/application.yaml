@@ -26,8 +26,12 @@ bp.api-gee.url:
   test: "https://api-test.pichincha.com"
   prod: "https://api.pichincha.com"
 
-fmc.api.url:
-  dev: "http://172.31.96.5:8080"
+fcm:
+  queue:
+    notification.sub.name: "TRADE_INNOVATION_NOT"
+
+  api.url:
+    dev: "http://172.31.96.5:8080"
 
 springdoc:
   api-docs.enabled: true

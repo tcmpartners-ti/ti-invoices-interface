@@ -64,17 +64,16 @@ fcm:
 
   config:
     debtor-id: ${FCM_DEBTOR_ID}
-    short-name: ${FCM_SHORT_NAME}
 
   api:
     headers.user-id: ${FCM_USER_ID}
 
     services:
       single-electronic-payment:
-        url: "${fmc.api.url.dev}/fcmclient/services/openapi/electronic"
+        url: "${fcm.api.url.dev}/fcmclient/services/openapi/electronic"
 
   route:
-    payment-result.from: "activemqFcm:queue:TRADE_INNOVATION_NOT"
+    payment-result.from: "activemqFcm:queue:${fcm.queue.notification.sub.name}"
 
 ti.route:
   fti:
