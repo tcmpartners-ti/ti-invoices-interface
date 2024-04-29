@@ -24,5 +24,18 @@
       },
       "body": ""
     }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/business-banking/v1/operational-gateway"
+    },
+    "httpResponse": {
+      "statusCode": 201,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": ""
+    }
   }
 ]

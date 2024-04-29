@@ -52,6 +52,9 @@ public abstract class AbstractIntegrationTest {
   @Value("${ti.queue.ticc.sub.name}")
   protected String ticcIncomingQueue;
 
+  @Value("${fcm.queue.notification.sub.name}")
+  protected String fcmIncomingQueue;
+
   static Network network = Network.newNetwork();
 
   @Container
@@ -103,7 +106,8 @@ public abstract class AbstractIntegrationTest {
     registry.add("spring.data.redis.host", redis::getHost);
     registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     registry.add("spring.activemq.broker-url", activemq::brokerUrl);
-    registry.add("fcm.activemq.broker-url", activemq::brokerUrl);
+    registry.add("fcm.activemq.host", activemq::getHost);
+    registry.add("fcm.activemq.port", activemq::getFirstMappedPort);
     registry.add("bp.api-gee.base-url", () -> mockServerUrl);
   }
 

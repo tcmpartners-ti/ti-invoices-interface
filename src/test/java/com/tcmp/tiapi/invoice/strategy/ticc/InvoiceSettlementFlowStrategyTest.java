@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.invoice.strategy.ticc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -275,16 +274,16 @@ class InvoiceSettlementFlowStrategyTest {
   private void assertCreditValues() {
     var creditRequest = creditRequestArgumentCaptor.getValue();
     assertNotNull(creditRequest);
-    assertEquals("123", creditRequest.customer().customerId());
-    assertEquals("1722466420", creditRequest.customer().documentNumber());
-    assertEquals("Buyer", creditRequest.customer().fullName());
-    assertEquals("ABC", creditRequest.customer().documentType());
-    assertEquals("9278281280", creditRequest.disbursement().accountNumber());
-    assertEquals("AH", creditRequest.disbursement().accountType());
-    assertEquals("FIN", creditRequest.amortizationPaymentPeriodType().code());
-    assertEquals("FIN", creditRequest.interestPayment().code());
-    assertEquals("V", creditRequest.interestPayment().gracePeriod().code());
-    assertEquals("001", creditRequest.interestPayment().gracePeriod().installmentNumber());
+    assertEquals("123", creditRequest.getCustomer().getCustomerId());
+    assertEquals("1722466420", creditRequest.getCustomer().getDocumentNumber());
+    assertEquals("Buyer", creditRequest.getCustomer().getFullName());
+    assertEquals("ABC", creditRequest.getCustomer().getDocumentType());
+    assertEquals("9278281280", creditRequest.getDisbursement().getAccountNumber());
+    assertEquals("AH", creditRequest.getDisbursement().getAccountType());
+    assertEquals("FIN", creditRequest.getAmortizationPaymentPeriodType().getCode());
+    assertEquals("FIN", creditRequest.getInterestPayment().getCode());
+    assertEquals("V", creditRequest.getInterestPayment().getGracePeriod().getCode());
+    assertEquals("001", creditRequest.getInterestPayment().getGracePeriod().getInstallmentNumber());
   }
 
   private void assertTransactionsValues() {
