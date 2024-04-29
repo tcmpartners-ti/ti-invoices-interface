@@ -1,3 +1,12 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.request;
 
-public record TermPeriodType(String code) {}
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class TermPeriodType {
+  private String code;
+}

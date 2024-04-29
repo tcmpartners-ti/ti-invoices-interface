@@ -1,3 +1,13 @@
 package com.tcmp.tiapi.titoapigee.corporateloan.dto.request;
 
-public record Reference(String code, String value) {}
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Reference {
+  private String code;
+  private String value;
+}
