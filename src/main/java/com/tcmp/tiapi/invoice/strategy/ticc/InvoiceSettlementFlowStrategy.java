@@ -102,7 +102,6 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             Mono.fromCallable(() -> findAccountByCustomerMnemonic(message.getSellerIdentifier())))
         .flatMap(
             tuple -> {
-              log.info("Started settlement flow.");
               ProgramExtension programExtension = tuple.getT3();
 
               boolean hasExtraFinancingDays = programExtension.getExtraFinancingDays() > 0;

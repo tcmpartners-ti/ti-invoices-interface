@@ -95,7 +95,7 @@ class InvoiceFinancingFlowStrategyTest {
 
   @BeforeEach
   void setUp() {
-    LocalDate mockedToday = LocalDate.of(2024, 2, 8);
+    var mockedToday = LocalDate.of(2024, 2, 8);
     var mockedClock =
         Clock.fixed(
             mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
@@ -429,7 +429,9 @@ class InvoiceFinancingFlowStrategyTest {
 
     when(customerRepository.findFirstByIdMnemonic(anyString())).thenReturn(Optional.of(seller));
     when(invoiceRepository.findByProductMasterMasterReference(anyString()))
-        .thenReturn(Optional.of(InvoiceMaster.builder().batchId("b123   ").build()));
+        .thenReturn(
+            Optional.of(
+                InvoiceMaster.builder().batchId("b123   ").reference("INV123    ").build()));
 
     doNothing()
         .when(invoicePaymentCorrelationInfoRepository)

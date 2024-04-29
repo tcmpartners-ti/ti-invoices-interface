@@ -39,6 +39,9 @@ import com.tcmp.tiapi.titofcm.exception.SinglePaymentException;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,9 +85,14 @@ class InvoiceSettlementFlowStrategyTest {
 
   @BeforeEach
   void setUp() {
+    var mockedToday = LocalDate.of(2024, 2, 8);
+    var mockedClock =
+            Clock.fixed(
+                    mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
     var singlePaymentMapper = Mappers.getMapper(SinglePaymentMapper.class);
     ReflectionTestUtils.setField(singlePaymentMapper, "bglAccount", MOCK_BGL_ACCOUNT);
     ReflectionTestUtils.setField(singlePaymentMapper, "debtorId", DEBTOR_ID);
+    ReflectionTestUtils.setField(singlePaymentMapper, "clock", mockedClock);
 
     invoiceSettlementFlowStrategy =
         new InvoiceSettlementFlowStrategy(
