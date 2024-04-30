@@ -9,7 +9,6 @@ import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
@@ -177,9 +176,6 @@ class SellerServiceTest {
   void
       getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfSellerHasNoLinkedInvoicesToBuyer() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
-    when(invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
-            anyString(), anyString(), anyChar(), any(ProductMasterStatus.class)))
-        .thenReturn(false);
 
     assertThrows(
         NotFoundHttpException.class,
