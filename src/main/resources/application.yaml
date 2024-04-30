@@ -31,7 +31,7 @@ fcm:
     notification.sub.name: "TRADE_INNOVATION_NOT"
 
   api.url:
-    dev: "http://172.31.96.5:8080"
+    dev: "http://172.31.34.6:8080"
 
 springdoc:
   api-docs.enabled: true
