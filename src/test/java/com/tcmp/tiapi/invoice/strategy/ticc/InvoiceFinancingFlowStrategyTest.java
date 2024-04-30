@@ -95,10 +95,10 @@ class InvoiceFinancingFlowStrategyTest {
 
   @BeforeEach
   void setUp() {
+    var zoneId = ZoneId.of("America/Guayaquil");
     var mockedToday = LocalDate.of(2024, 2, 8);
-    var mockedClock =
-        Clock.fixed(
-            mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+    var mockedClock = Clock.fixed(mockedToday.atStartOfDay(zoneId).toInstant(), zoneId);
+
     var singlePaymentMapper = Mappers.getMapper(SinglePaymentMapper.class);
     var corporateLoanMapper = Mappers.getMapper(CorporateLoanMapper.class);
     ReflectionTestUtils.setField(singlePaymentMapper, "clock", mockedClock);
