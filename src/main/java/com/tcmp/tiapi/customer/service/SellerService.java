@@ -91,7 +91,22 @@ public class SellerService {
     checkIfSellerExistsOrThrowNotFound(sellerMnemonic);
     checkIfBuyerExistsOrThrowNotFound(buyerMnemonic);
 
-    checkIfSellerHasLinkedInvoicesToBuyer(sellerMnemonic, buyerMnemonic);
+    if (buyerMnemonic != null) {
+      boolean isSellerRelatedToBuyer =
+          customerRepository.totalRelationsWithBuyer(sellerMnemonic, buyerMnemonic) > 0;
+      if (!isSellerRelatedToBuyer) {
+        throw new NotFoundHttpException(
+            String.format(
+                "Could not find any invoices linked to seller %s and buyer %s.",
+                sellerMnemonic, buyerMnemonic));
+      }
+
+      boolean sellerHasInvoicesLinkedToBuyer =
+          sellerHasInvoicesWithBuyer(sellerMnemonic, buyerMnemonic);
+      if (!sellerHasInvoicesLinkedToBuyer) {
+        return new OutstandingBalanceDTO(BigDecimal.ZERO);
+      }
+    }
 
     BigDecimal notFinancedOutstandingBalance =
         invoiceRepository
@@ -127,17 +142,8 @@ public class SellerService {
     }
   }
 
-  private void checkIfSellerHasLinkedInvoicesToBuyer(String sellerMnemonic, String buyerMnemonic) {
-    if (buyerMnemonic == null) return;
-
-    boolean sellerHasInvoicesLinkedToBuyer =
-        invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
-            sellerMnemonic, buyerMnemonic, 'O', ProductMasterStatus.LIV);
-    if (!sellerHasInvoicesLinkedToBuyer) {
-      throw new NotFoundHttpException(
-          String.format(
-              "Could not find any invoices linked to seller %s and buyer %s.",
-              sellerMnemonic, buyerMnemonic));
-    }
+  private boolean sellerHasInvoicesWithBuyer(String sellerMnemonic, String buyerMnemonic) {
+    return invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
+        sellerMnemonic, buyerMnemonic, 'O', ProductMasterStatus.LIV);
   }
 }
