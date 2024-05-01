@@ -20,6 +20,8 @@ import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class SellerService {
+  private final Clock clock;
+
   private final CustomerRepository customerRepository;
   private final InvoiceRepository invoiceRepository;
   private final ProgramRepository programRepository;
@@ -44,7 +48,7 @@ public class SellerService {
     Page<InvoiceMaster> sellerInvoicesPage =
         invoiceRepository.findAll(
             InvoiceSpecifications.filterBySellerMnemonicAndStatus(
-                sellerMnemonic, searchParams.status()),
+                sellerMnemonic, searchParams.status(), LocalDate.now(clock)),
             PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
     List<InvoiceDTO> invoicesDTOs =

@@ -17,6 +17,9 @@ import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +49,12 @@ class SellerServiceTest {
 
   @BeforeEach
   void setUp() {
+    var mockedToday = LocalDate.of(2024, 2, 8);
+    var mockedClock =
+        Clock.fixed(
+            mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+    ReflectionTestUtils.setField(sellerService, "clock", mockedClock);
     ReflectionTestUtils.setField(programMapper, "currencyAmountMapper", currencyAmountMapper);
   }
 
