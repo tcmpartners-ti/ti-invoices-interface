@@ -48,7 +48,7 @@ class ScheduleInvoiceSettlementMessageStrategyTest {
     ReflectionTestUtils.setField(
         scheduleInvoiceSettlementMessageStrategy, "shouldScheduleMessages", true);
 
-    LocalDate mockedToday = LocalDate.of(2024, 2, 8);
+    var mockedToday = LocalDate.of(2024, 2, 8);
     var mockedClock =
         Clock.fixed(
             mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());

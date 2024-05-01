@@ -9,7 +9,6 @@ import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.invoice.model.ProductMasterStatus;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
@@ -18,6 +17,9 @@ import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,12 @@ class SellerServiceTest {
 
   @BeforeEach
   void setUp() {
+    var mockedToday = LocalDate.of(2024, 2, 8);
+    var mockedClock =
+        Clock.fixed(
+            mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
+    ReflectionTestUtils.setField(sellerService, "clock", mockedClock);
     ReflectionTestUtils.setField(programMapper, "currencyAmountMapper", currencyAmountMapper);
   }
 
@@ -177,9 +185,6 @@ class SellerServiceTest {
   void
       getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfSellerHasNoLinkedInvoicesToBuyer() {
     when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
-    when(invoiceRepository.existsBySellerMnemonicAndBuyerMnemonicAndStatusAndProductMasterStatus(
-            anyString(), anyString(), anyChar(), any(ProductMasterStatus.class)))
-        .thenReturn(false);
 
     assertThrows(
         NotFoundHttpException.class,
