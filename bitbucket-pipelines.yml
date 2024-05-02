@@ -9,7 +9,8 @@ definitions:
       memory: 2048
 
   caches:
-    sonar: ~/.sonar/cache
+    sonar:
+      path: ~/.sonar/cache
 
   steps:
     - step: &build
@@ -17,12 +18,6 @@ definitions:
         caches: [ gradle ]
         script:
           - gradle build --no-daemon -x test
-
-    - step: &unit-tests
-        name: Unit tests
-        caches: [ gradle ]
-        script:
-          - gradle test --no-daemon
 
     - step: &integration-tests
         name: Integration tests
@@ -73,19 +68,14 @@ definitions:
         script:
           - echo $CR_PASS | docker login $CR_NAME -u $CR_USER --password-stdin
           - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME/$IMAGE:$SHORT_COMMIT . --build-arg="COMMIT=$SHORT_COMMIT"
-          - docker push $CR_NAME/$IMAGE:$SHORT_COMMIT
-
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME/$IMAGE:$SHORT_COMMIT -t $CR_NAME/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
+          - docker push $CR_NAME/$IMAGE --all-tags
 
 pipelines:
   branches:
     # Production Branch
     main:
       - step: *build
-      - parallel:
-          steps:
-            - step: *unit-tests
-            - step: *integration-tests
       - parallel:
           steps:
             - step: *sonar-scan-test
