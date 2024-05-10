@@ -20,8 +20,8 @@ spring:
     password: ${REDIS_PASS}
 
   activemq:
-    host: "localhost"
-    port: "61616"
+    host: ${MQ_HOST}
+    port: ${MQ_PORT}
     user: ${MQ_USER}
     password: ${MQ_PASS}
     broker-url: "tcp://${spring.activemq.host}:${spring.activemq.port}"
