@@ -25,7 +25,10 @@ public class SinglePaymentRequest {
 
   private String chargeBearer;
   private Account debtorAccount;
+
+  @JsonProperty("instructedAmountCurrencyOfTransfer2")
   private InstructedAmountCurrencyOfTransfer2 instructedAmount;
+
   private CreditorDetails creditorDetails;
   private CreditorAgent creditorAgent;
   private RemittanceInformation remittanceInformation;
