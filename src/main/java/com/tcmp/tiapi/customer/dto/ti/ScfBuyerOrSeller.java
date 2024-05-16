@@ -1,10 +1,7 @@
 package com.tcmp.tiapi.customer.dto.ti;
 
 import com.tcmp.tiapi.shared.messaging.CurrencyAmount;
-import com.tcmp.tiapi.ti.dto.CustomerRole;
-import com.tcmp.tiapi.ti.dto.TIBooleanAdapter;
-import com.tcmp.tiapi.ti.dto.TINamespace;
-import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.dto.*;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -23,8 +20,7 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ScfBuyerOrSeller {
   @XmlElement(name = "MaintType", namespace = TINamespace.MESSAGES)
-  @XmlJavaTypeAdapter(TIBooleanAdapter.class)
-  private Boolean maintenanceType;
+  private String maintenanceType;
 
   @XmlElement(name = "MaintainedInBackOffice", namespace = TINamespace.MESSAGES)
   @XmlJavaTypeAdapter(TIBooleanAdapter.class)
@@ -40,15 +36,10 @@ public class ScfBuyerOrSeller {
   private CustomerRole role;
 
   @XmlElement(name = "Customer", namespace = TINamespace.MESSAGES)
-  private Customer customer;
+  private NestedCustomer customer;
 
   @XmlElement(name = "Name", namespace = TINamespace.MESSAGES)
   private String name;
-
-  @XmlElement(name = "Email", namespace = TINamespace.MESSAGES)
-  private String email;
-
-  // SWIFT stuff
 
   @XmlElement(name = "TransferMethod", namespace = TINamespace.MESSAGES)
   private String transferMethod;
