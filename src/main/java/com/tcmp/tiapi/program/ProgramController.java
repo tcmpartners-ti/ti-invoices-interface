@@ -1,7 +1,10 @@
 package com.tcmp.tiapi.program;
 
 import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
+import com.tcmp.tiapi.program.dto.response.ProgramBulkOperationResponse;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.program.service.ProgramBatchOperationsService;
+import com.tcmp.tiapi.program.service.ProgramService;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
@@ -15,12 +18,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("programs")
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Programs", description = "Defines the programs operations.")
 public class ProgramController {
   private final ProgramService programService;
+  private final ProgramBatchOperationsService programBatchOperationsService;
 
   @GetMapping(path = "{programId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get a program by its identifier.")
@@ -81,5 +84,11 @@ public class ProgramController {
           String programId,
       @Parameter(hidden = true) @Valid PageParams pageParams) {
     return programService.getProgramSellersById(programId, pageParams);
+  }
+
+  @PostMapping("bulk")
+  public ProgramBulkOperationResponse createMultiplePrograms(MultipartFile programsFile) {
+    programBatchOperationsService.createMultipleProgramsInTi(programsFile);
+    return new ProgramBulkOperationResponse(HttpStatus.OK.value(), "Programs sent to be created");
   }
 }
