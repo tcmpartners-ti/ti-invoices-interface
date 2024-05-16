@@ -3,6 +3,7 @@ package com.tcmp.tiapi.ti.config;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
+import com.tcmp.tiapi.ti.dto.request.MultiItemServiceRequest;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
 import jakarta.xml.bind.JAXBContext;
@@ -38,7 +39,8 @@ public class MessagingConfiguration {
 
   @Bean
   public JaxbDataFormat jaxbDataFormatServiceRequest() throws JAXBException {
-    JAXBContext jaxbContext = JAXBContext.newInstance(ServiceRequest.class);
+    JAXBContext jaxbContext =
+        JAXBContext.newInstance(ServiceRequest.class, MultiItemServiceRequest.class);
 
     JaxbDataFormat jaxbDataFormat = new JaxbDataFormat(jaxbContext);
     jaxbDataFormat.setNamespacePrefix(namespacesPrefixes);

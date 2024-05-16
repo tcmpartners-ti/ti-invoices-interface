@@ -20,6 +20,7 @@ public enum TIOperation {
   CREATE_ACCOUNT(TIOperation.CREATE_ACCOUNT_VALUE),
   CREATE_PROGRAMME(TIOperation.CREATE_PROGRAMME_VALUE),
   CREATE_BUYER_OR_SELLER(TIOperation.CREATE_BUYER_OR_SELLER_VALUE),
+  CREATE_BUYER_SELLER_RELATIONSHIP(TIOperation.CREATE_BUYER_SELLER_RELATIONSHIP_VALUE),
   ITEM("Item");
 
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
@@ -32,6 +33,7 @@ public enum TIOperation {
   public static final String CREATE_ACCOUNT_VALUE = "Account";
   public static final String CREATE_PROGRAMME_VALUE = "SCFProgramme";
   public static final String CREATE_BUYER_OR_SELLER_VALUE = "SCFBuyerOrSeller";
+  public static final String CREATE_BUYER_SELLER_RELATIONSHIP_VALUE = "SCFRelationship";
 
   private final String value;
 }

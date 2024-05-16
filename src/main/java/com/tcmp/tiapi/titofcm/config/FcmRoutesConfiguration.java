@@ -30,7 +30,7 @@ public class FcmRoutesConfiguration {
    */
   @Bean
   public JmsComponent activemqFcm(FcmConfiguration configuration) {
-    var mq = configuration.getActivemq();
+    FcmConfiguration.ActiveMqConfiguration mq = configuration.getActivemq();
     String brokerUrl = String.format("tcp://%s:%s", mq.host(), mq.port());
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
     connectionFactory.setTrustedPackages(List.of(""));

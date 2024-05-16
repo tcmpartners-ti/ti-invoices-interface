@@ -1,10 +1,10 @@
 package com.tcmp.tiapi.ti.dto.request;
 
-import com.tcmp.tiapi.customer.dto.ti.Account;
-import com.tcmp.tiapi.customer.dto.ti.Customer;
-import com.tcmp.tiapi.customer.dto.ti.CustomerItemRequest;
+import com.tcmp.tiapi.customer.dto.ti.*;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.program.dto.ti.ScfProgramme;
+import com.tcmp.tiapi.ti.dto.NestedCustomer;
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import jakarta.xml.bind.annotation.*;
@@ -23,7 +23,10 @@ import lombok.NoArgsConstructor;
   CreateInvoiceEventMessage.class,
   FinanceBuyerCentricInvoiceEventMessage.class,
   Customer.class,
-  Account.class
+  Account.class,
+  ScfProgramme.class,
+  ScfBuyerOrSeller.class,
+  ScfRelationship.class
 })
 public class ServiceRequest<T> {
   // Missing namespaces
@@ -50,8 +53,24 @@ public class ServiceRequest<T> {
         type = Customer.class,
         namespace = TINamespace.MESSAGES),
     @XmlElement(
+        name = TIOperation.CREATE_CUSTOMER_VALUE,
+        type = NestedCustomer.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
         name = TIOperation.CREATE_ACCOUNT_VALUE,
         type = Account.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.CREATE_PROGRAMME_VALUE,
+        type = ScfProgramme.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.CREATE_BUYER_OR_SELLER_VALUE,
+        type = ScfBuyerOrSeller.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.CREATE_BUYER_SELLER_RELATIONSHIP_VALUE,
+        type = ScfRelationship.class,
         namespace = TINamespace.MESSAGES),
     @XmlElement(
         name = "ItemRequest",
