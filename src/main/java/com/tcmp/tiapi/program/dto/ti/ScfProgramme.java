@@ -1,11 +1,8 @@
 package com.tcmp.tiapi.program.dto.ti;
 
-import com.tcmp.tiapi.customer.dto.ti.Customer;
 import com.tcmp.tiapi.shared.messaging.CurrencyAmount;
-import com.tcmp.tiapi.ti.dto.CustomerRole;
-import com.tcmp.tiapi.ti.dto.TIBooleanAdapter;
-import com.tcmp.tiapi.ti.dto.TINamespace;
-import com.tcmp.tiapi.ti.dto.TIOperation;
+import com.tcmp.tiapi.ti.LocalDateAdapter;
+import com.tcmp.tiapi.ti.dto.*;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -26,8 +23,7 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ScfProgramme {
   @XmlElement(name = "MaintType", namespace = TINamespace.MESSAGES)
-  @XmlJavaTypeAdapter(TIBooleanAdapter.class)
-  private Boolean maintenanceType;
+  private String maintenanceType;
 
   @XmlElement(name = "MaintainedInBackOffice", namespace = TINamespace.MESSAGES)
   @XmlJavaTypeAdapter(TIBooleanAdapter.class)
@@ -40,7 +36,7 @@ public class ScfProgramme {
   private String description;
 
   @XmlElement(name = "Customer", namespace = TINamespace.MESSAGES)
-  private Customer customer;
+  private NestedCustomer customer;
 
   @XmlElement(name = "Type", namespace = TINamespace.MESSAGES)
   private Type type;
@@ -55,9 +51,11 @@ public class ScfProgramme {
   private String status;
 
   @XmlElement(name = "StartDate", namespace = TINamespace.MESSAGES)
+  @XmlJavaTypeAdapter(LocalDateAdapter.class)
   private LocalDate startDate;
 
   @XmlElement(name = "ExpiryDate", namespace = TINamespace.MESSAGES)
+  @XmlJavaTypeAdapter(LocalDateAdapter.class)
   private LocalDate expiryDate;
 
   @XmlElement(name = "Narrative", namespace = TINamespace.MESSAGES)
@@ -79,10 +77,15 @@ public class ScfProgramme {
   private CustomerRole financeToParty;
 
   @XmlElement(name = "BuyerAcceptanceRequired", namespace = TINamespace.MESSAGES)
-  private String buyerAcceptanceRequired;
+  @XmlJavaTypeAdapter(TIBooleanAdapter.class)
+  private Boolean buyerAcceptanceRequired;
+
+  @XmlElement(name = "BehalfOfBranch", namespace = TINamespace.MESSAGES)
+  private String behalfOfBranch;
 
   @XmlElement(name = "ParentGuarantorExists", namespace = TINamespace.MESSAGES)
-  private String parentGuarantorExists;
+  @XmlJavaTypeAdapter(TIBooleanAdapter.class)
+  private Boolean parentGuarantorExists;
 
   @XmlJavaTypeAdapter(TypeAdapter.class)
   public enum Type {
@@ -101,8 +104,8 @@ public class ScfProgramme {
     }
 
     @Override
-    public String marshal(Type type) {
-      return switch (type) {
+    public String marshal(Type t) {
+      return switch (t) {
         case BUYER_CENTRIC -> "B";
         case SELLER_CENTRIC -> "S";
       };
