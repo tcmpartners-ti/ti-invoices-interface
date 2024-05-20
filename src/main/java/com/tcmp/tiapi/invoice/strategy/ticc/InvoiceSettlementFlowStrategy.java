@@ -392,9 +392,9 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
 
     String invoiceReference = message.getInvoiceNumber().split("--")[0];
     String debitConcept =
-        String.format("Descuento Factura %s %s", invoiceReference, seller.getFullName().trim());
+        String.format("Debito Fact %s %s", invoiceReference, seller.getFullName().trim());
     String creditConcept =
-        String.format("Pago Factura %s %s", invoiceReference, buyer.getFullName().trim());
+        String.format("Pago Fact %s %s", invoiceReference, buyer.getFullName().trim());
 
     SinglePaymentRequest creditAndDebitRequest =
         singlePaymentMapper.mapSettlementCustomerToCustomerTransaction(

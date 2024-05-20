@@ -406,9 +406,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     log.info("Starting buyer to seller transaction.");
     String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String debitDescription =
-        String.format("Descuento Factura %s %s", invoiceNumber, financeMessage.getSellerName());
+        String.format("Debito Fact %s %s", invoiceNumber, financeMessage.getSellerName());
     String creditDescription =
-        String.format("Pago Factura %s %s", invoiceNumber, financeMessage.getBuyerName());
+        String.format("Pago Fact %s %s", invoiceNumber, financeMessage.getBuyerName());
 
     SinglePaymentRequest buyerToSellerPayment =
         singlePaymentMapper.mapFinanceCustomerToCustomerTransaction(
@@ -434,11 +434,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     log.info("Starting seller to buyer taxes transaction.");
     String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
     String debitDescription =
-        String.format(
-            "Intereses y Solca Factura %s %s", invoiceNumber, financeMessage.getBuyerName());
+        String.format("InteresySolca Fact %s %s", invoiceNumber, financeMessage.getBuyerName());
     String creditDescription =
-        String.format(
-            "Intereses y Solca Factura %s %s", invoiceNumber, financeMessage.getSellerName());
+        String.format("InteresySolca Fact %s %s", invoiceNumber, financeMessage.getSellerName());
 
     BigDecimal amount = calculateSolcaAndTaxesFromCreditResponse(sellerCredit, financeMessage);
     SinglePaymentRequest buyerToSellerPayment =
