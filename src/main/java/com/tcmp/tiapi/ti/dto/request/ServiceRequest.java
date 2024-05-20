@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
   CreateInvoiceEventMessage.class,
   FinanceBuyerCentricInvoiceEventMessage.class,
   Customer.class,
+  CustomerType.class,
   Account.class,
   ScfProgramme.class,
   ScfBuyerOrSeller.class,
@@ -53,6 +54,10 @@ public class ServiceRequest<T> {
         type = Customer.class,
         namespace = TINamespace.MESSAGES),
     @XmlElement(
+        name = TIOperation.CREATE_CUSTOMER_TYPE_VALUE,
+        type = CustomerType.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
         name = TIOperation.CREATE_CUSTOMER_VALUE,
         type = NestedCustomer.class,
         namespace = TINamespace.MESSAGES),
@@ -71,10 +76,6 @@ public class ServiceRequest<T> {
     @XmlElement(
         name = TIOperation.CREATE_BUYER_SELLER_RELATIONSHIP_VALUE,
         type = ScfRelationship.class,
-        namespace = TINamespace.MESSAGES),
-    @XmlElement(
-        name = "ItemRequest",
-        type = CustomerItemRequest.class,
         namespace = TINamespace.MESSAGES)
   })
   private T body;

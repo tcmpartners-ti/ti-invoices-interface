@@ -43,7 +43,7 @@ public class CustomerCreationCSVRow implements Serializable {
   private String number;
 
   @CsvBindByName(column = "Type", required = true)
-  @Size(min = 3, max = 3, message = "Type must be 3 characters long")
+  @Size(min = 2, max = 8, message = "Type must be between 2 and 8 characters")
   private String type; // Commercial Destination in GAF
 
   @CsvBindByName(column = "FullName", required = true)

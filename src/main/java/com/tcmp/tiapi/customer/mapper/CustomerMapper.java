@@ -3,13 +3,13 @@ package com.tcmp.tiapi.customer.mapper;
 import com.tcmp.tiapi.customer.dto.csv.CustomerCreationCSVRow;
 import com.tcmp.tiapi.customer.dto.ti.Account;
 import com.tcmp.tiapi.customer.dto.ti.Customer;
-import com.tcmp.tiapi.customer.dto.ti.CustomerItemRequest;
+import com.tcmp.tiapi.customer.dto.ti.CustomerType;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
 import com.tcmp.tiapi.ti.dto.MaintenanceType;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.dto.TIService;
-import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
-import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
+import com.tcmp.tiapi.ti.dto.request.*;
+import java.util.ArrayList;
 import java.util.List;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
@@ -25,7 +25,7 @@ public abstract class CustomerMapper {
 
   @Autowired private TIServiceRequestWrapper wrapper;
 
-  @Mapping(target = "maintenanceType", constant = "")
+  @Mapping(target = "maintenanceType", ignore = true)
   @Mapping(target = "maintainedInBackOffice", constant = "N")
   @Mapping(target = "sourceBankingBusiness", source = "sourceBankingBusiness")
   @Mapping(target = "mnemonic", source = "mnemonic")
@@ -48,7 +48,7 @@ public abstract class CustomerMapper {
             .build());
   }
 
-  @Mapping(target = "maintenanceType", constant = "")
+  @Mapping(target = "maintenanceType", ignore = true)
   @Mapping(target = "maintainedInBackOffice", constant = "N")
   @Mapping(target = "customer.sourceBankingBusiness", source = "sourceBankingBusiness")
   @Mapping(target = "customer.mnemonic", source = "mnemonic")
@@ -58,34 +58,60 @@ public abstract class CustomerMapper {
   @Mapping(target = "dateOpened", source = "accountDateOpened", dateFormat = DATE_FORMAT)
   abstract Account mapCsvRowToAccount(CustomerCreationCSVRow row);
 
-  public ServiceRequest<CustomerItemRequest> mapCustomerAndAccountToBulkRequest(
+  @Mapping(target = "maintenanceType", ignore = true)
+  @Mapping(target = "maintainedInBackOffice", constant = "N")
+  @Mapping(target = "type", source = "type")
+  @Mapping(target = "description", source = "type")
+  @Mapping(target = "qualifier", constant = "C")
+  abstract CustomerType mapCsvRowToCustomerType(CustomerCreationCSVRow row);
+
+  public MultiItemServiceRequest mapCustomerAndAccountToBulkRequest(
       MaintenanceType maintenanceType, CustomerCreationCSVRow row) {
+    CustomerType type = mapCsvRowToCustomerType(row);
+    type.setMaintenanceType(maintenanceType.value());
+
     Customer customer = mapCsvRowToCustomer(row);
     customer.setMaintenanceType(maintenanceType.value());
 
     Account account = mapCsvRowToAccount(row);
     account.setMaintenanceType(maintenanceType.value());
 
-    CustomerItemRequest customerItemRequest =
-        new CustomerItemRequest(
-            wrapper.wrapRequest(
-                TIService.TRADE_INNOVATION,
-                TIOperation.CREATE_CUSTOMER,
-                ReplyFormat.STATUS,
-                null,
-                customer),
-            wrapper.wrapRequest(
-                TIService.TRADE_INNOVATION,
-                TIOperation.CREATE_ACCOUNT,
-                ReplyFormat.STATUS,
-                null,
-                account));
+    ServiceRequest<CustomerType> customerTypeRequest =
+        wrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.CREATE_CUSTOMER_TYPE,
+            ReplyFormat.STATUS,
+            null,
+            type);
+    ServiceRequest<Customer> customerRequest =
+        wrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.CREATE_CUSTOMER,
+            ReplyFormat.STATUS,
+            null,
+            customer);
+    ServiceRequest<Account> accountRequest =
+        wrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.CREATE_ACCOUNT,
+            ReplyFormat.STATUS,
+            null,
+            account);
 
-    return wrapper.wrapRequest(
-        TIService.TRADE_INNOVATION_BULK,
-        TIOperation.ITEM,
-        ReplyFormat.STATUS,
-        null,
-        customerItemRequest);
+    RequestHeader requestHeader =
+        RequestHeader.builder()
+            .service(TIService.TRADE_INNOVATION_BULK.getValue())
+            .operation(TIOperation.ITEM.getValue())
+            .replyFormat(ReplyFormat.STATUS.getValue())
+            .noOverride("N")
+            .correlationId(null)
+            .credentials(Credentials.builder().name("TI_INTERFACE").build())
+            .build();
+    List<ItemRequest> itemRequests = new ArrayList<>();
+    itemRequests.add(new ItemRequest(customerTypeRequest));
+    itemRequests.add(new ItemRequest(customerRequest));
+    itemRequests.add(new ItemRequest(accountRequest));
+
+    return new MultiItemServiceRequest(requestHeader, itemRequests);
   }
 }

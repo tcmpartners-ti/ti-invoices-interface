@@ -3,12 +3,11 @@ package com.tcmp.tiapi.customer.service;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.tcmp.tiapi.customer.dto.csv.CustomerCreationCSVRow;
-import com.tcmp.tiapi.customer.dto.ti.CustomerItemRequest;
 import com.tcmp.tiapi.customer.mapper.CustomerMapper;
 import com.tcmp.tiapi.shared.exception.CsvValidationException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.ti.dto.MaintenanceType;
-import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
+import com.tcmp.tiapi.ti.dto.request.MultiItemServiceRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -104,7 +103,7 @@ public class CustomerBatchOperationsService {
   private void processCustomersRows(
       MaintenanceType maintenanceType, List<CustomerCreationCSVRow> customerRows) {
     for (CustomerCreationCSVRow customerRow : customerRows) {
-      ServiceRequest<CustomerItemRequest> itemsServiceRequest =
+      MultiItemServiceRequest itemsServiceRequest =
           customerMapper.mapCustomerAndAccountToBulkRequest(maintenanceType, customerRow);
 
       producerTemplate.asyncSendBody(uriFtiOutgoingFrom, itemsServiceRequest);
