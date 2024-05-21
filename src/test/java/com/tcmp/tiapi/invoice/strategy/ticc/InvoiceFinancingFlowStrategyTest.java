@@ -336,8 +336,8 @@ class InvoiceFinancingFlowStrategyTest {
                     .build())
             .remittanceInformation(
                 new RemittanceInformation(
-                    "Descuento Factura 701-173-980660251 null",
-                    "Pago Factura 701-173-980660251 null",
+                    "Debito Fact 701-173-980660251 null",
+                    "Pago Fact 701-173-980660251 null",
                     "0974631820"))
             .build();
 
