@@ -2,6 +2,7 @@ package com.tcmp.tiapi.shared.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.tcmp.tiapi.invoice.exception.FieldsInconsistenciesException;
 import com.tcmp.tiapi.shared.dto.response.error.CSVErrorsDetails;
 import com.tcmp.tiapi.shared.dto.response.error.FieldErrorDetails;
@@ -128,5 +129,14 @@ public class GlobalHttpExceptionHandler {
 
     return ResponseEntity.status(badRequest)
         .body(new CSVErrorsDetails(badRequest.value(), e.getMessage(), e.getFieldErrors()));
+  }
+
+  @ExceptionHandler(CsvRequiredFieldEmptyException.class)
+  public ResponseEntity<SimpleHttpErrorMessage> handleCsvRequiredFieldEmptyException(
+      CsvRequiredFieldEmptyException e) {
+    HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity.status(badRequest)
+        .body(new SimpleHttpErrorMessage(badRequest.value(), e.getMessage()));
   }
 }
