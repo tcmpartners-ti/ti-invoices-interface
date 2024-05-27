@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.strategy.schedule;
 
+import com.tcmp.tiapi.invoice.exception.InvoiceSchedulingException;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
@@ -44,14 +45,16 @@ public class ScheduleInvoiceSettlementMessageStrategy implements ScheduleIncomin
       return;
     }
 
-    LocalDate deliverOn = getSettlementDateFromSettlementMessage(message);
-    boolean shouldProcessToday = deliverOn.isEqual(LocalDate.now(clock));
+    LocalDate invoiceSettlementDate = findInvoiceSettlementDate(message);
+    LocalDate today = LocalDate.now(clock);
+    boolean shouldProcessToday =
+        invoiceSettlementDate.isEqual(today) || invoiceSettlementDate.isBefore(today);
     if (shouldProcessToday) {
       parseAndHandleServiceRequest(message);
       return;
     }
 
-    saveMessageAsScheduled(message, deliverOn);
+    saveMessageAsScheduled(message, invoiceSettlementDate);
   }
 
   private void parseAndHandleServiceRequest(String message) {
@@ -65,11 +68,11 @@ public class ScheduleInvoiceSettlementMessageStrategy implements ScheduleIncomin
       return (AckServiceRequest<?>)
           jaxbContext.createUnmarshaller().unmarshal(new StringReader(message));
     } catch (JAXBException e) {
-      throw new RuntimeException(e);
+      throw new InvoiceSchedulingException(e.getMessage());
     }
   }
 
-  private LocalDate getSettlementDateFromSettlementMessage(String message) {
+  private LocalDate findInvoiceSettlementDate(String message) {
     String masterReference = MessageUtils.extractFieldFromMessage("MasterRef", message);
 
     return invoiceRepository
