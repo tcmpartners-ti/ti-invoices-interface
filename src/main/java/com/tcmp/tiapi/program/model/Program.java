@@ -5,6 +5,7 @@ import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.*;
 
 @Entity
@@ -133,4 +134,7 @@ public class Program {
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(name = "ID", referencedColumnName = "PID", insertable = false, updatable = false)
   private ProgramExtension extension;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "programId")
+  private List<Interest> interests;
 }

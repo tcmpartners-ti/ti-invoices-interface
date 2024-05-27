@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcmp.tiapi.program.dto.request.ProgramCustomerDTO;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,4 +56,7 @@ public class ProgramDTO {
       defaultValue = "0",
       example = "30")
   private Integer extraFinancingDays;
+
+  @Schema(description = "Program interest rate.", minimum = "0", example = "0.05")
+  private BigDecimal interestRate;
 }

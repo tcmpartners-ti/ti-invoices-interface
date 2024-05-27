@@ -6,6 +6,7 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceProgramDTO;
 import com.tcmp.tiapi.program.dto.csv.ProgramCreationCsvRow;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.dto.ti.ScfProgramme;
+import com.tcmp.tiapi.program.model.Interest;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import com.tcmp.tiapi.shared.utils.MapperUtils;
@@ -16,6 +17,7 @@ import com.tcmp.tiapi.ti.dto.CustomerRole;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import org.mapstruct.*;
@@ -48,11 +50,23 @@ public abstract class ProgramMapper {
       source = "extension.extraFinancingDays",
       target = "extraFinancingDays",
       defaultValue = "0")
+  @Mapping(target = "interestRate", expression = "java(mapInterestsToRate(program.getInterests()))")
   public abstract ProgramDTO mapEntityToDTO(Program program);
 
   public abstract List<ProgramDTO> mapEntitiesToDTOs(List<Program> programs);
 
+  @Mapping(target = "interestRate", expression = "java(mapInterestsToRate(program.getInterests()))")
+  @Mapping(target = "extraFinancingDays", source = "extension.extraFinancingDays")
   public abstract InvoiceProgramDTO mapEntityToInvoiceDTO(Program program);
+
+  public BigDecimal mapInterestsToRate(List<Interest> interests) {
+    return interests.stream()
+        .filter(interest -> interest.getScfMap() == null)
+        .findFirst()
+        .map(Interest::getTier)
+        .map(tiers -> tiers.get(0).getRate())
+        .orElse(BigDecimal.ZERO);
+  }
 
   @Mapping(target = "maintenanceType", constant = "F")
   @Mapping(target = "maintainedInBackOffice", constant = "false")
@@ -70,7 +84,6 @@ public abstract class ProgramMapper {
   @Mapping(target = "startDate", source = "programmeStartDate", dateFormat = DATE_FORMAT)
   @Mapping(target = "expiryDate", source = "programmeExpiryDate", dateFormat = DATE_FORMAT)
   @Mapping(target = "narrative", constant = "Narrative")
-  // Todo: map this nuts
   @Mapping(target = "financeProductType", ignore = true)
   @Mapping(target = "invoiceUploadedBy", expression = "java(CustomerRole.BUYER)")
   @Mapping(target = "financeRequestedBy", expression = "java(CustomerRole.SELLER)")
