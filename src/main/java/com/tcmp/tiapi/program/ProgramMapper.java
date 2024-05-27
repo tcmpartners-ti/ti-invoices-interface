@@ -60,6 +60,8 @@ public abstract class ProgramMapper {
   public abstract InvoiceProgramDTO mapEntityToInvoiceDTO(Program program);
 
   public BigDecimal mapInterestsToRate(List<Interest> interests) {
+    if (interests == null) return BigDecimal.ZERO;
+
     return interests.stream()
         .filter(interest -> interest.getScfMap() == null)
         .findFirst()
