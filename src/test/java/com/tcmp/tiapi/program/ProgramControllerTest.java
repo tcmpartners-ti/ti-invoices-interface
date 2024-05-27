@@ -53,7 +53,7 @@ class ProgramControllerTest {
   void getProgramById_itShouldReturnProgram() throws Exception {
     var programId = "123";
     var expectedBody =
-        "{\"id\":\"123\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null}";
+        "{\"id\":\"123\",\"description\":null,\"customer\":null,\"startDate\":null,\"expiryDate\":null,\"type\":null,\"creditLimit\":null,\"status\":null,\"extraFinancingDays\":null,\"interestRate\":null}";
 
     when(programService.getProgramById(anyString()))
         .thenReturn(ProgramDTO.builder().id("123").build());
