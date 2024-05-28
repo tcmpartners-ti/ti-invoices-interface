@@ -2,6 +2,7 @@ package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
@@ -36,6 +37,7 @@ public class SellerService {
   private final Clock clock;
 
   private final CustomerRepository customerRepository;
+  private final CounterPartyRepository counterPartyRepository;
   private final InvoiceRepository invoiceRepository;
   private final ProgramRepository programRepository;
   private final InvoiceMapper invoiceMapper;
@@ -131,7 +133,7 @@ public class SellerService {
   }
 
   private void checkIfSellerExistsOrThrowNotFound(String sellerMnemonic) {
-    if (!customerRepository.existsByIdMnemonic(sellerMnemonic)) {
+    if (!counterPartyRepository.counterPartyIsSeller(sellerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));
     }
@@ -140,7 +142,7 @@ public class SellerService {
   private void checkIfBuyerExistsOrThrowNotFound(@Nullable String buyerMnemonic) {
     if (buyerMnemonic == null) return;
 
-    if (!customerRepository.existsByIdMnemonic(buyerMnemonic)) {
+    if (!counterPartyRepository.counterPartyIsBuyer(buyerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a buyer with mnemonic %s.", buyerMnemonic));
     }
