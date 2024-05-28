@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
@@ -38,10 +39,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 class SellerServiceTest {
   @Mock private CustomerRepository customerRepository;
+  @Mock private CounterPartyRepository counterPartyRepository;
   @Mock private InvoiceRepository invoiceRepository;
   @Mock private ProgramRepository programRepository;
   @Mock private InvoiceMapper invoiceMapper;
+
   @Spy private ProgramMapper programMapper = Mappers.getMapper(ProgramMapper.class);
+
   private final CurrencyAmountMapper currencyAmountMapper =
       Mappers.getMapper(CurrencyAmountMapper.class);
 
@@ -65,7 +69,7 @@ class SellerServiceTest {
         SearchSellerInvoicesParams.builder().status("O").build();
     PageParams pageParams = new PageParams();
 
-    when(customerRepository.existsByIdMnemonic(sellerMnemonic)).thenReturn(false);
+    when(counterPartyRepository.counterPartyIsSeller(sellerMnemonic)).thenReturn(false);
 
     assertThrows(
         NotFoundHttpException.class,
@@ -79,7 +83,7 @@ class SellerServiceTest {
         SearchSellerInvoicesParams.builder().status("O").build();
     PageParams pageParams = new PageParams();
 
-    when(customerRepository.existsByIdMnemonic(sellerMnemonic)).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsSeller(sellerMnemonic)).thenReturn(true);
     when(invoiceRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of()));
 
@@ -93,7 +97,7 @@ class SellerServiceTest {
 
   @Test
   void getSellerInvoices_itShouldReturnSellerInvoices() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(true);
     when(invoiceRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(InvoiceMaster.builder().build())));
 
@@ -107,7 +111,7 @@ class SellerServiceTest {
 
   @Test
   void getSellerProgramsByMnemonic_itShouldThrowNotFoundException() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(false);
 
     var pageParams = new PageParams();
     assertThrows(
@@ -122,7 +126,7 @@ class SellerServiceTest {
             Program.builder().id("Program1").customerMnemonic("1722466420").build(),
             Program.builder().id("Program2").customerMnemonic("1722466420").build());
 
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(true);
     when(programRepository.findAllBySellerMnemonic(anyString(), any(Pageable.class)))
         .thenReturn(new PageImpl<>(programs));
 
@@ -164,7 +168,7 @@ class SellerServiceTest {
 
   @Test
   void getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfCustomerNotFound() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(false);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(false);
 
     assertThrows(
         NotFoundHttpException.class,
@@ -173,7 +177,8 @@ class SellerServiceTest {
 
   @Test
   void getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfBuyerNotFound() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true).thenReturn(false);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsBuyer(anyString())).thenReturn(false);
 
     assertThrows(
         NotFoundHttpException.class,
@@ -184,7 +189,8 @@ class SellerServiceTest {
   @Test
   void
       getSellerOutstandingBalanceByMnemonic_itShouldThrowExceptionIfSellerHasNoLinkedInvoicesToBuyer() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsBuyer(anyString())).thenReturn(true);
 
     assertThrows(
         NotFoundHttpException.class,
@@ -194,7 +200,7 @@ class SellerServiceTest {
 
   @Test
   void getSellerOutstandingBalanceByMnemonic_itShouldReturnOutstandingBalance() {
-    when(customerRepository.existsByIdMnemonic(anyString())).thenReturn(true);
+    when(counterPartyRepository.counterPartyIsSeller(anyString())).thenReturn(true);
     when(invoiceRepository.getNotFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
         .thenReturn(Optional.of(BigDecimal.valueOf(100000L)));
     when(invoiceRepository.getFinancedOutstandingBalanceBySellerMnemonic(anyString(), any()))
