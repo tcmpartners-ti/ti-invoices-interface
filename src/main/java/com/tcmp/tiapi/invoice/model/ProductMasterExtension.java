@@ -27,7 +27,7 @@ public class ProductMasterExtension {
   private String gafOperationId;
 
   @Column(name = "GAFINTRT", nullable = false)
-  private String gafInterestRate;
+  private BigDecimal gafInterestRate;
 
   @Column(name = "GAFDIAMT", nullable = false)
   private BigDecimal gafDisbursementAmount;
