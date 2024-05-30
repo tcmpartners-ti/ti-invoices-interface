@@ -33,13 +33,13 @@ public class ProductMasterExtension {
   private BigDecimal gafDisbursementAmount;
 
   @Column(name = "GAFFACTO", nullable = false)
-  private BigDecimal gafFactor;
+  private BigDecimal gafTaxFactor;
 
   @Column(name = "BGAFINTS", nullable = false)
-  private BigDecimal buyerInterestsAmount;
+  private BigDecimal buyerGafInterests;
 
   @Column(name = "SGAFINTS", nullable = false)
-  private BigDecimal sellerInterestsAmount;
+  private BigDecimal sellerGafInterests;
 
   @Column(name = "BSOLCAMT", nullable = false)
   private BigDecimal buyerSolcaAmount;

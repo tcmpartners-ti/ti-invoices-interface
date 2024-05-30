@@ -24,6 +24,9 @@ public class InvoiceContext implements Serializable {
   @XmlElement(name = "Customer", namespace = TINamespace.COMMON)
   private String customer;
 
+  @XmlElement(name = "OurReference", namespace = TINamespace.COMMON)
+  private String ourReference;
+
   @XmlElement(name = "TheirReference", namespace = TINamespace.COMMON)
   private String theirReference;
 
