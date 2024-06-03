@@ -113,6 +113,7 @@ public abstract class InvoiceMapper {
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
+  @Mapping(target = "context.ourReference", ignore = true)
   @Mapping(source = "context.behalfOfBranch", target = "context.branch")
   @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")
   @Mapping(target = "batchId", expression = "java(null)")
@@ -131,7 +132,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "outstandingAmount", target = "outstandingAmount")
   @Mapping(source = "issueDate", target = "issueDate", dateFormat = DTO_DATE_FORMAT)
   @Mapping(source = "settlementDate", target = "settlementDate", dateFormat = DTO_DATE_FORMAT)
-  @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
+  @Mapping(target = "invoiceApproved", constant = "Y")
   public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(
       InvoiceCreationDTO invoiceCreationDTO);
 
@@ -161,7 +162,7 @@ public abstract class InvoiceMapper {
       source = "invoiceRow.settlementDate",
       target = "settlementDate",
       dateFormat = DTO_DATE_FORMAT)
-  @Mapping(target = "invoiceApproved", expression = "java(\"Y\")")
+  @Mapping(target = "invoiceApproved", constant = "Y")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(
       InvoiceCreationRowCSV invoiceRow, String batchId);
 
@@ -170,6 +171,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "context.behalfOfBranch", target = "context.branch")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
   @Mapping(source = "context.theirReference", target = "theirReference")
+  @Mapping(target = "context.ourReference", ignore = true)
   @Mapping(source = "programme", target = "programme")
   @Mapping(source = "seller", target = "seller")
   @Mapping(source = "sellerAccount", target = "extraFinancingData.financeSellerAccount")
