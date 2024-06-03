@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.dto.ti.creation;
+package com.tcmp.tiapi.invoice.dto.ti;
 
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import jakarta.xml.bind.annotation.XmlAccessType;
