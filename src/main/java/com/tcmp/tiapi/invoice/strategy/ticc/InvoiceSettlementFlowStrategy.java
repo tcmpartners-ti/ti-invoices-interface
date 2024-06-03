@@ -6,9 +6,6 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
-import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.creation.ExtraData;
 import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
@@ -21,23 +18,15 @@ import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.ApplicationEnv;
 import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
-import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
-import com.tcmp.tiapi.ti.dto.TIOperation;
-import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
-import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
-import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadDetails;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadInvoice;
-import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;
+import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.*;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.CorporateLoanMapper;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Amortization;
-import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.*;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
@@ -58,7 +47,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -72,8 +60,6 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   private final UUIDGenerator uuidGenerator;
   private final ObjectMapper objectMapper;
 
-  private final ProducerTemplate producerTemplate;
-  private final TIServiceRequestWrapper serviceRequestWrapper;
   private final CorporateLoanService corporateLoanService;
   private final OperationalGatewayService operationalGatewayService;
   private final BusinessBankingService businessBankingService;
@@ -86,12 +72,10 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
   private final ProgramExtensionRepository programExtensionRepository;
   private final SinglePaymentMapper singlePaymentMapper;
+  private final CorporateLoanMapper corporateLoanMapper;
 
   @Value("${spring.profiles.active}")
   private String activeProfile;
-
-  @Value("${ti.route.fti.out.from}")
-  private String uriFromFtiOutgoing;
 
   /**
    * This function handles the settlement message sent by TI. It notifies to Business Banking the
@@ -160,8 +144,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     return sendEmailToCustomer(InvoiceEmailEvent.SETTLED, message, seller)
         .then(
             createBuyerCredit(message, buyer, programExtension, buyerAccount)
-                .flatMap(
-                    creditResponse -> saveGafInformation(message, creditResponse, tuple.getT4())))
+                .flatMap(creditResponse -> saveGafInformation(creditResponse, tuple.getT4())))
         .then(sendEmailToCustomer(InvoiceEmailEvent.CREDITED, message, buyer))
         .then(
             transferPaymentAmountFromBuyerToSeller(
@@ -346,48 +329,21 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   }
 
   private Mono<ProductMasterExtension> saveGafInformation(
-      InvoiceSettlementEventMessage message,
-      DistributorCreditResponse creditResponse,
-      ProductMasterExtension invoiceExtension) {
+      DistributorCreditResponse creditResponse, ProductMasterExtension invoiceExtension) {
+    BigDecimal buyerGafInterests = getInterests(creditResponse);
 
-    CreateInvoiceEventMessage updateInvoiceMasterMessage =
-        CreateInvoiceEventMessage.builder()
-            .context(InvoiceContext.builder().ourReference(message.getMasterRef().trim()).build())
-            .anchorParty(message.getAnchorPartyCustomerMnemonic())
-            .programme(message.getProgramme())
-            .buyer(message.getBuyerIdentifier())
-            .seller(message.getSellerIdentifier())
-            .issueDate(LocalDate.parse(message.getPaymentValueDate()))
-            .settlementDate(LocalDate.parse(message.getPaymentValueDate()))
-            .extraData(
-                ExtraData.builder()
-                    .financeAccount(invoiceExtension.getFinanceAccount())
-                    .gafOperationId(creditResponse.data().operationId())
-                    .gafInterestRate(BigDecimal.valueOf(creditResponse.data().interestRate()))
-                    .gafDisbursementAmount(
-                        BigDecimal.valueOf(creditResponse.data().disbursementAmount()))
-                    .gafTaxFactor(BigDecimal.valueOf(creditResponse.data().tax().factor()))
-                    .buyerGafInterests(
-                        creditResponse.data().amortizations().stream()
-                            .filter(a -> "IV".equals(a.code()))
-                            .findFirst()
-                            .map(Amortization::amount)
-                            .map(BigDecimal::new)
-                            .orElse(BigDecimal.ZERO))
-                    .buyerSolcaAmount(BigDecimal.valueOf(creditResponse.data().tax().amount()))
-                    .build())
-            .build();
+    Data credit = creditResponse.data();
+    invoiceExtension.setGafOperationId(credit.operationId());
+    invoiceExtension.setGafInterestRate(BigDecimal.valueOf(credit.interestRate()));
+    invoiceExtension.setGafDisbursementAmount(BigDecimal.valueOf(credit.disbursementAmount()));
+    invoiceExtension.setGafTaxFactor(BigDecimal.valueOf(credit.tax().factor()));
+    invoiceExtension.setBuyerGafInterests(buyerGafInterests);
+    invoiceExtension.setBuyerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
+    invoiceExtension.setAmortizations(getAmortizationsPayload(creditResponse));
 
     return Mono.fromRunnable(
         () -> {
-          ServiceRequest<CreateInvoiceEventMessage> updateInvoiceRequest =
-              serviceRequestWrapper.wrapRequest(
-                  TIService.TRADE_INNOVATION,
-                  TIOperation.CREATE_INVOICE,
-                  ReplyFormat.STATUS,
-                  null,
-                  updateInvoiceMasterMessage);
-          producerTemplate.asyncSendBody(uriFromFtiOutgoing, updateInvoiceRequest);
+          productMasterExtensionRepository.save(invoiceExtension);
 
           log.info(
               "Saved GAF information for invoice extension with id [{}].",
@@ -395,52 +351,38 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         });
   }
 
-  // Todo: add this to mapper
+  private BigDecimal getInterests(DistributorCreditResponse creditResponse) {
+    return creditResponse.data().amortizations().stream()
+        .filter(a -> "IV".equals(a.code()))
+        .findFirst()
+        .map(Amortization::amount)
+        .map(BigDecimal::new)
+        .orElse(BigDecimal.ZERO);
+  }
+
+  private String getAmortizationsPayload(DistributorCreditResponse creditResponse) {
+    try {
+      return objectMapper.writeValueAsString(creditResponse.data().amortizations());
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage());
+      return "";
+    }
+  }
+
   private DistributorCreditRequest buildDistributorCreditRequest(
       InvoiceSettlementEventMessage invoiceSettlementMessage,
       Customer buyer,
       ProgramExtension programExtension,
       EncodedAccountParser buyerAccountParser) {
     // Mock this value for dev testing purposes.
-    boolean isDevelopment =
+    boolean isDev =
         ApplicationEnv.LOCAL.value().equals(activeProfile)
             || ApplicationEnv.DEV.value().equals(activeProfile);
     String paymentValueDate =
-        isDevelopment ? getSystemDate() : invoiceSettlementMessage.getPaymentValueDate();
+        isDev ? getSystemDate() : invoiceSettlementMessage.getPaymentValueDate();
 
-    return DistributorCreditRequest.builder()
-        .commercialTrade(new CommercialTrade(buyer.getType().trim()))
-        .customer(
-            com.tcmp.tiapi.titoapigee.corporateloan.dto.request.Customer.builder()
-                .customerId(buyer.getNumber().trim())
-                .documentNumber(buyer.getId().getMnemonic().trim())
-                .fullName(buyer.getFullName().trim())
-                .documentType(buyer.getBankCode1().trim())
-                .build())
-        .disbursement(
-            Disbursement.builder()
-                .accountNumber(buyerAccountParser.getAccount())
-                .accountType(buyerAccountParser.getType())
-                .bankId("010")
-                .form("N/C")
-                .build())
-        .amount(getPaymentAmountFromMessage(invoiceSettlementMessage))
-        .effectiveDate(paymentValueDate)
-        .term(programExtension.getExtraFinancingDays())
-        .termPeriodType(new TermPeriodType("D"))
-        .amortizationPaymentPeriodType(new AmortizationPaymentPeriodType("FIN"))
-        .interestPayment(new InterestPayment("FIN", new GracePeriod("V", "001")))
-        .maturityForm("C99")
-        .quotaMaturityCriteria("*NO")
-        .references(List.of())
-        .tax(
-            Tax.builder()
-                .code("L")
-                .paymentForm(new PaymentForm("C"))
-                .rate(BigDecimal.ZERO)
-                .amount(BigDecimal.ZERO)
-                .build())
-        .build();
+    return corporateLoanMapper.mapToFinanceRequest(
+        invoiceSettlementMessage, buyer, buyerAccountParser, paymentValueDate, programExtension);
   }
 
   private String getSystemDate() {
