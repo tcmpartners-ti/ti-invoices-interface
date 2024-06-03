@@ -25,10 +25,12 @@ import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayR
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;
 import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcessCode;
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.CorporateLoanMapper;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.DistributorCreditRequest;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Data;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Tax;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
@@ -42,6 +44,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +52,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -78,7 +82,7 @@ class InvoiceSettlementFlowStrategyTest {
   @Captor private ArgumentCaptor<SinglePaymentRequest> singlePaymentRequestArgumentCaptor;
   @Captor private ArgumentCaptor<DistributorCreditRequest> creditRequestArgumentCaptor;
 
-  private InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
+  @InjectMocks private InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
 
   private Customer buyer;
   private Customer seller;
@@ -87,9 +91,10 @@ class InvoiceSettlementFlowStrategyTest {
   void setUp() {
     var mockedToday = LocalDate.of(2024, 2, 8);
     var mockedClock =
-            Clock.fixed(
-                    mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        Clock.fixed(
+            mockedToday.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
     var singlePaymentMapper = Mappers.getMapper(SinglePaymentMapper.class);
+    var corporateLoanMapper = Mappers.getMapper(CorporateLoanMapper.class);
     ReflectionTestUtils.setField(singlePaymentMapper, "bglAccount", MOCK_BGL_ACCOUNT);
     ReflectionTestUtils.setField(singlePaymentMapper, "debtorId", DEBTOR_ID);
     ReflectionTestUtils.setField(singlePaymentMapper, "clock", mockedClock);
@@ -108,7 +113,8 @@ class InvoiceSettlementFlowStrategyTest {
             invoiceRepository,
             productMasterExtensionRepository,
             programExtensionRepository,
-            singlePaymentMapper);
+            singlePaymentMapper,
+            corporateLoanMapper);
 
     ReflectionTestUtils.setField(invoiceSettlementFlowStrategy, "activeProfile", "prod");
     // Mock injected fields
@@ -221,7 +227,12 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH9278281281").build()));
     when(corporateLoanService.createCredit(any()))
         .thenReturn(
-            new DistributorCreditResponse(Data.builder().error(new Error("", "", "INFO")).build()));
+            new DistributorCreditResponse(
+                Data.builder()
+                    .tax(Tax.builder().factor(8).amount(20).build())
+                    .amortizations(List.of())
+                    .error(new Error("", "", "INFO"))
+                    .build()));
     when(singleElectronicPaymentService.createSinglePayment(any()))
         .thenThrow(new SinglePaymentException("Payment failed"));
 
@@ -239,7 +250,7 @@ class InvoiceSettlementFlowStrategyTest {
 
   @Test
   void handleServiceRequest_itShouldHandleHappyPath() {
-    InvoiceMaster notFinancedInvoice =
+    var notFinancedInvoice =
         InvoiceMaster.builder()
             .id(1L)
             .batchId("123")
@@ -260,7 +271,12 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH9278281281").build()));
     when(corporateLoanService.createCredit(any()))
         .thenReturn(
-            new DistributorCreditResponse(Data.builder().error(new Error("", "", "INFO")).build()));
+            new DistributorCreditResponse(
+                Data.builder()
+                    .tax(Tax.builder().factor(8).amount(20).build())
+                    .amortizations(List.of())
+                    .error(new Error("", "", "INFO"))
+                    .build()));
     when(singleElectronicPaymentService.createSinglePayment(any()))
         .thenReturn(new SinglePaymentResponse(new SinglePaymentResponse.Data("Reference123")));
 
