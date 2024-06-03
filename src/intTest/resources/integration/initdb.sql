@@ -53,7 +53,16 @@ ALTER TABLE public.extevent OWNER TO test;
 CREATE TABLE public.extmaster (
     key29 bigint NOT NULL,
     master bigint NOT NULL,
-    finacc character varying(255)
+    finacc character varying(255),
+    GAFOPEID CHAR(16),
+    GAFDIAMT DECIMAL(10, 2),
+    GAFFACTO DECIMAL(4, 4),
+    SSOLCAMT DECIMAL(8, 2),
+    BGAFINTS DECIMAL(10, 2),
+    SGAFINTS DECIMAL(10, 2),
+    GAFAMORT VARCHAR(2048),
+    BSOLCAMT DECIMAL(8, 2),
+    GAFINTRT DECIMAL(4, 2)
 );
 
 
