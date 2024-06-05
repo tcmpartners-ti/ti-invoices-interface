@@ -525,7 +525,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     BigDecimal sellerGafInterests = getInterests(creditResponse);
 
     invoiceExtension.setSellerGafInterests(sellerGafInterests);
-    invoiceExtension.setBuyerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
+    invoiceExtension.setSellerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
 
     productMasterExtensionRepository.save(invoiceExtension);
     log.info("Saved GAF information for seller on invoice extension with id [{}].", invoiceExtension.getId());
