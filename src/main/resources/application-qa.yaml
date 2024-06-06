@@ -70,7 +70,7 @@ fcm:
 
     services:
       single-electronic-payment:
-        url: "${fcm.api.url.dev}/fcmclient/services/openapi/electronic"
+        url: "${fcm.api.url.test}/fcmclient/services/openapi/electronic"
 
   route:
     payment-result.from: "activemqFcm:queue:${fcm.queue.notification.sub.name}"

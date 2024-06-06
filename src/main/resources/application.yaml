@@ -32,6 +32,7 @@ fcm:
 
   api.url:
     dev: "http://172.31.96.5:8080"
+    test: "http://172.31.112.4:8080"
 
 springdoc:
   api-docs.enabled: true
