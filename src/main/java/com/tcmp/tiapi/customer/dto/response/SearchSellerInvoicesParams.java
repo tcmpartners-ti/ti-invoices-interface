@@ -9,8 +9,8 @@ import lombok.Builder;
 public record SearchSellerInvoicesParams(
     @Size(min = 1, max = 1, message = "Invoice status must be up to 1 character long.")
         @Pattern(
-            regexp = "[OFLPDEC]",
+            regexp = "[OFTLPDEC]",
             message =
-                "Invoice status must be either O = Outstanding and Not Financed; F = Outstanding and Financed; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured or C = Cancelled.")
+                "Invoice status must be either O = Outstanding and Not Financed (> today); T = Outstanding and Not Financed (= today); F = Outstanding and Financed; L = Overdue; P = Paid; D = Inquiry; E = Dishonoured or C = Cancelled.")
         @Nullable
         String status) {}

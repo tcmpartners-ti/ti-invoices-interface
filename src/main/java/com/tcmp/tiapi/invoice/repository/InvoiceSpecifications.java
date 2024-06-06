@@ -28,7 +28,7 @@ public class InvoiceSpecifications {
       }
 
       // F status is not a native status, it's overridden with O status.
-      String dbStatus = status.equals("F") ? "O" : status;
+      String dbStatus = status.equals("F") || status.equals("T") ? "O" : status;
       predicates.add(cb.equal(root.get("status"), dbStatus));
 
       Predicate invoiceHasBeenFinanced =
@@ -39,11 +39,19 @@ public class InvoiceSpecifications {
                   cb.isNotNull(root.get("discountDealAmount")),
                   cb.notEqual(root.get("discountDealAmount"), 0)));
 
-      if (status.equals("O")) {
-        predicates.add(cb.not(invoiceHasBeenFinanced));
-        predicates.add(cb.greaterThan(root.get("settlementDate"), today));
-      } else if (status.equals("F")) {
-        predicates.add(invoiceHasBeenFinanced);
+      switch (status) {
+        case "O" -> {
+          predicates.add(cb.not(invoiceHasBeenFinanced));
+          predicates.add(cb.greaterThan(root.get("settlementDate"), today));
+        }
+        case "T" -> {
+          predicates.add(cb.not(invoiceHasBeenFinanced));
+          predicates.add(cb.equal(root.get("settlementDate"), today));
+        }
+        case "F" -> predicates.add(invoiceHasBeenFinanced);
+        default -> {
+          // Do nothing
+        }
       }
 
       query.orderBy(cb.asc(root.get("reference")));
