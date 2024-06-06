@@ -2,7 +2,6 @@ package com.tcmp.tiapi.customer.dto.csv;
 
 import com.opencsv.bean.CsvBindByName;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
@@ -12,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 
-@CsvRecord(separator = ",")
+@CsvRecord(separator = ",", quoting = true)
 @Data
 @Builder
 @AllArgsConstructor
@@ -39,7 +38,7 @@ public class CustomerCreationCSVRow implements Serializable {
   private String bankCode;
 
   @CsvBindByName(column = "Number", required = true)
-  @Size(min = 3, max = 12, message = "Number must be between 3 and 12 characters")
+  @Size(min = 2, max = 12, message = "Number must be between 2 and 12 characters")
   private String number;
 
   @CsvBindByName(column = "Type", required = true)
@@ -59,16 +58,16 @@ public class CustomerCreationCSVRow implements Serializable {
   private String address;
 
   @CsvBindByName(column = "Phone", required = true)
-  @Size(min = 10, max = 20, message = "Phone must be between 10 and 20 characters")
+  @Size(min = 2, max = 20, message = "Phone must be between 2 and 20 characters")
   private String phone;
 
   @CsvBindByName(column = "Email", required = true)
-  @Size(min = 3, max = 128, message = "Email must be between 3 and 128 characters")
-  @Email
+  @Size(min = 2, max = 128, message = "Email must be between 2 and 128 characters")
   private String email;
 
   @CsvBindByName(column = "AccountType", required = true)
   @Size(min = 1, max = 10, message = "AccountType must be between 1 and 10 characters")
+  @Pattern(regexp = "^CA$", message = "AccountType must be CA")
   private String accountType;
 
   @CsvBindByName(column = "AccountNumber", required = true)
@@ -80,7 +79,7 @@ public class CustomerCreationCSVRow implements Serializable {
 
   @CsvBindByName(column = "AccountCurrency", required = true)
   @Size(min = 3, max = 3, message = "AccountCurrency must be 3 characters long")
-  @Pattern(regexp = "^[A-Z]{3}$", message = "AccountCurrency must be 3 uppercase letters")
+  @Pattern(regexp = "^USD$", message = "AccountCurrency must be USD")
   private String accountCurrency;
 
   @CsvBindByName(column = "AccountDateOpened", required = true)
