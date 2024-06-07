@@ -6,9 +6,6 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.invoice.dto.ti.ExtraData;
-import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
-import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.exception.InconsistentInvoiceInformationException;
 import com.tcmp.tiapi.invoice.model.EventExtension;
@@ -22,12 +19,7 @@ import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
-import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
-import com.tcmp.tiapi.ti.dto.TIOperation;
-import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.AckServiceRequest;
-import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
-import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.BusinessBankingService;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.OperationalGatewayRequestPayload;
@@ -46,7 +38,6 @@ import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
-import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import com.tcmp.tiapi.titofcm.dto.SinglePaymentMapper;
 import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
 import com.tcmp.tiapi.titofcm.dto.response.PaymentResultResponse;
@@ -56,16 +47,12 @@ import com.tcmp.tiapi.titofcm.model.InvoicePaymentCorrelationInfo;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.ProducerTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -75,8 +62,6 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   private final UUIDGenerator uuidGenerator;
   private final ObjectMapper objectMapper;
 
-  private final ProducerTemplate producerTemplate;
-  private final TIServiceRequestWrapper serviceRequestWrapper;
   private final AccountRepository accountRepository;
   private final CustomerRepository customerRepository;
   private final EventExtensionRepository eventExtensionRepository;
@@ -91,9 +76,6 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   private final CorporateLoanService corporateLoanService;
   private final OperationalGatewayService operationalGatewayService;
   private final BusinessBankingService businessBankingService;
-
-  @Value("${ti.route.fti.out.from}")
-  private String uriFromFtiOutgoing;
 
   /**
    * This function receives the financing result message from TI. First, it sends a notification to
@@ -208,10 +190,16 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     try {
       validatePaymentResult(paymentResult);
 
+      ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
       Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
 
       sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, financeMessage, seller);
-      notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
+      notifyFinanceStatus(
+          PayloadStatus.SUCCEEDED,
+          financeMessage,
+          invoice,
+          invoiceExtension.getGafOperationId(),
+          null);
 
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
     } catch (Exception e) {
@@ -269,7 +257,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
             || e instanceof EncodedAccountParser.AccountDecodingException;
     if (!isNotifiableError) return;
 
-    notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, e.getMessage());
+    notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, null, e.getMessage());
   }
 
   public void sendEmailToCustomer(
@@ -296,6 +284,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       PayloadStatus status,
       FinanceAckMessage financeResultMessage,
       InvoiceMaster invoice,
+      @Nullable String operationId,
       @Nullable String error) {
     List<String> errors = error == null ? null : List.of(error);
 
@@ -307,6 +296,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
                     .batchId(invoice.getBatchId().trim())
                     .reference(financeResultMessage.getTheirRef())
                     .sellerMnemonic(financeResultMessage.getSellerIdentifier())
+                    .operationId(operationId)
                     .build())
             .details(new PayloadDetails(errors, null, null))
             .build();
@@ -528,7 +518,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     invoiceExtension.setSellerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
 
     productMasterExtensionRepository.save(invoiceExtension);
-    log.info("Saved GAF information for seller on invoice extension with id [{}].", invoiceExtension.getId());
+    log.info(
+        "Saved GAF information for seller on invoice extension with id [{}].",
+        invoiceExtension.getId());
   }
 
   private BigDecimal getInterests(DistributorCreditResponse creditResponse) {
