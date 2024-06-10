@@ -6,6 +6,7 @@ import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
+import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
 import com.tcmp.tiapi.titoapigee.businessbanking.dto.request.PayloadStatus;
@@ -54,7 +55,8 @@ public class SettlementPaymentResultStrategy implements PaymentResultStrategy {
     if (onlyCreditSucceeded) {
       String errorMessage = "Could not perform bgl to seller transaction";
       invoiceSettlementFlowStrategy
-          .notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, errorMessage)
+          .notifySettlementStatusExternally(
+              PayloadStatus.FAILED, message, invoice, null, errorMessage)
           .onErrorResume(
               error -> invoiceSettlementFlowStrategy.handleError(error, message, invoice))
           .subscribe();
@@ -62,12 +64,19 @@ public class SettlementPaymentResultStrategy implements PaymentResultStrategy {
       return;
     }
 
+    ProductMasterExtension invoiceExtension =
+        invoiceSettlementFlowStrategy.findMasterExtensionByReference(message.getMasterRef());
+
     // Credit received, should be all good
     invoiceSettlementFlowStrategy
         .sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller)
         .then(
             invoiceSettlementFlowStrategy.notifySettlementStatusExternally(
-                PayloadStatus.SUCCEEDED, message, invoice, null))
+                PayloadStatus.SUCCEEDED,
+                message,
+                invoice,
+                invoiceExtension.getGafOperationId(),
+                null))
         .onErrorResume(error -> invoiceSettlementFlowStrategy.handleError(error, message, invoice))
         .subscribe();
   }

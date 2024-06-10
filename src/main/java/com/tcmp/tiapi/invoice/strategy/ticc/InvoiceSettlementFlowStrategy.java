@@ -220,13 +220,15 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         e instanceof CreditCreationException || e instanceof SinglePaymentException;
     if (!isNotifiableError) return Mono.empty();
 
-    return notifySettlementStatusExternally(PayloadStatus.FAILED, message, invoice, e.getMessage());
+    return notifySettlementStatusExternally(
+        PayloadStatus.FAILED, message, invoice, null, e.getMessage());
   }
 
   public Mono<Object> notifySettlementStatusExternally(
       PayloadStatus status,
       InvoiceSettlementEventMessage message,
       InvoiceMaster invoice,
+      @Nullable String operationId,
       @Nullable String error) {
     List<String> errors = error == null ? null : List.of(error);
 
@@ -238,6 +240,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
                     .batchId(invoice.getBatchId().trim())
                     .reference(message.getInvoiceNumber())
                     .sellerMnemonic(message.getSellerIdentifier())
+                    .operationId(operationId)
                     .build())
             .details(new PayloadDetails(errors, null, null))
             .build();
@@ -263,7 +266,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
                     "Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  private ProductMasterExtension findMasterExtensionByReference(String masterReference) {
+  public ProductMasterExtension findMasterExtensionByReference(String masterReference) {
     return productMasterExtensionRepository
         .findByMasterReference(masterReference)
         .orElseThrow(
