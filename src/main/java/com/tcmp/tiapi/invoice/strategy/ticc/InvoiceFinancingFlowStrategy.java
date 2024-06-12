@@ -47,10 +47,12 @@ import com.tcmp.tiapi.titofcm.model.InvoicePaymentCorrelationInfo;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -190,16 +192,10 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     try {
       validatePaymentResult(paymentResult);
 
-      ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
       Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
 
       sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, financeMessage, seller);
-      notifyFinanceStatus(
-          PayloadStatus.SUCCEEDED,
-          financeMessage,
-          invoice,
-          invoiceExtension.getGafOperationId(),
-          null);
+      notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
 
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
     } catch (Exception e) {
@@ -257,7 +253,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
             || e instanceof EncodedAccountParser.AccountDecodingException;
     if (!isNotifiableError) return;
 
-    notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, null, e.getMessage());
+    notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, e.getMessage());
   }
 
   public void sendEmailToCustomer(
@@ -284,7 +280,6 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       PayloadStatus status,
       FinanceAckMessage financeResultMessage,
       InvoiceMaster invoice,
-      @Nullable String operationId,
       @Nullable String error) {
     List<String> errors = error == null ? null : List.of(error);
 
@@ -296,7 +291,6 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
                     .batchId(invoice.getBatchId().trim())
                     .reference(financeResultMessage.getTheirRef())
                     .sellerMnemonic(financeResultMessage.getSellerIdentifier())
-                    .operationId(operationId)
                     .build())
             .details(new PayloadDetails(errors, null, null))
             .build();
