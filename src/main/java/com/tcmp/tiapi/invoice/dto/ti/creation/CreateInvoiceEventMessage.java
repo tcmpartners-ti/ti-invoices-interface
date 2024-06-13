@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.invoice.dto.ti.creation;
 
+import com.tcmp.tiapi.invoice.dto.ti.ExtraData;
 import com.tcmp.tiapi.invoice.dto.ti.InvoiceContext;
 import com.tcmp.tiapi.ti.LocalDateAdapter;
 import com.tcmp.tiapi.ti.dto.TINamespace;

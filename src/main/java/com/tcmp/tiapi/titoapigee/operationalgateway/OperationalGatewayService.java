@@ -69,7 +69,7 @@ public class OperationalGatewayService {
           "Successfully sent notification via {} to: {}", channel.description(), channel.value());
       tryRequestAndResponseLogging(request, response);
     } catch (FeignException e) {
-      throw new OperationalGatewayException(e.getMessage());
+      log.error("Failed to send email notification: {}", e.getMessage());
     }
   }
 

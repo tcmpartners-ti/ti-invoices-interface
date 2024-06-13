@@ -30,13 +30,14 @@ import com.tcmp.tiapi.titoapigee.businessbanking.model.OperationalGatewayProcess
 import com.tcmp.tiapi.titoapigee.corporateloan.CorporateLoanService;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.CorporateLoanMapper;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.request.*;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Amortization;
+import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Data;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.DistributorCreditResponse;
 import com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Error;
 import com.tcmp.tiapi.titoapigee.corporateloan.exception.CreditCreationException;
 import com.tcmp.tiapi.titoapigee.operationalgateway.OperationalGatewayService;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
-import com.tcmp.tiapi.titoapigee.paymentexecution.exception.PaymentExecutionException;
 import com.tcmp.tiapi.titofcm.dto.SinglePaymentMapper;
 import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
 import com.tcmp.tiapi.titofcm.dto.response.PaymentResultResponse;
@@ -46,10 +47,12 @@ import com.tcmp.tiapi.titofcm.model.InvoicePaymentCorrelationInfo;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -109,14 +112,12 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       EncodedAccountParser sellerAccountParser = findSelectedSellerAccountOrDefault(financeMessage);
 
       sendEmailToCustomer(InvoiceEmailEvent.FINANCED, financeMessage, seller);
+      DistributorCreditResponse buyerCredit =
+          createBuyerCredit(financeMessage, programExtension, buyer, buyerAccountParser);
+      saveGafOperationBuyerInformation(buyerCredit, invoiceExtension);
       SinglePaymentResponse response =
-          transferBuyerCreditAmountFromBuyerToSeller(
-              financeMessage,
-              programExtension,
-              buyer,
-              seller,
-              buyerAccountParser,
-              sellerAccountParser);
+          transferCreditAmountFromBuyerToSeller(
+              financeMessage, buyer, seller, buyerAccountParser, sellerAccountParser);
       saveInitialPaymentCorrelationInfo(response.data().paymentReferenceNumber(), financeMessage);
     } catch (Exception e) {
       handleFinanceFlowError(e, financeMessage, invoice);
@@ -151,16 +152,13 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       EncodedAccountParser buyerAccountParser =
           new EncodedAccountParser(invoiceExtension.getFinanceAccount());
       EncodedAccountParser sellerAccountParser = findSelectedSellerAccountOrDefault(financeMessage);
-
+      // Nueva funcion crear credi
+      DistributorCreditResponse sellerCredit =
+          simulateSellerCredit(financeMessage, buyer, programExtension, buyerAccountParser);
+      saveGafOperationSellerInformation(sellerCredit, invoiceExtension);
       SinglePaymentResponse response =
-          transferSellerCreditAmountFromSellerToBuyer(
-              financeMessage,
-              buyer,
-              seller,
-              programExtension,
-              buyerAccountParser,
-              sellerAccountParser);
-
+          transferTaxesAmountFromSellerToBuyer(
+              financeMessage, sellerCredit, buyer, seller, buyerAccountParser, sellerAccountParser);
       invoicePaymentInfo.setInitialEvent(
           InvoicePaymentCorrelationInfo.InitialEvent.BUYER_CENTRIC_FINANCE_1);
       invoicePaymentInfo.setPaymentReference(response.data().paymentReferenceNumber());
@@ -221,15 +219,11 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     }
   }
 
-  private SinglePaymentResponse transferSellerCreditAmountFromSellerToBuyer(
+  private DistributorCreditResponse simulateSellerCredit(
       FinanceAckMessage financeMessage,
       Customer buyer,
-      Customer seller,
       ProgramExtension programExtension,
-      EncodedAccountParser buyerAccountParser,
-      EncodedAccountParser sellerAccountParser)
-      throws CreditCreationException {
-
+      EncodedAccountParser buyerAccountParser) {
     log.info("Starting credit simulation.");
     int sellerCreditTerm = calculateCreditTermForSeller(financeMessage);
     DistributorCreditRequest creditRequest =
@@ -244,12 +238,8 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
           creditError != null ? creditError.message() : "Credit simulation failed.";
       throw new CreditCreationException(creditErrorMessage);
     }
-
     log.info("Starting seller to buyer taxes and solca transaction.");
-
-    // Correlation info should be updated by caller
-    return transferTaxesAmountFromSellerToBuyer(
-        financeMessage, sellerCredit, buyer, seller, buyerAccountParser, sellerAccountParser);
+    return sellerCredit;
   }
 
   private void handleFinanceFlowError(
@@ -370,21 +360,19 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
                     "Could not find account for customer " + customerMnemonic));
   }
 
-  private SinglePaymentResponse transferBuyerCreditAmountFromBuyerToSeller(
+  private DistributorCreditResponse createBuyerCredit(
       FinanceAckMessage financeMessage,
       ProgramExtension programExtension,
       Customer buyer,
-      Customer seller,
-      EncodedAccountParser buyerAccountParser,
-      EncodedAccountParser sellerAccountParser)
-      throws CreditCreationException, PaymentExecutionException {
+      EncodedAccountParser buyerAccountParser)
+      throws CreditCreationException {
     log.info("Starting credit creation.");
     int term = calculateCreditTermForBuyer(financeMessage, programExtension);
     DistributorCreditRequest credit =
         corporateLoanMapper.mapToFinanceRequest(
             financeMessage, programExtension, buyer, buyerAccountParser, term);
-    DistributorCreditResponse distributorCreditResponse = corporateLoanService.createCredit(credit);
-    Error creditError = distributorCreditResponse.data().error();
+    DistributorCreditResponse buyerCredit = corporateLoanService.createCredit(credit);
+    Error creditError = buyerCredit.data().error();
 
     boolean hasBeenCredited = creditError != null && creditError.hasNoError();
     if (!hasBeenCredited) {
@@ -392,9 +380,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
           creditError != null ? creditError.message() : "Credit creation failed.";
       throw new CreditCreationException(creditErrorMessage);
     }
-
-    return transferCreditAmountFromBuyerToSeller(
-        financeMessage, buyer, seller, buyerAccountParser, sellerAccountParser);
+    return buyerCredit;
   }
 
   private SinglePaymentResponse transferCreditAmountFromBuyerToSeller(
@@ -497,5 +483,55 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   private BigDecimal getFinanceDealAmountFromMessage(FinanceAckMessage invoiceFinanceAck) {
     BigDecimal financeDealAmountInCents = new BigDecimal(invoiceFinanceAck.getFinanceDealAmount());
     return MonetaryAmountUtils.convertCentsToDollars(financeDealAmountInCents);
+  }
+
+  private void saveGafOperationBuyerInformation(
+      DistributorCreditResponse creditResponse, ProductMasterExtension invoiceExtension) {
+    BigDecimal buyerGafInterests = getInterests(creditResponse);
+    Data credit = creditResponse.data();
+
+    invoiceExtension.setGafOperationId(credit.operationId());
+    invoiceExtension.setGafInterestRate(BigDecimal.valueOf(credit.interestRate()));
+    invoiceExtension.setGafDisbursementAmount(BigDecimal.valueOf(credit.disbursementAmount()));
+    invoiceExtension.setGafTaxFactor(BigDecimal.valueOf(credit.tax().factor()));
+    invoiceExtension.setBuyerGafInterests(buyerGafInterests);
+    invoiceExtension.setBuyerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
+    invoiceExtension.setAmortizations(getAmortizationsPayload(creditResponse));
+
+    productMasterExtensionRepository.save(invoiceExtension);
+
+    log.info("Saved GAF information for invoice extension with id [{}].", invoiceExtension.getId());
+  }
+
+  private void saveGafOperationSellerInformation(
+      DistributorCreditResponse creditResponse, ProductMasterExtension invoiceExtension) {
+    Data credit = creditResponse.data();
+    BigDecimal sellerGafInterests = getInterests(creditResponse);
+
+    invoiceExtension.setSellerGafInterests(sellerGafInterests);
+    invoiceExtension.setSellerSolcaAmount(BigDecimal.valueOf(credit.tax().amount()));
+
+    productMasterExtensionRepository.save(invoiceExtension);
+    log.info(
+        "Saved GAF information for seller on invoice extension with id [{}].",
+        invoiceExtension.getId());
+  }
+
+  private BigDecimal getInterests(DistributorCreditResponse creditResponse) {
+    return creditResponse.data().amortizations().stream()
+        .filter(a -> "IV".equals(a.code()))
+        .findFirst()
+        .map(Amortization::amount)
+        .map(BigDecimal::new)
+        .orElse(BigDecimal.ZERO);
+  }
+
+  private String getAmortizationsPayload(DistributorCreditResponse creditResponse) {
+    try {
+      return objectMapper.writeValueAsString(creditResponse.data().amortizations());
+    } catch (JsonProcessingException e) {
+      log.error(e.getMessage());
+      return "";
+    }
   }
 }

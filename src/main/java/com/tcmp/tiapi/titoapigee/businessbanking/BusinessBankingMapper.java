@@ -15,6 +15,7 @@ public interface BusinessBankingMapper {
   @Mapping(source = "serviceResponse.responseHeader.status", target = "status")
   @Mapping(source = "serviceResponse.responseHeader.details", target = "details")
   @Mapping(source = "invoice", target = "invoice")
+  @Mapping(target = "invoice.operationId", ignore = true)
   OperationalGatewayRequestPayload mapToRequestPayload(
       ServiceResponse serviceResponse, InvoiceEventInfo invoice);
 }
