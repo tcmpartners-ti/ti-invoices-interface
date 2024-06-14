@@ -1,9 +1,6 @@
 package com.tcmp.tiapi.invoice;
 
-import com.tcmp.tiapi.invoice.dto.request.InvoiceBulkCreationForm;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
-import com.tcmp.tiapi.invoice.dto.request.InvoiceSearchParams;
+import com.tcmp.tiapi.invoice.dto.request.*;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
@@ -85,9 +82,20 @@ public class InvoiceController {
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Create multiple invoices in Trade Innovation.")
-  public InvoicesCreatedDTO bulkCreateInvoices(@Valid InvoiceBulkCreationForm form) {
-    invoiceBatchOperationsService.createMultipleInvoicesInTi(form.invoicesFile(), form.batchId());
-    return InvoicesCreatedDTO.builder().message("Invoices sent to be created.").build();
+  public InvoicesCreatedDTO bulkCreateInvoices(
+      @Valid InvoiceBulkCreationForm form, @Valid InvoiceBulkCreationParams params) {
+    InvoiceBulkCreationParams.Channel channel =
+        InvoiceBulkCreationParams.Channel.fromString(params.channel());
+
+    if (channel == InvoiceBulkCreationParams.Channel.BUSINESS_BANKING) {
+      invoiceBatchOperationsService.createInvoicesInTiWithBusinessBankingChannel(
+          form.invoicesFile(), form.batchId());
+    } else if (channel == InvoiceBulkCreationParams.Channel.SFTP) {
+      invoiceBatchOperationsService.createInvoicesInTIWithSftpChannel(
+          form.invoicesFile(), form.batchId());
+    }
+
+    return new InvoicesCreatedDTO("Invoices sent to be created.");
   }
 
   @PostMapping(
