@@ -60,17 +60,17 @@ class InvoiceBatchOperationsServiceTest {
   }
 
   @Test
-  void createMultipleInvoicesInTi_itShouldThrowExceptionWhenFileEmpty() {
+  void createInvoicesInTi_WithBusinessBankingChannel_itShouldThrowExceptionWhenFileEmpty() {
     var mockFile = new MockMultipartFile("file.csv", new byte[] {});
     var batchId = "batch123";
 
     assertThrows(
         InvalidFileHttpException.class,
-        () -> invoiceBatchOperationsService.createMultipleInvoicesInTi(mockFile, batchId));
+        () -> invoiceBatchOperationsService.createInvoicesInTiWithBusinessBankingChannel(mockFile, batchId));
   }
 
   @Test
-  void createMultipleInvoicesInTi_itShouldSendAllInvoicesToTi() {
+  void createInvoicesInTi_itShouldSendAllInvoicesToTiWithBusinessBankingChannel() {
     var batchId = "11111";
     var totalInvoices = 220;
     var firstUuid = "000-001";
@@ -84,7 +84,7 @@ class InvoiceBatchOperationsServiceTest {
         .thenReturn(ServiceRequest.builder().build());
     when(uuidGenerator.getNewId()).thenReturn(firstUuid, uuids);
 
-    invoiceBatchOperationsService.createMultipleInvoicesInTi(mockMultipartFile, batchId);
+    invoiceBatchOperationsService.createInvoicesInTiWithBusinessBankingChannel(mockMultipartFile, batchId);
 
     // File has 220 invoices and invoices are processed in batches of 100.
     var expectedBatchCalls = 3;
