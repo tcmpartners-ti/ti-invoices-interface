@@ -3,6 +3,9 @@
 config.schedule-messages: true
 
 spring:
+  jpa.show-sql: true
+  output.ansi.enabled: ALWAYS
+
   datasource:
     host: ${DB_HOST}
     port: ${DB_PORT}
@@ -52,6 +55,18 @@ bp:
         user: ${CL_USER}
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.prod}/domain/corporate-loan/v1"
+
+sftp:
+  user: ${SFTP_USER}
+  private-key: ${SFTP_PRIVATE_KEY}
+  host: ${SFTP_HOST}
+  port: ${SFTP_PORT}
+  local-dir:
+    full-output: "./tmp/full-output"
+    summary: "./tmp/summary"
+  remote-dir:
+    full-output: "/ti/full-output"
+    summary: "/ti/summary"
 
 ti.route:
   fti:
