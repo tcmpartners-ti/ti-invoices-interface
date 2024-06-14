@@ -25,23 +25,24 @@ sonar {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.2.4"
-val camelVersion = "4.5.0"
+val springbootVersion = "3.3.0"
+val camelVersion = "4.6.0"
 val lombokVersion = "1.18.32"
 val h2Version = "2.2.224"
 val postgresVersion = "42.7.1"
 val mapstructVersion = "1.6.0.Beta1"
 val jdbcVersion = "12.7.0.jre8-preview"
 val openCsvVersion = "5.9"
-val commonsCodecVersion = "1.16.1"
+val commonsCodecVersion = "1.17.0"
 val openApiVersion = "2.3.0"
+val azureStorageBlobVersion = "12.26.1"
 val woodStoxVersion = "4.4.1"
-val openFeignVersion = "4.1.1"
-val retryVersion = "2.0.5"
-val aspectsVersion = "6.1.6"
+val openFeignVersion = "4.1.2"
+val retryVersion = "2.0.6"
+val aspectsVersion = "6.1.8"
 val lombokMapstructBindingVersion = "0.2.0"
 
-val junitVersion = "5.10.2"
+val junitVersion = "5.11.0-M2"
 val testContainersVersion = "1.19.3"
 val awaitilityVersion = "4.2.0"
 val restAssuredVersion = "5.4.0"
@@ -61,6 +62,7 @@ dependencies {
     // Apache Camel
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
     implementation("org.apache.camel:camel-activemq:$camelVersion")
+    implementation("org.apache.camel:camel-ftp:$camelVersion")
     implementation("org.apache.camel:camel-bindy:$camelVersion")
     implementation("org.apache.camel:camel-jackson:$camelVersion")
     implementation("org.apache.camel:camel-jaxb:$camelVersion")
