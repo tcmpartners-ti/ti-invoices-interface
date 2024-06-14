@@ -22,5 +22,10 @@ COPY --from=build /app/build/libs/invoices-0.0.1.jar invoices.jar
 
 EXPOSE 80
 
+RUN mkdir -p \
+    /app/tmp/full-output \
+    /app/tmp/summary \
+RUN chown -R invoices:invoices-group /app/tmp
+
 USER invoices
 CMD ["java", "-jar", "/app/invoices.jar"]

@@ -53,6 +53,18 @@ bp:
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
 
+sftp:
+  user: ${SFTP_USER}
+  private-key: ${SFTP_PRIVATE_KEY}
+  host: ${SFTP_HOST}
+  port: ${SFTP_PORT}
+  local-dir:
+    full-output: "/app/tmp/full-output"
+    summary: "/app/tmp/summary"
+  remote-dir:
+    full-output: "/ti/full-output"
+    summary: "/ti/summary"
+
 fcm:
   activemq:
     host: ${FCM_MQ_HOST}
