@@ -36,15 +36,15 @@ class InvoiceControllerTest {
     String expectedBody = "{\"status\":404,\"error\":\"Could not find invoice with id 1.\"}";
 
     when(invoiceService.getInvoiceById(anyLong()))
-      .thenThrow(new NotFoundHttpException(
-        String.format("Could not find invoice with id %s.", invoiceId)));
+        .thenThrow(
+            new NotFoundHttpException(
+                String.format("Could not find invoice with id %s.", invoiceId)));
 
-    mockMvc.perform(
-        get(String.format("/invoices/%s", invoiceId))
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andExpect(status().isNotFound())
-      .andExpect(content().json(expectedBody, true));
+    mockMvc
+        .perform(
+            get(String.format("/invoices/%s", invoiceId)).contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().json(expectedBody, true));
 
     verify(invoiceService).getInvoiceById(invoiceId);
   }
@@ -52,20 +52,17 @@ class InvoiceControllerTest {
   @Test
   void getInvoiceById_itShouldReturnInvoice() throws Exception {
     long invoiceId = 1L;
-    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
+    String expectedBody =
+        "{\"id\":1,\"invoiceNumber\":\"Invoice123\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
 
     when(invoiceService.getInvoiceById(anyLong()))
-      .thenReturn(InvoiceDTO.builder()
-        .id(invoiceId)
-        .invoiceNumber("Invoice123")
-        .build());
+        .thenReturn(InvoiceDTO.builder().id(invoiceId).invoiceNumber("Invoice123").build());
 
-    mockMvc.perform(
-        get(String.format("/invoices/%s", invoiceId))
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andExpect(status().isOk())
-      .andExpect(content().json(expectedBody, true));
+    mockMvc
+        .perform(
+            get(String.format("/invoices/%s", invoiceId)).contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedBody, true));
 
     verify(invoiceService).getInvoiceById(invoiceId);
   }
@@ -73,119 +70,100 @@ class InvoiceControllerTest {
   @Test
   void searchInvoice_itShouldThrowExceptionWhenNotFound() throws Exception {
     String programId = "Program123";
-    String expectedBody = "{\"status\":404,\"error\":\"Could not find a program with id Program123.\"}";
+    String expectedBody =
+        "{\"status\":404,\"error\":\"Could not find a program with id Program123.\"}";
 
     when(invoiceService.searchInvoice(any(InvoiceSearchParams.class)))
-      .thenThrow(new NotFoundHttpException(
-        String.format("Could not find a program with id %s.", programId)));
+        .thenThrow(
+            new NotFoundHttpException(
+                String.format("Could not find a program with id %s.", programId)));
 
-    mockMvc.perform(
-        get("/invoices/search")
-          .param("programme", programId)
-          .param("seller", "1722466420001")
-          .param("invoice", "001-001-01")
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andExpect(status().isNotFound())
-      .andExpect(content().json(expectedBody, true));
+    mockMvc
+        .perform(
+            get("/invoices/search")
+                .param("programme", programId)
+                .param("seller", "1722466420001")
+                .param("invoice", "001-001-01")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().json(expectedBody, true));
   }
 
   @Test
   void searchInvoice_itShouldReturnInvoice() throws Exception {
     long invoiceId = 1L;
-    String expectedBody = "{\"id\":1,\"invoiceNumber\":\"001-001-01\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
-    InvoiceSearchParams searchParams = InvoiceSearchParams.builder()
-      .programme("Programme123")
-      .seller("1722466420001")
-      .invoice("001-001-01")
-      .build();
+    String expectedBody =
+        "{\"id\":1,\"invoiceNumber\":\"001-001-01\",\"buyerPartyId\":null,\"createFinanceEventId\":null,\"batchId\":null,\"buyer\":null,\"seller\":null,\"programme\":null,\"bulkPaymentMasterId\":null,\"subTypeCategory\":null,\"programType\":null,\"isApproved\":null,\"status\":null,\"detailsReceivedOn\":null,\"settlementDate\":null,\"issueDate\":null,\"isDisclosed\":null,\"isRecourse\":null,\"isDrawDownEligible\":null,\"preferredCurrencyCode\":null,\"isDeferCharged\":null,\"eligibilityReasonCode\":null,\"faceValue\":null,\"totalPaid\":null,\"outstanding\":null,\"advanceAvailable\":null,\"advanceAvailableEquivalent\":null,\"discountAdvance\":null,\"discountDeal\":null,\"detailsNotesForCustomer\":null,\"securityDetails\":null,\"taxDetails\":null}";
+    InvoiceSearchParams searchParams =
+        InvoiceSearchParams.builder()
+            .programme("Programme123")
+            .seller("1722466420001")
+            .invoice("001-001-01")
+            .build();
 
     when(invoiceService.searchInvoice(searchParams))
-      .thenReturn(InvoiceDTO.builder()
-        .id(invoiceId)
-        .invoiceNumber("001-001-01")
-        .build());
+        .thenReturn(InvoiceDTO.builder().id(invoiceId).invoiceNumber("001-001-01").build());
 
-    mockMvc.perform(
-        get("/invoices/search")
-          .param("programme", searchParams.programme())
-          .param("seller", searchParams.seller())
-          .param("invoice", searchParams.invoice())
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andExpect(status().isOk())
-      .andExpect(content().json(expectedBody, true));
+    mockMvc
+        .perform(
+            get("/invoices/search")
+                .param("programme", searchParams.programme())
+                .param("seller", searchParams.seller())
+                .param("invoice", searchParams.invoice())
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedBody, true));
 
     verify(invoiceService).searchInvoice(searchParams);
   }
 
   @Test
   void createInvoice_itShouldSendInvoiceToTI() throws Exception {
-    String requestBody = "{\"context\":{\"customer\":\"1743067860001\",\"theirReference\":\"01-01-001\",\"behalfOfBranch\":\"BPEC\"},\"anchorParty\":\"1743067860001\",\"anchorAccount\":\"AH2209677941\",\"programme\":\"Coffee1\",\"seller\":\"1790049795001\",\"buyer\":\"1743067860001\",\"invoiceNumber\":\"01-01-001\",\"issueDate\":\"06-09-2023\",\"faceValue\":{\"amount\":1000,\"currency\":\"USD\"},\"outstandingAmount\":{\"amount\":1000,\"currency\":\"USD\"},\"settlementDate\":\"15-10-2023\"}\n";
+    String requestBody =
+        "{\"context\":{\"customer\":\"1743067860001\",\"theirReference\":\"01-01-001\",\"behalfOfBranch\":\"BPEC\"},\"anchorParty\":\"1743067860001\",\"anchorAccount\":\"AH2209677941\",\"programme\":\"Coffee1\",\"seller\":\"1790049795001\",\"buyer\":\"1743067860001\",\"invoiceNumber\":\"01-01-001\",\"issueDate\":\"06-09-2023\",\"faceValue\":{\"amount\":1000,\"currency\":\"USD\"},\"outstandingAmount\":{\"amount\":1000,\"currency\":\"USD\"},\"settlementDate\":\"15-10-2023\"}\n";
     String expectedResponse = "{\"message\":\"Invoice sent to be created.\"};";
 
-    mockMvc.perform(
-        post("/invoices")
-          .content(requestBody)
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andExpect(status().isOk())
-      .andExpect(content().json(expectedResponse, true));
-
+    mockMvc
+        .perform(post("/invoices").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedResponse, true));
 
     verify(invoiceService).createSingleInvoiceInTi(any(InvoiceCreationDTO.class));
   }
 
-
   @Test
   void bulkCreateInvoices_itShouldValidateForm() throws Exception {
-    MockMultipartFile mockFile = new MockMultipartFile(
-      "invoicesFile",
-      new byte[0]
-    );
-    InvoiceBulkCreationForm invalidForm = InvoiceBulkCreationForm.builder()
-      .invoicesFile(mockFile)
-      .batchId("InvalidBatch!d")
-      .build();
-    String expectedResponse = "{\"status\":400,\"error\":\"Could not validate the provided fields.\",\"errors\":[{\"field\":\"batchId\",\"error\":\"Only letters, numbers and underscores are allowed.\"}]}";
+    MockMultipartFile mockFile = new MockMultipartFile("invoicesFile", new byte[0]);
+    InvoiceBulkCreationForm invalidForm =
+        InvoiceBulkCreationForm.builder().invoicesFile(mockFile).batchId("InvalidBatch!d").build();
+    String expectedResponse =
+        "{\"status\":400,\"error\":\"Could not validate the provided fields.\",\"errors\":[{\"field\":\"batchId\",\"error\":\"Only letters, numbers and underscores are allowed.\"}]}";
 
-    mockMvc.perform(
-        multipart("/invoices/bulk")
-          .file(mockFile)
-          .param("batchId", invalidForm.batchId())
-      )
-      .andExpect(status().is4xxClientError())
-      .andExpect(content().json(expectedResponse, true));
+    mockMvc
+        .perform(multipart("/invoices/bulk").file(mockFile).param("batchId", invalidForm.batchId()))
+        .andExpect(status().is4xxClientError())
+        .andExpect(content().json(expectedResponse, true));
 
-    verify(invoiceBatchOperationsService, never()).createMultipleInvoicesInTi(
-      any(MultipartFile.class),
-      anyString()
-    );
+    verify(invoiceBatchOperationsService, never())
+        .createInvoicesInTiWithBusinessBankingChannel(any(MultipartFile.class), anyString());
   }
 
   @Test
   void bulkCreateInvoices_itShouldSendInvoicesToTI() throws Exception {
-    MockMultipartFile mockFile = new MockMultipartFile(
-      "invoicesFile",
-      "1,2,3".getBytes()
-    );
-    InvoiceBulkCreationForm form = InvoiceBulkCreationForm.builder()
-      .invoicesFile(mockFile)
-      .batchId("Batch123")
-      .build();
-    String expectedResponse = "{\"message\":\"Invoices sent to be created.\"}";
+    var mockFile = new MockMultipartFile("invoicesFile", "1,2,3".getBytes());
+    var form = InvoiceBulkCreationForm.builder().invoicesFile(mockFile).batchId("Batch123").build();
+    var expectedResponse = "{\"message\":\"Invoices sent to be created.\"}";
 
-    mockMvc.perform(
-        multipart("/invoices/bulk")
-          .file(mockFile)
-          .param("batchId", form.batchId())
-      )
-      .andExpect(status().isOk())
-      .andExpect(content().json(expectedResponse, true));
+    mockMvc
+        .perform(
+            multipart("/invoices/bulk")
+                .file(mockFile)
+                .param("batchId", form.batchId())
+                .queryParam("channel", "business-banking"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedResponse, true));
 
-    verify(invoiceBatchOperationsService).createMultipleInvoicesInTi(
-      any(MultipartFile.class),
-      anyString()
-    );
+    verify(invoiceBatchOperationsService)
+        .createInvoicesInTiWithBusinessBankingChannel(any(MultipartFile.class), anyString());
   }
 }

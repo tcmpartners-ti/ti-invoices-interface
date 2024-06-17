@@ -2,6 +2,7 @@ package com.tcmp.tiapi.titofcm.config;
 
 import com.tcmp.tiapi.titofcm.dto.response.PaymentResultResponse;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
+import com.tcmp.tiapi.titofcm.route.FcmSftpRouteBuilder;
 import com.tcmp.tiapi.titofcm.route.PaymentResultRouteBuilder;
 import com.tcmp.tiapi.titofcm.strategy.PaymentResultHandlerContext;
 import java.util.List;
@@ -20,6 +21,12 @@ import org.springframework.context.annotation.Configuration;
 public class FcmRoutesConfiguration {
   @Value("${fcm.route.payment-result.from}")
   private String uriFromPaymentResult;
+
+  @Value("${fcm.route.sftp.from-full-output}")
+  private String uriFromFullOutput;
+
+  @Value("${fcm.route.sftp.from-summary}")
+  private String uriFromSummary;
 
   /**
    * This bean creates the jms component required to consume the FCM active mq server, this
@@ -52,5 +59,10 @@ public class FcmRoutesConfiguration {
         new JacksonDataFormat(PaymentResultResponse.class),
         invoicePaymentCorrelationInfoRepository,
         paymentResultHandlerContext);
+  }
+
+  @Bean
+  public FcmSftpRouteBuilder fcmSftpRouteBuilder(FcmSftpConfiguration sftp) {
+    return new FcmSftpRouteBuilder(uriFromFullOutput, uriFromSummary, sftp);
   }
 }
