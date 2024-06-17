@@ -1,5 +1,5 @@
 # Builder Stage
-FROM gradle:8.5.0-jdk17-alpine AS build
+FROM gradle:8.8.0-jdk17-alpine AS build
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ EXPOSE 80
 
 RUN mkdir -p \
     /app/tmp/full-output \
-    /app/tmp/summary \
+    /app/tmp/summary
 RUN chown -R invoices:invoices-group /app/tmp
 
 USER invoices
