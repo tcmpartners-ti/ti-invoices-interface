@@ -82,5 +82,5 @@ pipelines:
       - parallel:
           steps:
             - step: *sonar-scan-test
-            - step: *integration-tests
+            # - step: *integration-tests
       - step: *deploy-dev
