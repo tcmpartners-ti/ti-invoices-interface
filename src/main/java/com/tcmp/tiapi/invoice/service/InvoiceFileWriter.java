@@ -2,11 +2,14 @@ package com.tcmp.tiapi.invoice.service;
 
 import com.opencsv.CSVWriter;
 import com.opencsv.ICSVWriter;
+import org.springframework.stereotype.Component;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+@Component
 public class InvoiceFileWriter {
   public CSVWriter createWriter(String path, Character separator) throws FileNotFoundException {
     return new CSVWriter(
