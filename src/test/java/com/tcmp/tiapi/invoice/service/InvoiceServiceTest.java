@@ -14,6 +14,8 @@ import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
+import com.tcmp.tiapi.program.model.InterestTier;
+import com.tcmp.tiapi.program.repository.InterestTierRepository;
 import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
@@ -23,7 +25,6 @@ import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
 import com.tcmp.tiapi.ti.dto.request.RequestHeader;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -36,9 +37,11 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceServiceTest {
+  @Mock private InterestTierRepository interestTierRepository;
   @Mock private ProducerTemplate producerTemplate;
   @Mock private InvoiceRepository invoiceRepository;
   @Mock private InvoiceEventRepository invoiceEventRepository;
@@ -52,10 +55,8 @@ class InvoiceServiceTest {
   @InjectMocks private InvoiceService invoiceService;
 
   @BeforeEach
-  void setUp() throws NoSuchFieldException, IllegalAccessException {
-    Field uriFromFtiOutgoing = InvoiceService.class.getDeclaredField("uriFromFtiOutgoing");
-    uriFromFtiOutgoing.setAccessible(true);
-    uriFromFtiOutgoing.set(invoiceService, "direct:mock");
+  void setUp() {
+    ReflectionTestUtils.setField(invoiceService, "uriFromFtiOutgoing", "direct:mock");
   }
 
   @Test
@@ -75,11 +76,15 @@ class InvoiceServiceTest {
     long invoiceId = 1L;
 
     when(invoiceRepository.findById(anyLong()))
-        .thenReturn(Optional.of(InvoiceMaster.builder().id(invoiceId).build()));
+        .thenReturn(
+            Optional.of(
+                InvoiceMaster.builder().id(invoiceId).programmeId(1L).sellerId(2L).build()));
+    when(interestTierRepository.findByProgrammeIdAndSellerId(anyLong(), anyLong()))
+        .thenReturn(Optional.of(InterestTier.builder().rate(BigDecimal.TEN).build()));
 
     invoiceService.getInvoiceById(invoiceId);
 
-    verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class));
+    verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class), any());
   }
 
   @Test
@@ -93,11 +98,13 @@ class InvoiceServiceTest {
 
     when(invoiceRepository.findByProgramIdAndSellerMnemonicAndReferenceAndProductMasterIsActive(
             anyString(), anyString(), anyString(), anyBoolean()))
-        .thenReturn(Optional.of(InvoiceMaster.builder().build()));
+        .thenReturn(Optional.of(InvoiceMaster.builder().programmeId(1L).sellerId(2L).build()));
+    when(interestTierRepository.findByProgrammeIdAndSellerId(anyLong(), anyLong()))
+        .thenReturn(Optional.of(InterestTier.builder().rate(BigDecimal.TEN).build()));
 
     invoiceService.searchInvoice(searchParams);
 
-    verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class));
+    verify(invoiceMapper).mapEntityToDTO(any(InvoiceMaster.class), any());
   }
 
   @Test
