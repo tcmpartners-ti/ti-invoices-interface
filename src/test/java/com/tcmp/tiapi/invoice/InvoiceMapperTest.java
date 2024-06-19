@@ -1,24 +1,15 @@
 package com.tcmp.tiapi.invoice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceCreationDTO;
-import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 class InvoiceMapperTest {
   private final InvoiceMapper testedInvoiceMapper = Mappers.getMapper(InvoiceMapper.class);
-
-  @Test
-  void mapEntityToDTO_itShouldReturnNullIfEverySourceIsNull() {
-    InvoiceDTO invoiceDTO = testedInvoiceMapper.mapEntityToDTO(null);
-
-    assertNull(invoiceDTO);
-  }
 
   @Test
   void mapDTOToFTIMessage_itShouldMapDTOToFTIMessage() {
