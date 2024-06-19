@@ -22,4 +22,11 @@ public class InterestTier {
 
   @Column(name = "TIER_RATE", nullable = false)
   private BigDecimal rate;
+
+  @Column(name = "TIER_NUM", nullable = false)
+  private Integer number;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "OWNER", referencedColumnName = "KEY29", insertable = false, updatable = false)
+  private Interest interest;
 }
