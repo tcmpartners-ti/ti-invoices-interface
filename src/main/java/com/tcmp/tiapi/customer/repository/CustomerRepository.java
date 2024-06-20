@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface CustomerRepository extends JpaRepository<Customer, CustomerId> {
   Optional<Customer> findFirstByIdMnemonic(String customerMnemonic);
 
+  Optional<Customer> findFirstByNumber(String customerNumber);
+
   boolean existsByIdMnemonic(String customerMnemonic);
 
   boolean existsByNumber(String customerNumber);

@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.customer.repository;
 
 import com.tcmp.tiapi.customer.model.CounterParty;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,7 @@ public interface CounterPartyRepository extends JpaRepository<CounterParty, Long
   @Query(
       "SELECT COUNT(cp) > 0 FROM CounterParty cp WHERE cp.role = 'B' AND cp.mnemonic = :mnemonic")
   boolean counterPartyIsBuyer(String mnemonic);
+
+  @Query("SELECT cp.id FROM CounterParty cp WHERE cp.role = 'S' and cp.mnemonic = :mnemonic")
+  Set<Long> findSellerIdsByMnemonic(String mnemonic);
 }

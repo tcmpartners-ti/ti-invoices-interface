@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
@@ -158,7 +159,7 @@ class SellerServiceTest {
 
   @Test
   void getSellerProgramsByCif_itShouldThrowNofFoundException() {
-    when(customerRepository.existsByNumber(anyString())).thenReturn(false);
+    when(customerRepository.findFirstByNumber(anyString())).thenReturn(Optional.empty());
 
     var pageParams = new PageParams();
     assertThrows(
@@ -172,7 +173,8 @@ class SellerServiceTest {
             Program.builder().id("Program1").customerMnemonic("1722466420").build(),
             Program.builder().id("Program2").customerMnemonic("1722466420").build());
 
-    when(customerRepository.existsByNumber(anyString())).thenReturn(true);
+    when(customerRepository.findFirstByNumber(anyString()))
+        .thenReturn(Optional.of(Customer.builder().gfcus("1722466420001").build()));
     when(programRepository.findAllBySellerCif(anyString(), any(Pageable.class)))
         .thenReturn(new PageImpl<>(programs));
 
