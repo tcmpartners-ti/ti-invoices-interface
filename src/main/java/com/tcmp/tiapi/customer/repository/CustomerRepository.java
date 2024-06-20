@@ -15,8 +15,6 @@ public interface CustomerRepository extends JpaRepository<Customer, CustomerId> 
 
   boolean existsByIdMnemonic(String customerMnemonic);
 
-  boolean existsByNumber(String customerNumber);
-
   @Query(
       value =
           """

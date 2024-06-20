@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.springframework.stereotype.Component;
 
+/** This class acts as a wrapper for the `Files` class to improve testability. */
 @Component
 public class InvoiceFileHandler {
   public void saveFile(String path, String content) {
