@@ -68,7 +68,7 @@ pipelines:
       - step: *unit-tests
 
     # Staging branches
-    '{develop,hotfix/*,release/*}':
+    '{develop,hotfix/*}':
       - step: *build
       - parallel:
           steps:
@@ -77,7 +77,7 @@ pipelines:
       - step: *deploy-test
 
     # Development Branches
-    feat/*:
+    features:
       - step: *build
       - parallel:
           steps:
