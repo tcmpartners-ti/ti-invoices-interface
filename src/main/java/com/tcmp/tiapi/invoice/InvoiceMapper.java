@@ -19,16 +19,16 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import org.mapstruct.InjectionStrategy;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
+import java.util.Map;
+import java.util.Optional;
+import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(
     uses = {CurrencyAmountMapper.class, CounterPartyMapper.class, ProgramMapper.class},
     componentModel = MappingConstants.ComponentModel.SPRING,
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+    builder = @Builder(disableBuilder = true),
     imports = {
       BigDecimal.class,
       List.class,
@@ -44,34 +44,34 @@ public abstract class InvoiceMapper {
   @Autowired protected CounterPartyMapper counterPartyMapper;
   @Autowired protected ProgramMapper programMapper;
 
-  @Mapping(source = "id", target = "id")
+  @Mapping(source = "invoice.id", target = "id")
   @Mapping(
       target = "invoiceNumber",
       expression = "java(StringMappingUtils.trimNullable(invoice.getReference()))")
-  @Mapping(source = "buyerPartyId", target = "buyerPartyId")
-  @Mapping(source = "createFinanceEventId", target = "createFinanceEventId")
+  @Mapping(source = "invoice.buyerPartyId", target = "buyerPartyId")
+  @Mapping(source = "invoice.createFinanceEventId", target = "createFinanceEventId")
   @Mapping(
       target = "batchId",
       expression = "java(StringMappingUtils.trimNullable(invoice.getBatchId()))")
-  @Mapping(source = "bulkPaymentMasterId", target = "bulkPaymentMasterId")
-  @Mapping(source = "subTypeCategory", target = "subTypeCategory")
-  @Mapping(source = "programType", target = "programType")
-  @Mapping(source = "isApproved", target = "isApproved")
-  @Mapping(source = "status", target = "status")
-  @Mapping(source = "detailsReceivedOn", target = "detailsReceivedOn")
-  @Mapping(source = "settlementDate", target = "settlementDate")
-  @Mapping(source = "productMaster.contractDate", target = "issueDate")
-  @Mapping(source = "isDisclosed", target = "isDisclosed")
-  @Mapping(source = "isRecourse", target = "isRecourse")
-  @Mapping(source = "isDrawDownEligible", target = "isDrawDownEligible")
+  @Mapping(source = "invoice.bulkPaymentMasterId", target = "bulkPaymentMasterId")
+  @Mapping(source = "invoice.subTypeCategory", target = "subTypeCategory")
+  @Mapping(source = "invoice.programType", target = "programType")
+  @Mapping(source = "invoice.isApproved", target = "isApproved")
+  @Mapping(source = "invoice.status", target = "status")
+  @Mapping(source = "invoice.detailsReceivedOn", target = "detailsReceivedOn")
+  @Mapping(source = "invoice.settlementDate", target = "settlementDate")
+  @Mapping(source = "invoice.productMaster.contractDate", target = "issueDate")
+  @Mapping(source = "invoice.isDisclosed", target = "isDisclosed")
+  @Mapping(source = "invoice.isRecourse", target = "isRecourse")
+  @Mapping(source = "invoice.isDrawDownEligible", target = "isDrawDownEligible")
   @Mapping(
       target = "preferredCurrencyCode",
       expression = "java(StringMappingUtils.trimNullable(invoice.getPreferredCurrencyCode()))")
-  @Mapping(source = "isDeferCharged", target = "isDeferCharged")
-  @Mapping(source = "eligibilityReasonCode", target = "eligibilityReasonCode")
-  @Mapping(source = "detailsNotesForCustomer", target = "detailsNotesForCustomer")
-  @Mapping(source = "securityDetails", target = "securityDetails")
-  @Mapping(source = "taxDetails", target = "taxDetails")
+  @Mapping(source = "invoice.isDeferCharged", target = "isDeferCharged")
+  @Mapping(source = "invoice.eligibilityReasonCode", target = "eligibilityReasonCode")
+  @Mapping(source = "invoice.detailsNotesForCustomer", target = "detailsNotesForCustomer")
+  @Mapping(source = "invoice.securityDetails", target = "securityDetails")
+  @Mapping(source = "invoice.taxDetails", target = "taxDetails")
   @Mapping(
       target = "faceValue",
       expression =
@@ -108,8 +108,9 @@ public abstract class InvoiceMapper {
       expression = "java(counterPartyMapper.mapEntityToInvoiceDTO(invoice.getSeller()))")
   @Mapping(
       target = "programme",
-      expression = "java(programMapper.mapEntityToInvoiceDTO(invoice.getProgram()))")
-  public abstract InvoiceDTO mapEntityToDTO(InvoiceMaster invoice);
+      expression =
+          "java(programMapper.mapEntityToInvoiceDTO(invoice.getProgram(), programInterestRate))")
+  public abstract InvoiceDTO mapEntityToDTO(InvoiceMaster invoice, BigDecimal programInterestRate);
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.theirReference", target = "context.theirReference")
@@ -193,12 +194,21 @@ public abstract class InvoiceMapper {
   @Mapping(source = "outstanding.currency", target = "outstandingAmountCurrency")
   protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);
 
-  public List<InvoiceDTO> mapEntitiesToDTOs(List<InvoiceMaster> invoices) {
+  public List<InvoiceDTO> mapEntitiesToDTOs(
+      List<InvoiceMaster> invoices, Map<String, BigDecimal> sellerProgramRates) {
     List<InvoiceDTO> invoicesDTOs = new ArrayList<>(invoices.size());
-    for (InvoiceMaster invoiceWithJoins : invoices) {
-      invoicesDTOs.add(mapEntityToDTO(invoiceWithJoins));
+    for (InvoiceMaster invoice : invoices) {
+      BigDecimal rate = getInterestOrDefault(invoice, sellerProgramRates);
+      invoicesDTOs.add(mapEntityToDTO(invoice, rate));
     }
 
     return invoicesDTOs;
+  }
+
+  private BigDecimal getInterestOrDefault(
+      InvoiceMaster invoice, Map<String, BigDecimal> sellerProgramRates) {
+    String key = String.format("%d:%d", invoice.getProgrammeId(), invoice.getSellerId());
+
+    return Optional.ofNullable(sellerProgramRates.get(key)).orElse(BigDecimal.ZERO);
   }
 }

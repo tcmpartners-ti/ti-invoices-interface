@@ -1,7 +1,6 @@
 package com.tcmp.tiapi.program.model;
 
 import jakarta.persistence.*;
-import java.util.List;
 import lombok.*;
 
 @Entity
@@ -23,6 +22,11 @@ public class Interest {
   @Column(name = "SCFMAP", nullable = false)
   private Long scfMap;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "owner")
-  private List<InterestTier> tier;
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(
+      name = "SCFMAP",
+      referencedColumnName = "KEY97",
+      insertable = false,
+      updatable = false)
+  private ScfMap map;
 }

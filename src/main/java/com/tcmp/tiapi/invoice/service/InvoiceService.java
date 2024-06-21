@@ -10,6 +10,8 @@ import com.tcmp.tiapi.invoice.model.InvoiceEventInfo;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceEventRepository;
+import com.tcmp.tiapi.program.model.InterestTier;
+import com.tcmp.tiapi.program.repository.InterestTierRepository;
 import com.tcmp.tiapi.shared.UUIDGenerator;
 import com.tcmp.tiapi.shared.exception.NotFoundHttpException;
 import com.tcmp.tiapi.ti.TIServiceRequestWrapper;
@@ -17,6 +19,7 @@ import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.dto.TIService;
 import com.tcmp.tiapi.ti.dto.request.ReplyFormat;
 import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceService {
+  private final InterestTierRepository interestTierRepository;
   private final ProducerTemplate producerTemplate;
 
   private final InvoiceRepository invoiceRepository;
@@ -48,7 +52,18 @@ public class InvoiceService {
                     new NotFoundHttpException(
                         String.format("Could not find invoice with id %s.", invoiceId)));
 
-    return invoiceMapper.mapEntityToDTO(invoice);
+    BigDecimal programInterestRate =
+        interestTierRepository
+            .findByProgrammeIdAndSellerId(invoice.getProgrammeId(), invoice.getSellerId())
+            .map(InterestTier::getRate)
+            .orElseGet(
+                () ->
+                    interestTierRepository
+                        .findByProgrammeId(invoice.getProgrammeId())
+                        .map(InterestTier::getRate)
+                        .orElse(BigDecimal.ZERO));
+
+    return invoiceMapper.mapEntityToDTO(invoice, programInterestRate);
   }
 
   public InvoiceDTO searchInvoice(InvoiceSearchParams searchParams) {
@@ -63,7 +78,18 @@ public class InvoiceService {
                             "Could not find an active invoice %s for the given program and seller.",
                             searchParams.invoice())));
 
-    return invoiceMapper.mapEntityToDTO(invoice);
+    BigDecimal programInterestRate =
+        interestTierRepository
+            .findByProgrammeIdAndSellerId(invoice.getProgrammeId(), invoice.getSellerId())
+            .map(InterestTier::getRate)
+            .orElseGet(
+                () ->
+                    interestTierRepository
+                        .findByProgrammeId(invoice.getProgrammeId())
+                        .map(InterestTier::getRate)
+                        .orElse(BigDecimal.ZERO));
+
+    return invoiceMapper.mapEntityToDTO(invoice, programInterestRate);
   }
 
   public void createSingleInvoiceInTi(InvoiceCreationDTO creationDTO) {

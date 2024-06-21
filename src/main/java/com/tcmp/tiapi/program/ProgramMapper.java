@@ -6,7 +6,6 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceProgramDTO;
 import com.tcmp.tiapi.program.dto.csv.ProgramCreationCsvRow;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.dto.ti.ScfProgramme;
-import com.tcmp.tiapi.program.model.Interest;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import com.tcmp.tiapi.shared.utils.MapperUtils;
@@ -20,6 +19,7 @@ import com.tcmp.tiapi.ti.dto.request.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
     imports = {MonetaryAmountUtils.class, StringMappingUtils.class, CustomerRole.class},
     componentModel = MappingConstants.ComponentModel.SPRING,
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+    builder = @Builder(disableBuilder = true),
     uses = {CurrencyAmountMapper.class, MapperUtils.class})
 public abstract class ProgramMapper {
   private static final String DATE_FORMAT = "dd-MM-yyyy";
@@ -34,41 +35,38 @@ public abstract class ProgramMapper {
   @Autowired private TIServiceRequestWrapper wrapper;
   @Autowired protected CurrencyAmountMapper currencyAmountMapper;
 
-  @Mapping(source = "id", target = "id")
-  @Mapping(source = "description", target = "description")
-  @Mapping(source = "customer.id.mnemonic", target = "customer.mnemonic")
-  @Mapping(source = "customer.type", target = "customer.commercialTradeCode")
-  @Mapping(source = "startDate", target = "startDate")
-  @Mapping(source = "expiryDate", target = "expiryDate")
-  @Mapping(source = "type", target = "type")
-  @Mapping(source = "status", target = "status")
+  @Mapping(source = "program.id", target = "id")
+  @Mapping(source = "program.description", target = "description")
+  @Mapping(source = "program.customer.id.mnemonic", target = "customer.mnemonic")
+  @Mapping(source = "program.customer.type", target = "customer.commercialTradeCode")
+  @Mapping(source = "program.startDate", target = "startDate")
+  @Mapping(source = "program.expiryDate", target = "expiryDate")
+  @Mapping(source = "program.type", target = "type")
+  @Mapping(source = "program.status", target = "status")
   @Mapping(
       target = "creditLimit",
       expression =
           "java(currencyAmountMapper.mapToDto(program.getAvailableLimitAmount(), program.getAvailableLimitCurrencyCode()))")
   @Mapping(
-      source = "extension.extraFinancingDays",
+      source = "program.extension.extraFinancingDays",
       target = "extraFinancingDays",
       defaultValue = "0")
-  @Mapping(target = "interestRate", expression = "java(mapInterestsToRate(program.getInterests()))")
-  public abstract ProgramDTO mapEntityToDTO(Program program);
+  @Mapping(source = "interestRate", target = "interestRate", defaultValue = "0")
+  public abstract ProgramDTO mapEntityToDTO(Program program, BigDecimal interestRate);
 
-  public abstract List<ProgramDTO> mapEntitiesToDTOs(List<Program> programs);
+  public List<ProgramDTO> mapEntitiesToDTOs(
+      List<Program> programs, Map<Long, BigDecimal> programsRates) {
+    List<ProgramDTO> programDTOs = new ArrayList<>(programs.size());
+    for (Program program : programs) {
+      programDTOs.add(mapEntityToDTO(program, programsRates.get(program.getPk())));
+    }
 
-  @Mapping(target = "interestRate", expression = "java(mapInterestsToRate(program.getInterests()))")
-  @Mapping(target = "extraFinancingDays", source = "extension.extraFinancingDays")
-  public abstract InvoiceProgramDTO mapEntityToInvoiceDTO(Program program);
-
-  public BigDecimal mapInterestsToRate(List<Interest> interests) {
-    if (interests == null) return BigDecimal.ZERO;
-
-    return interests.stream()
-        .filter(interest -> interest.getScfMap() == null)
-        .findFirst()
-        .map(Interest::getTier)
-        .map(tiers -> tiers.get(0).getRate())
-        .orElse(BigDecimal.ZERO);
+    return programDTOs;
   }
+
+  @Mapping(target = "interestRate", source = "interestRate")
+  @Mapping(target = "extraFinancingDays", source = "program.extension.extraFinancingDays")
+  public abstract InvoiceProgramDTO mapEntityToInvoiceDTO(Program program, BigDecimal interestRate);
 
   @Mapping(target = "maintenanceType", constant = "F")
   @Mapping(target = "maintainedInBackOffice", constant = "false")

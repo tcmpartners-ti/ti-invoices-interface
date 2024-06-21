@@ -2,6 +2,7 @@ package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
 import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
@@ -12,7 +13,9 @@ import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceSpecifications;
 import com.tcmp.tiapi.program.ProgramMapper;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.program.model.InterestTier;
 import com.tcmp.tiapi.program.model.Program;
+import com.tcmp.tiapi.program.repository.InterestTierRepository;
 import com.tcmp.tiapi.program.repository.ProgramRepository;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
@@ -23,7 +26,10 @@ import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +42,7 @@ import org.springframework.stereotype.Service;
 public class SellerService {
   private final Clock clock;
 
+  private final InterestTierRepository interestTierRepository;
   private final CustomerRepository customerRepository;
   private final CounterPartyRepository counterPartyRepository;
   private final InvoiceRepository invoiceRepository;
@@ -53,13 +60,29 @@ public class SellerService {
                 sellerMnemonic, searchParams.status(), LocalDate.now(clock)),
             PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
-    List<InvoiceDTO> invoicesDTOs =
-        invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent());
+    Set<Long> programIds =
+        sellerInvoicesPage.stream().map(InvoiceMaster::getProgrammeId).collect(Collectors.toSet());
+    Set<Long> sellerIds =
+        sellerInvoicesPage.stream().map(InvoiceMaster::getSellerId).collect(Collectors.toSet());
+
+    Map<String, BigDecimal> sellerProgramRates =
+        interestTierRepository.findAllByProgrammeIdInAndSellerIdIn(programIds, sellerIds).stream()
+            .collect(
+                Collectors.toMap(
+                    this::buildProgramSellerKeys,
+                    t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO)));
 
     return PaginatedResult.<InvoiceDTO>builder()
-        .data(invoicesDTOs)
+        .data(invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent(), sellerProgramRates))
         .meta(PaginatedResultMeta.from(sellerInvoicesPage))
         .build();
+  }
+
+  private String buildProgramSellerKeys(InterestTier tier) {
+    Long programId = tier.getInterest().getMap().getProgramId();
+    Long sellerId = tier.getInterest().getMap().getCounterPartyId();
+
+    return String.format("%d:%d", programId, sellerId);
   }
 
   public PaginatedResult<ProgramDTO> getSellerProgramsByMnemonic(
@@ -70,26 +93,47 @@ public class SellerService {
     Page<Program> programsPage =
         programRepository.findAllBySellerMnemonic(sellerMnemonic, pageable);
 
+    Set<Long> sellerIds = counterPartyRepository.findSellerIdsByMnemonic(sellerMnemonic);
+    Map<Long, BigDecimal> programsInterests = getProgramsInterests(programsPage, sellerIds);
+
     return PaginatedResult.<ProgramDTO>builder()
-        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
+        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent(), programsInterests))
         .meta(PaginatedResultMeta.from(programsPage))
         .build();
   }
 
   public PaginatedResult<ProgramDTO> getSellerProgramsByCif(
       String sellerCif, PageParams pageParams) {
-    if (!customerRepository.existsByNumber(sellerCif)) {
-      throw new NotFoundHttpException(
-          String.format("Could not find a seller with cif %s.", sellerCif));
-    }
+    Customer seller =
+        customerRepository
+            .findFirstByNumber(sellerCif)
+            .orElseThrow(
+                () ->
+                    new NotFoundHttpException(
+                        String.format("Could not find a seller with cif %s.", sellerCif)));
 
     PageRequest pageable = PageRequest.of(pageParams.getPage(), pageParams.getSize());
     Page<Program> programsPage = programRepository.findAllBySellerCif(sellerCif, pageable);
+    Set<Long> sellerIds = counterPartyRepository.findSellerIdsByMnemonic(seller.getGfcus());
 
+    Map<Long, BigDecimal> programsInterests = getProgramsInterests(programsPage, sellerIds);
     return PaginatedResult.<ProgramDTO>builder()
-        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent()))
+        .data(programMapper.mapEntitiesToDTOs(programsPage.getContent(), programsInterests))
         .meta(PaginatedResultMeta.from(programsPage))
         .build();
+  }
+
+  private Map<Long, BigDecimal> getProgramsInterests(
+      Page<Program> programsPage, Set<Long> sellerIds) {
+    Set<Long> programIds = programsPage.stream().map(Program::getPk).collect(Collectors.toSet());
+
+    return interestTierRepository
+        .findAllByProgrammeIdInAndSellerIdIn(programIds, sellerIds)
+        .stream()
+        .collect(
+            Collectors.toMap(
+                t -> t.getInterest().getProgramId(),
+                t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO)));
   }
 
   public OutstandingBalanceDTO getSellerOutstandingBalanceByMnemonic(

@@ -1,5 +1,5 @@
 # Builder Stage
-FROM gradle:8.5.0-jdk17-alpine AS build
+FROM gradle:8.8.0-jdk17-alpine AS build
 
 WORKDIR /app
 
@@ -21,6 +21,11 @@ WORKDIR /app
 COPY --from=build /app/build/libs/invoices-0.0.1.jar invoices.jar
 
 EXPOSE 80
+
+RUN mkdir -p \
+    /app/tmp/full-output \
+    /app/tmp/summary
+RUN chown -R invoices:invoices-group /app/tmp
 
 USER invoices
 CMD ["java", "-jar", "/app/invoices.jar"]
