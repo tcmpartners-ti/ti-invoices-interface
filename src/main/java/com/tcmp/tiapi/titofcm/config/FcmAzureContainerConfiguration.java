@@ -1,5 +1,8 @@
 package com.tcmp.tiapi.titofcm.config;
 
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.tcmp.tiapi.titofcm.exception.PrivateKeyException;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,21 +15,38 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "sftp")
-public class FcmSftpConfiguration {
+@ConfigurationProperties(prefix = "azure")
+@Slf4j
+public class FcmAzureContainerConfiguration {
+  private StorageAccount storageAccount;
   private String user;
   private String host;
   private String port;
   private String privateKey;
   private LocalDir localDir;
   private RemoteDir remoteDir;
+
+  @Bean
+  public BlobContainerClient fcmContainerClient() {
+    log.warn(this.toString());
+    log.warn(storageAccount.toString());
+
+    BlobServiceClient client =
+        new BlobServiceClientBuilder()
+            .connectionString(storageAccount.connectionString())
+            .buildClient();
+
+    return client.getBlobContainerClient(storageAccount.fcmContainer());
+  }
 
   public File privateKeyFile() {
     String privateKeyPEM =
@@ -82,6 +102,21 @@ public class FcmSftpConfiguration {
 
   @Data
   @AllArgsConstructor
+  public static class StorageAccount {
+    private String connectionString;
+    private String fcmContainer;
+
+    public String connectionString() {
+      return connectionString;
+    }
+
+    public String fcmContainer() {
+      return fcmContainer;
+    }
+  }
+
+  @Data
+  @AllArgsConstructor
   public static class LocalDir {
     private String fullOutput;
     private String summary;
@@ -100,6 +135,7 @@ public class FcmSftpConfiguration {
   public static class RemoteDir {
     private String fullOutput;
     private String summary;
+    private String realOutput;
 
     public String fullOutput() {
       return fullOutput;
@@ -107,6 +143,10 @@ public class FcmSftpConfiguration {
 
     public String summary() {
       return summary;
+    }
+
+    public String realOutput() {
+      return realOutput;
     }
   }
 }
