@@ -1,7 +1,7 @@
 package com.tcmp.tiapi.customer.service;
 
 import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
-import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.dto.request.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
@@ -70,7 +70,9 @@ public class SellerService {
             .collect(
                 Collectors.toMap(
                     this::buildProgramSellerKeys,
-                    t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO)));
+                    t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO),
+                        //Deal with duplicates
+                        (old, actual) -> actual));
 
     return PaginatedResult.<InvoiceDTO>builder()
         .data(invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent(), sellerProgramRates))

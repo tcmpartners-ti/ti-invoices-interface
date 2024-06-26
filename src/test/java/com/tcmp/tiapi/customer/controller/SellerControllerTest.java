@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
-import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.dto.request.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;

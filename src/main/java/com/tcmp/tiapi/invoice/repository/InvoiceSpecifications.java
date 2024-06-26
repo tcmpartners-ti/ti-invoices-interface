@@ -51,4 +51,41 @@ public class InvoiceSpecifications {
       return cb.and(predicates.toArray(new Predicate[0]));
     };
   }
+
+  public static Specification<InvoiceMaster> filterByBuyerMnemonicAndStatus(
+      @Nonnull String buyerMnemonic, @Nullable String status, @Nullable LocalDate today) {
+    return (root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+
+      predicates.add(cb.equal(root.get("buyer").get("mnemonic"), buyerMnemonic));
+      predicates.add(
+          cb.equal(root.get("productMaster").get("status"), ProductMasterStatus.LIV.name()));
+
+      if (status == null) {
+        return cb.and(predicates.toArray(new Predicate[0]));
+      }
+
+      String dbStatus = status.equals("F") ? "O" : status;
+      predicates.add(cb.equal(root.get("status"), dbStatus));
+
+      Predicate invoiceHasBeenFinanced =
+          cb.and(
+              cb.not(root.get("isDrawDownEligible")),
+              cb.isNotNull(root.get("createFinanceEventId")),
+              cb.and(
+                  cb.isNotNull(root.get("discountDealAmount")),
+                  cb.notEqual(root.get("discountDealAmount"), 0)));
+
+      if (status.equals("O")) {
+        predicates.add(cb.not(invoiceHasBeenFinanced));
+        predicates.add(cb.greaterThan(root.get("settlementDate"), today));
+      } else if (status.equals("F")) {
+        predicates.add(invoiceHasBeenFinanced);
+      }
+
+      query.orderBy(cb.asc(root.get("reference")));
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
+  }
 }
