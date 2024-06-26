@@ -1,47 +1,40 @@
-package com.tcmp.tiapi.invoice.service;
+package com.tcmp.tiapi.invoice.service.files.summary;
 
 import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
-import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
+import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceSummaryFileService {
-  private static final String FILE_RECEIVED_AT_DATETIME_FORMAT = "yyyyMMdd HH:mm";
+public class InvoiceSummaryFileBuilder {
+  private static final String DATETIME_FORMAT = "yyyyMMdd HH:mm";
 
-  private final InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
+  private final FcmAzureContainerConfiguration azureContainerConfiguration;
   private final InvoiceFileHandler invoiceFileHandler;
-
-  @Value("${sftp.local-dir.summary}")
-  private String localTempPath;
 
   /**
    * @param fileInfo The redis entity with the file information.
    * @return The absolute path of the created file.
    */
-  public String generateAndSaveFile(BulkCreateInvoicesFileInfo fileInfo) {
-    String fileContent = generateHeader(fileInfo) + generateFileBody(fileInfo);
+  public String generateAndSaveFile(
+      BulkCreateInvoicesFileInfo fileInfo, long totalInvoicesSucceeded) {
+    String fileContent =
+        generateHeader(fileInfo) + generateFileBody(fileInfo, totalInvoicesSucceeded);
     String fileName = generateFilename(fileInfo.getOriginalFilename());
-    String tempFilePath = localTempPath + fileName;
+    String tempFilePath = azureContainerConfiguration.getLocalDir().summary() + fileName;
 
     invoiceFileHandler.saveFile(tempFilePath, fileContent);
 
     return tempFilePath;
   }
 
-  private String generateFilename(String originalFilename) {
-    String filename = originalFilename.split("\\.")[0];
-    return String.format("/%s-SUMMARY.tsv", filename);
-  }
-
   private String generateHeader(BulkCreateInvoicesFileInfo fileInfo) {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(FILE_RECEIVED_AT_DATETIME_FORMAT);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
     String filename = fileInfo.getOriginalFilename();
     String service = filename.split("-")[0];
     String receivedAt = formatter.format(fileInfo.getReceivedAt());
@@ -56,12 +49,9 @@ public class InvoiceSummaryFileService {
         .formatted(filename, receivedAt, service);
   }
 
-  private String generateFileBody(BulkCreateInvoicesFileInfo fileInfo) {
+  private String generateFileBody(
+      BulkCreateInvoicesFileInfo fileInfo, long totalInvoicesSucceeded) {
     int totalInvoices = fileInfo.getTotalInvoices();
-    long totalInvoicesSucceeded =
-        invoiceRowProcessingResultRepository
-            .findAllByFileUuidAndStatus(fileInfo.getId(), InvoiceRowProcessingResult.Status.PENDING)
-            .size();
     long totalInvoiceFailed = totalInvoices - totalInvoicesSucceeded;
 
     return """
@@ -71,5 +61,10 @@ public class InvoiceSummaryFileService {
     Total de filas Procesadas con Errores: %d
     """
         .formatted(totalInvoices, totalInvoicesSucceeded, totalInvoiceFailed);
+  }
+
+  private String generateFilename(String originalFilename) {
+    String filename = originalFilename.split("\\.")[0];
+    return String.format("/%s-SUMMARY.tsv", filename);
   }
 }

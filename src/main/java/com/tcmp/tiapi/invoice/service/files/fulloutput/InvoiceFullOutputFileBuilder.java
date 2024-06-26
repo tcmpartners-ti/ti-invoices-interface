@@ -1,46 +1,45 @@
-package com.tcmp.tiapi.invoice.service;
+package com.tcmp.tiapi.invoice.service.files.fulloutput;
 
 import com.opencsv.CSVWriter;
 import com.tcmp.tiapi.invoice.exception.InvoiceFileException;
 import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
+import com.tcmp.tiapi.invoice.service.files.InvoiceCsvFileWriter;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceFullOutputFileService {
+public class InvoiceFullOutputFileBuilder {
   private static final char SEPARATOR = '\t';
 
-  private final InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
-  private final InvoiceFileWriter invoiceFileWriter;
-
-  @Value("${sftp.local-dir.full-output}")
-  private String localTempPath;
+  private final FcmAzureContainerConfiguration containerConfiguration;
+  private final InvoiceCsvFileWriter invoiceCsvFileWriter;
 
   /**
    * This function generates the full output file containing the result of the invoice upload
    * processing results.
    *
    * @param originalFilename Filename received by the upload bulk invoices file.
-   * @param fileUuid File information uuid, information is stored in redis.
+   * @param results File information, information is stored in redis.
    * @return The absolute path of the created file.
    */
-  public String generateAndSaveFile(String originalFilename, String fileUuid) {
+  public String generateAndSaveFile(
+      String originalFilename, List<InvoiceRowProcessingResult> results) {
     String filename = generateFilename(originalFilename);
+    String localTempPath = containerConfiguration.localDirectories().fullOutput();
     String tempFilePath = localTempPath + filename;
 
-    try (CSVWriter writer = invoiceFileWriter.createWriter(tempFilePath, SEPARATOR)) {
+    try (CSVWriter writer = invoiceCsvFileWriter.createWriter(tempFilePath, SEPARATOR)) {
       writer.writeNext(header());
 
-      invoiceRowProcessingResultRepository
-          .findAllByFileUuidOrderByIndex(fileUuid)
-          .forEach(result -> writer.writeNext(mapResultToRow(result)));
+      for (InvoiceRowProcessingResult result : results) {
+        writer.writeNext(mapResultToRow(result));
+      }
 
       return tempFilePath;
     } catch (IOException e) {

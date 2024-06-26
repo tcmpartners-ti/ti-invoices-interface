@@ -12,9 +12,9 @@ import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceProcessingRowBulkRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
-import com.tcmp.tiapi.invoice.service.InvoiceFileHandler;
-import com.tcmp.tiapi.invoice.service.InvoiceFullOutputFileService;
-import com.tcmp.tiapi.invoice.service.InvoiceSummaryFileService;
+import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
+import com.tcmp.tiapi.invoice.service.files.fulloutput.InvoiceFullOutputFileBuilder;
+import com.tcmp.tiapi.invoice.service.files.summary.InvoiceSummaryFileBuilder;
 import com.tcmp.tiapi.ti.dto.response.Details;
 import com.tcmp.tiapi.ti.dto.response.ResponseHeader;
 import com.tcmp.tiapi.ti.dto.response.ResponseStatus;
@@ -38,8 +38,8 @@ class InvoiceCreationStatusSftpNotifierTest {
   @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
   @Mock private InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
   @Mock private BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
-  @Mock private InvoiceFullOutputFileService invoiceFullOutputFileService;
-  @Mock private InvoiceSummaryFileService invoiceSummaryFileService;
+  @Mock private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
+  @Mock private InvoiceSummaryFileBuilder invoiceSummaryFileBuilder;
   @Mock private InvoiceFileHandler invoiceFileHandler;
 
   @InjectMocks private InvoiceCreationStatusSftpNotifier invoiceCreationStatusNotifier;
@@ -92,9 +92,9 @@ class InvoiceCreationStatusSftpNotifierTest {
                     .originalFilename("CRD-ArchivoEmpresaACB01-20240610.csv")
                     .build()));
     when(invoiceProcessingRowBulkRepository.totalRowsByIdPattern(anyString())).thenReturn(1L);
-    when(invoiceFullOutputFileService.generateAndSaveFile(anyString(), anyString()))
+    when(invoiceFullOutputFileBuilder.generateAndSaveFile(anyString(), anyList()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-FULLOUTPUT.tsv");
-    when(invoiceSummaryFileService.generateAndSaveFile(any()))
+    when(invoiceSummaryFileBuilder.generateAndSaveFile(any()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv");
 
     invoiceCreationStatusNotifier.notify(serviceResponse);

@@ -6,7 +6,8 @@ import static org.mockito.Mockito.*;
 
 import com.opencsv.CSVWriter;
 import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
+import com.tcmp.tiapi.invoice.service.files.InvoiceCsvFileWriter;
+import com.tcmp.tiapi.invoice.service.files.fulloutput.InvoiceFullOutputFileBuilder;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,19 +19,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class InvoiceFullOutputFileServiceTest {
+class InvoiceFullOutputFileBuilderTest {
   private static final String LOCAL_TEMP_PATH = "/tmp";
 
-  @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
-  @Mock private InvoiceFileWriter invoiceFileWriter;
+  @Mock private InvoiceCsvFileWriter invoiceCsvFileWriter;
 
   @Captor private ArgumentCaptor<String[]> fileRowArgumentCaptor;
 
-  @InjectMocks private InvoiceFullOutputFileService invoiceFullOutputFileService;
+  @InjectMocks private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
 
   @BeforeEach
   void setup() {
-    ReflectionTestUtils.setField(invoiceFullOutputFileService, "localTempPath", LOCAL_TEMP_PATH);
+    ReflectionTestUtils.setField(invoiceFullOutputFileBuilder, "localTempPath", LOCAL_TEMP_PATH);
   }
 
   @Test
@@ -53,12 +53,10 @@ class InvoiceFullOutputFileServiceTest {
 
     var writerMock = Mockito.mock(CSVWriter.class);
 
-    when(invoiceFileWriter.createWriter(anyString(), anyChar())).thenReturn(writerMock);
-    when(invoiceRowProcessingResultRepository.findAllByFileUuidOrderByIndex(anyString()))
-        .thenReturn(results);
+    when(invoiceCsvFileWriter.createWriter(anyString(), anyChar())).thenReturn(writerMock);
     doNothing().when(writerMock).writeNext(fileRowArgumentCaptor.capture());
 
-    invoiceFullOutputFileService.generateAndSaveFile(originalFilename, fileUuid);
+    invoiceFullOutputFileBuilder.generateAndSaveFile(originalFilename, results);
 
     var expectedRows = new ArrayList<String[]>();
     expectedRows.add(new String[] {"Índice", "Estado", "Descripción Estado"});

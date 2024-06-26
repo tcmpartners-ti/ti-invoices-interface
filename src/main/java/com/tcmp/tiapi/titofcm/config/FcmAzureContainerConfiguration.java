@@ -3,21 +3,9 @@ package com.tcmp.tiapi.titofcm.config;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.tcmp.tiapi.titofcm.exception.PrivateKeyException;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemWriter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -37,9 +25,6 @@ public class FcmAzureContainerConfiguration {
 
   @Bean
   public BlobContainerClient fcmContainerClient() {
-    log.warn(this.toString());
-    log.warn(storageAccount.toString());
-
     BlobServiceClient client =
         new BlobServiceClientBuilder()
             .connectionString(storageAccount.connectionString())
@@ -48,48 +33,8 @@ public class FcmAzureContainerConfiguration {
     return client.getBlobContainerClient(storageAccount.fcmContainer());
   }
 
-  public File privateKeyFile() {
-    String privateKeyPEM =
-        privateKey
-            .replace("-----BEGIN RSA PRIVATE KEY-----", "")
-            .replace("----END RSA PRIVATE KEY-----", "")
-            .replaceAll("\\s", "");
-
-    try {
-      byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
-      PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-      KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-      PrivateKey key = keyFactory.generatePrivate(keySpec);
-
-      return getPEMFile(key);
-    } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-      throw new PrivateKeyException(e.getMessage());
-    }
-  }
-
-  public File getPEMFile(PrivateKey privateKey) throws IOException {
-    File file = new File(System.getProperty("user.home"), "privatekey.pem");
-
-    try (FileWriter fileWriter = new FileWriter(file);
-        PemWriter pemWriter = new PemWriter(fileWriter)) {
-      PemObject pemObject = new PemObject("PRIVATE KEY", privateKey.getEncoded());
-      pemWriter.writeObject(pemObject);
-    }
-
-    return file;
-  }
-
   public String user() {
     return user;
-  }
-
-  public String host() {
-    return host;
-  }
-
-  public String port() {
-    return port;
   }
 
   public LocalDir localDirectories() {

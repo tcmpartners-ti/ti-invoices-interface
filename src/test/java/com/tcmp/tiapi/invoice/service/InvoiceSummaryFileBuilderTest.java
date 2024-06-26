@@ -9,6 +9,9 @@ import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
+import com.tcmp.tiapi.invoice.service.files.summary.InvoiceSummaryFileBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class InvoiceSummaryFileServiceTest {
+class InvoiceSummaryFileBuilderTest {
   private static final String LOCAL_TEMP_PATH = "/tmp";
 
   @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
@@ -27,11 +30,11 @@ class InvoiceSummaryFileServiceTest {
 
   @Captor private ArgumentCaptor<String> contentArgumentCaptor;
 
-  @InjectMocks private InvoiceSummaryFileService invoiceSummaryFileService;
+  @InjectMocks private InvoiceSummaryFileBuilder invoiceSummaryFileBuilder;
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(invoiceSummaryFileService, "localTempPath", LOCAL_TEMP_PATH);
+    ReflectionTestUtils.setField(invoiceSummaryFileBuilder, "localTempPath", LOCAL_TEMP_PATH);
   }
 
   @Test
@@ -44,7 +47,7 @@ class InvoiceSummaryFileServiceTest {
             .totalInvoices(100)
             .build();
 
-    invoiceSummaryFileService.generateAndSaveFile(fileInfo);
+    invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo);
 
     when(invoiceRowProcessingResultRepository.findAllByFileUuidAndStatus(any(), any()))
         .thenReturn(List.of());
@@ -54,7 +57,7 @@ class InvoiceSummaryFileServiceTest {
     when(mockedSuccessfulInvoices.size()).thenReturn(45);
     doNothing().when(invoiceFileHandler).saveFile(anyString(), contentArgumentCaptor.capture());
 
-    var actualPath = invoiceSummaryFileService.generateAndSaveFile(fileInfo);
+    var actualPath = invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo);
 
     var expectedPath = "/tmp/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv";
     var expectedContent =
