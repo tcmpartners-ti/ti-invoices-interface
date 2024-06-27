@@ -66,4 +66,17 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
               AND tier.number = 1
               AND interest.map.programId = :programmeId""")
   Optional<InterestTier> findByProgrammeId(Long programmeId);
+
+  @Query(
+      value =
+          """
+          SELECT
+            tier
+          FROM
+            InterestTier tier
+          WHERE interest.map IS NOT NULL
+            AND tier.number=1 AND interest.map.programType = 'B'
+            AND interest.map.programId IN :programmeIds
+            AND interest.map.counterPartyId IN :buyerIds""")
+  List<InterestTier> findAllByProgrammeIdInAndBuyerIdIn(Set<Long> programmeIds, Set<Long> buyerIds);
 }
