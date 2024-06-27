@@ -70,9 +70,7 @@ public class SellerService {
             .collect(
                 Collectors.toMap(
                     this::buildProgramSellerKeys,
-                    t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO),
-                        //Deal with duplicates
-                        (old, actual) -> actual));
+                    t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO)));
 
     return PaginatedResult.<InvoiceDTO>builder()
         .data(invoiceMapper.mapEntitiesToDTOs(sellerInvoicesPage.getContent(), sellerProgramRates))
