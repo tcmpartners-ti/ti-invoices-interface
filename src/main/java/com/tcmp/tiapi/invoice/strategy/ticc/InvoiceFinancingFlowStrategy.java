@@ -211,7 +211,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
 
       String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
-      boolean invoiceCreatedBySftp = fileUuid != null;
+      boolean invoiceCreatedBySftp = fileUuid.isBlank();
       if (invoiceCreatedBySftp) {
         notifyFinanceStatusViaSftp(
             InvoiceRealOutputData.Status.FINANCED, financeMessage, invoice, fileUuid);
