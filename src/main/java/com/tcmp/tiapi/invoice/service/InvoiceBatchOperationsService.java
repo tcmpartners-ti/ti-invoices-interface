@@ -112,7 +112,7 @@ public class InvoiceBatchOperationsService {
               TIOperation.CREATE_INVOICE,
               ReplyFormat.STATUS,
               uuid,
-              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId));
+              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, null));
       invoiceMessages.add(tiMessage);
     }
 
@@ -123,7 +123,6 @@ public class InvoiceBatchOperationsService {
   }
 
   public void createInvoicesInTIWithSftpChannel(MultipartFile invoicesFile, String batchId) {
-
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
     String fileUuid = uuidGenerator.getNewId();
@@ -153,17 +152,17 @@ public class InvoiceBatchOperationsService {
 
   /**
    * @see com.tcmp.tiapi.invoice.strategy.ftireply.InvoiceCreationStatusNotifierStrategy
-   * @param batchCorrelationId Batch correlation id to use when response is received
+   * @param fileUuid Batch correlation id to use when response is received
    * @param batchId Batch identifier to store in TI
    * @param invoices List of invoices to process
    * @return Total invoices processed
    */
   private int processSftpChannelBatch(
-      String batchCorrelationId, String batchId, CsvToBean<InvoiceCreationRowCSV> invoices) {
+      String fileUuid, String batchId, CsvToBean<InvoiceCreationRowCSV> invoices) {
     int totalInvoices = 0;
 
     for (InvoiceCreationRowCSV invoiceRow : invoices) {
-      String correlationId = batchCorrelationId + ":" + invoiceRow.getIndex();
+      String correlationId = fileUuid + ":" + invoiceRow.getIndex();
 
       ServiceRequest<CreateInvoiceEventMessage> message =
           wrapper.wrapRequest(
@@ -171,7 +170,7 @@ public class InvoiceBatchOperationsService {
               TIOperation.CREATE_INVOICE,
               ReplyFormat.STATUS,
               correlationId,
-              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId));
+              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, fileUuid));
 
       producerTemplate.asyncSendBody(uriFtiOutgoingFrom, message);
       totalInvoices++;

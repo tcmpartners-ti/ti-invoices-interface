@@ -6,14 +6,18 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
+import com.tcmp.tiapi.invoice.dto.InvoiceRealOutputData;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.exception.InconsistentInvoiceInformationException;
 import com.tcmp.tiapi.invoice.model.EventExtension;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.repository.EventExtensionRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
+import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
+import com.tcmp.tiapi.invoice.service.files.realoutput.InvoiceRealOutputFileUploader;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
@@ -47,12 +51,13 @@ import com.tcmp.tiapi.titofcm.model.InvoicePaymentCorrelationInfo;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
 import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
-
+import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -63,10 +68,13 @@ import org.springframework.stereotype.Component;
 public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
   private final UUIDGenerator uuidGenerator;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   private final AccountRepository accountRepository;
   private final CustomerRepository customerRepository;
   private final EventExtensionRepository eventExtensionRepository;
+  private final BulkCreateInvoicesFileInfoRepository createInvoicesFileInfoRepository;
+  private final InvoiceRealOutputFileUploader realOutputFileUploader;
   private final InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   private final InvoiceRepository invoiceRepository;
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
@@ -140,12 +148,12 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       InvoicePaymentCorrelationInfo invoicePaymentInfo) {
 
     String invoiceReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
+    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(invoiceReference);
+
     log.info("Started credit payment result handling for invoice [{}].", invoiceReference);
 
     try {
       validatePaymentResult(paymentResult);
-
-      ProductMasterExtension invoiceExtension = findMasterExtensionByReference(invoiceReference);
       Customer buyer = findCustomerByMnemonic(financeMessage.getBuyerIdentifier());
       Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
       ProgramExtension programExtension = findByProgrammeIdOrDefault(financeMessage.getProgramme());
@@ -167,6 +175,8 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       log.info("Stored invoice correlation info with uuid: {}.", invoicePaymentInfo.getId());
     } catch (Exception e) {
       InvoiceMaster invoice = findInvoiceByMasterReference(invoiceReference);
+      invoice.setProductMasterExtension(invoiceExtension);
+
       handleFinanceFlowError(e, financeMessage, invoice);
     }
   }
@@ -185,6 +195,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       InvoicePaymentCorrelationInfo invoicePaymentCorrelationInfo) {
     String masterReference = financeMessage.getInvoiceArray().get(0).getInvoiceReference();
     InvoiceMaster invoice = findInvoiceByMasterReference(masterReference);
+    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
+    invoice.setProductMasterExtension(invoiceExtension);
+
     log.info(
         "Started invoice taxes payment result handling for invoice [{}].",
         invoice.getReference().trim());
@@ -193,11 +206,30 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       validatePaymentResult(paymentResult);
 
       Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
-
       sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, financeMessage, seller);
-      notifyFinanceStatus(PayloadStatus.SUCCEEDED, financeMessage, invoice, null);
 
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
+
+      String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
+      boolean invoiceCreatedBySftp = fileUuid != null;
+      if (invoiceCreatedBySftp) {
+        notifyFinanceStatusViaSftp(
+            InvoiceRealOutputData.Status.FINANCED, financeMessage, invoice, fileUuid);
+        notifyFinanceStatusViaBusinessBanking(
+            PayloadStatus.SUCCEEDED,
+            OperationalGatewayProcessCode.INVOICE_FINANCING_SFTP,
+            financeMessage,
+            invoice,
+            null);
+        return;
+      }
+
+      notifyFinanceStatusViaBusinessBanking(
+          PayloadStatus.SUCCEEDED,
+          OperationalGatewayProcessCode.INVOICE_FINANCING,
+          financeMessage,
+          invoice,
+          null);
     } catch (Exception e) {
       handleFinanceFlowError(e, financeMessage, invoice);
     }
@@ -253,7 +285,26 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
             || e instanceof EncodedAccountParser.AccountDecodingException;
     if (!isNotifiableError) return;
 
-    notifyFinanceStatus(PayloadStatus.FAILED, financeMessage, invoice, e.getMessage());
+    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
+    boolean createdBySftpChannel = fileUuid.isBlank();
+    if (createdBySftpChannel) {
+      notifyFinanceStatusViaSftp(
+          InvoiceRealOutputData.Status.FAILED, financeMessage, invoice, fileUuid);
+      notifyFinanceStatusViaBusinessBanking(
+          PayloadStatus.FAILED,
+          OperationalGatewayProcessCode.INVOICE_FINANCING_SFTP,
+          financeMessage,
+          invoice,
+          e.getMessage());
+      return;
+    }
+
+    notifyFinanceStatusViaBusinessBanking(
+        PayloadStatus.FAILED,
+        OperationalGatewayProcessCode.INVOICE_FINANCING,
+        financeMessage,
+        invoice,
+        e.getMessage());
   }
 
   public void sendEmailToCustomer(
@@ -276,8 +327,32 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
   }
 
-  private void notifyFinanceStatus(
+  private void notifyFinanceStatusViaSftp(
+      InvoiceRealOutputData.Status status,
+      FinanceAckMessage financeMessage,
+      InvoiceMaster invoice,
+      String fileUuid) {
+    BulkCreateInvoicesFileInfo fileInfo =
+        createInvoicesFileInfoRepository
+            .findById(fileUuid.trim())
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException("Could not find file info with uuid " + fileUuid));
+
+    realOutputFileUploader.appendInvoiceStatusRow(
+        fileInfo.getOriginalFilename(),
+        InvoiceRealOutputData.builder()
+            .invoiceReference(invoice.getReference().trim())
+            .processedAt(LocalDateTime.now(clock))
+            .status(status)
+            .amount(getFinanceDealAmountFromMessage(financeMessage))
+            .counterPartyMnemonic(financeMessage.getSellerIdentifier())
+            .build());
+  }
+
+  private void notifyFinanceStatusViaBusinessBanking(
       PayloadStatus status,
+      OperationalGatewayProcessCode processCode,
       FinanceAckMessage financeResultMessage,
       InvoiceMaster invoice,
       @Nullable String error) {
@@ -295,7 +370,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
             .details(new PayloadDetails(errors, null, null))
             .build();
 
-    businessBankingService.notifyEvent(OperationalGatewayProcessCode.INVOICE_FINANCING, payload);
+    businessBankingService.notifyEvent(processCode, payload);
   }
 
   private Customer findCustomerByMnemonic(String customerMnemonic) {

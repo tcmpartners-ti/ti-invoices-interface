@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class InvoiceSummaryFileBuilder {
   private static final String DATETIME_FORMAT = "yyyyMMdd HH:mm";
 
-  private final FcmAzureContainerConfiguration azureContainerConfiguration;
+  private final FcmAzureContainerConfiguration containerConfiguration;
   private final InvoiceFileHandler invoiceFileHandler;
 
   /**
@@ -26,7 +26,7 @@ public class InvoiceSummaryFileBuilder {
     String fileContent =
         generateHeader(fileInfo) + generateFileBody(fileInfo, totalInvoicesSucceeded);
     String fileName = generateFilename(fileInfo.getOriginalFilename());
-    String tempFilePath = azureContainerConfiguration.getLocalDir().summary() + fileName;
+    String tempFilePath = containerConfiguration.localDirectories().summary() + fileName;
 
     invoiceFileHandler.saveFile(tempFilePath, fileContent);
 

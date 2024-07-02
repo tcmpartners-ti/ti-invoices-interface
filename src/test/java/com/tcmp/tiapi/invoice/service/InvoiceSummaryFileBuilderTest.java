@@ -5,28 +5,20 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
-import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
 import com.tcmp.tiapi.invoice.service.files.summary.InvoiceSummaryFileBuilder;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceSummaryFileBuilderTest {
-  private static final String LOCAL_TEMP_PATH = "/tmp";
-
-  @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
+  @Mock private FcmAzureContainerConfiguration containerConfiguration;
   @Mock private InvoiceFileHandler invoiceFileHandler;
-
-  @Mock private List<InvoiceRowProcessingResult> mockedSuccessfulInvoices;
 
   @Captor private ArgumentCaptor<String> contentArgumentCaptor;
 
@@ -34,7 +26,10 @@ class InvoiceSummaryFileBuilderTest {
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(invoiceSummaryFileBuilder, "localTempPath", LOCAL_TEMP_PATH);
+    var localDirectories = mock(FcmAzureContainerConfiguration.LocalDir.class);
+
+    when(containerConfiguration.localDirectories()).thenReturn(localDirectories);
+    when(localDirectories.summary()).thenReturn("/tmp/summary");
   }
 
   @Test
@@ -47,19 +42,13 @@ class InvoiceSummaryFileBuilderTest {
             .totalInvoices(100)
             .build();
 
-    invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo);
+    invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo, 10);
 
-    when(invoiceRowProcessingResultRepository.findAllByFileUuidAndStatus(any(), any()))
-        .thenReturn(List.of());
-    when(invoiceRowProcessingResultRepository.findAllByFileUuidAndStatus(
-            anyString(), eq(InvoiceRowProcessingResult.Status.PENDING)))
-        .thenReturn(mockedSuccessfulInvoices);
-    when(mockedSuccessfulInvoices.size()).thenReturn(45);
     doNothing().when(invoiceFileHandler).saveFile(anyString(), contentArgumentCaptor.capture());
 
-    var actualPath = invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo);
+    var actualPath = invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo, 45);
 
-    var expectedPath = "/tmp/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv";
+    var expectedPath = "/tmp/summary/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv";
     var expectedContent =
         """
         Resumen del Procesamiento

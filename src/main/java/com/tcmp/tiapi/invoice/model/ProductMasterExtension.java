@@ -23,6 +23,10 @@ public class ProductMasterExtension {
   @Column(name = "MASTER", nullable = false)
   private Long masterId;
 
+  @Column(name = "FILEUUID", nullable = false)
+  private String fileCreationUuid;
+
+  // GAF stuff
   @Column(name = "GAFOPEID", nullable = false)
   private String gafOperationId;
 
