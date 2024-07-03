@@ -1,11 +1,9 @@
 package com.tcmp.tiapi.invoice.dto.request;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
 public record InvoiceBulkCreationParams(
-    @NotNull(message = "This field is required")
         @Pattern(
             regexp = "^(sftp|business-banking)$",
             message = "Must be either sftp or business-banking")

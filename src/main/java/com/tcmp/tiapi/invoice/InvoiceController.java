@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -85,7 +86,9 @@ public class InvoiceController {
   public InvoicesCreatedDTO bulkCreateInvoices(
       @Valid InvoiceBulkCreationForm form, @Valid InvoiceBulkCreationParams params) {
     InvoiceBulkCreationParams.Channel channel =
-        InvoiceBulkCreationParams.Channel.fromString(params.channel());
+        Optional.ofNullable(params.channel())
+            .map(InvoiceBulkCreationParams.Channel::fromString)
+            .orElse(InvoiceBulkCreationParams.Channel.BUSINESS_BANKING);
 
     if (channel == InvoiceBulkCreationParams.Channel.BUSINESS_BANKING) {
       invoiceBatchOperationsService.createInvoicesInTiWithBusinessBankingChannel(
