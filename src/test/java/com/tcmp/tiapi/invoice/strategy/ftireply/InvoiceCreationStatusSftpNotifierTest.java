@@ -2,7 +2,6 @@ package com.tcmp.tiapi.invoice.strategy.ftireply;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
@@ -19,9 +18,9 @@ import com.tcmp.tiapi.ti.dto.response.Details;
 import com.tcmp.tiapi.ti.dto.response.ResponseHeader;
 import com.tcmp.tiapi.ti.dto.response.ResponseStatus;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
 import java.util.List;
 import java.util.Optional;
-import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,28 +29,28 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceCreationStatusSftpNotifierTest {
-  @Mock private ProducerTemplate producerTemplate;
-  @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
-  @Mock private InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  @Mock private FcmAzureContainerConfiguration containerConfiguration;
   @Mock private BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
+  @Mock private InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
+  @Mock private InvoiceFileHandler invoiceFileHandler;
   @Mock private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
   @Mock private InvoiceSummaryFileBuilder invoiceSummaryFileBuilder;
-  @Mock private InvoiceFileHandler invoiceFileHandler;
-
-  @InjectMocks private InvoiceCreationStatusSftpNotifier invoiceCreationStatusNotifier;
 
   @Captor private ArgumentCaptor<InvoiceRowProcessingResult> resultArgumentCaptor;
 
+  @InjectMocks private InvoiceCreationStatusSftpNotifier invoiceCreationStatusNotifier;
+
   @BeforeEach
   void setup() {
-    ReflectionTestUtils.setField(
-        invoiceCreationStatusNotifier, "uriFromFullOutputFile", "direct:fullOutput");
-    ReflectionTestUtils.setField(
-        invoiceCreationStatusNotifier, "uriFromSummaryFile", "direct:summary");
+    var remoteDirectories = mock(FcmAzureContainerConfiguration.RemoteDir.class);
+
+    when(remoteDirectories.summary()).thenReturn("/ti/summary");
+    when(remoteDirectories.fullOutput()).thenReturn("/ti/full-output");
+    when(containerConfiguration.remoteDirectories()).thenReturn(remoteDirectories);
   }
 
   @Test
@@ -83,26 +82,25 @@ class InvoiceCreationStatusSftpNotifierTest {
             .build();
     var serviceResponse = ServiceResponse.builder().responseHeader(header).build();
 
+    var fileInfo =
+        BulkCreateInvoicesFileInfo.builder()
+            .id("abc-123")
+            .totalInvoices(1)
+            .originalFilename("CRD-ArchivoEmpresaACB01-20240610.csv")
+            .build();
     when(bulkCreateInvoicesFileInfoRepository.findById(anyString()))
-        .thenReturn(
-            Optional.of(
-                BulkCreateInvoicesFileInfo.builder()
-                    .id("abc-123")
-                    .totalInvoices(1)
-                    .originalFilename("CRD-ArchivoEmpresaACB01-20240610.csv")
-                    .build()));
+        .thenReturn(Optional.of(fileInfo));
     when(invoiceProcessingRowBulkRepository.totalRowsByIdPattern(anyString())).thenReturn(1L);
     when(invoiceFullOutputFileBuilder.generateAndSaveFile(anyString(), anyList()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-FULLOUTPUT.tsv");
-    when(invoiceSummaryFileBuilder.generateAndSaveFile(any()))
+    when(invoiceSummaryFileBuilder.generateAndSaveFile(any(), anyLong()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv");
 
     invoiceCreationStatusNotifier.notify(serviceResponse);
 
     verify(invoiceRowProcessingResultRepository).save(resultArgumentCaptor.capture());
-    verify(producerTemplate, times(2)).sendBodyAndHeaders(anyString(), anyString(), anyMap());
     verify(invoiceFileHandler, times(2)).deleteFile(anyString());
-    verify(bulkCreateInvoicesFileInfoRepository).deleteById(anyString());
+    verify(bulkCreateInvoicesFileInfoRepository).findById(anyString());
     verify(invoiceRowProcessingResultRepository).deleteAllByFileUuid(anyString());
 
     var expectedErrorCodes =

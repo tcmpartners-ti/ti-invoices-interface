@@ -43,7 +43,7 @@ class InvoiceMapperTest {
             .build();
 
     CreateInvoiceEventMessage createInvoiceMessage =
-        testedInvoiceMapper.mapCSVRowToFTIMessage(invoiceRow, null);
+        testedInvoiceMapper.mapCSVRowToFTIMessage(invoiceRow, null, null);
 
     assertEquals(invoiceRow.getInvoiceNumber(), createInvoiceMessage.getInvoiceNumber());
     assertEquals(invoiceRow.getBuyer(), createInvoiceMessage.getBuyer());
