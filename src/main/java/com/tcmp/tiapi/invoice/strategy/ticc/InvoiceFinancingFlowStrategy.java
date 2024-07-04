@@ -108,11 +108,12 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
         masterReference);
 
     InvoiceMaster invoice = findInvoiceByMasterReference(masterReference);
+    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
+    invoice.setProductMasterExtension(invoiceExtension);
 
     try {
       Customer buyer = findCustomerByMnemonic(financeMessage.getBuyerIdentifier());
       Customer seller = findCustomerByMnemonic(financeMessage.getSellerIdentifier());
-      ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
       ProgramExtension programExtension = findByProgrammeIdOrDefault(financeMessage.getProgramme());
 
       EncodedAccountParser buyerAccountParser =
@@ -128,7 +129,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
               financeMessage, buyer, seller, buyerAccountParser, sellerAccountParser);
       saveInitialPaymentCorrelationInfo(response.data().paymentReferenceNumber(), financeMessage);
     } catch (Exception e) {
-      handleFinanceFlowError(e, financeMessage, invoice);
+      handleFinancingError(e, financeMessage, invoice);
     }
   }
 
@@ -160,7 +161,6 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       EncodedAccountParser buyerAccountParser =
           new EncodedAccountParser(invoiceExtension.getFinanceAccount());
       EncodedAccountParser sellerAccountParser = findSelectedSellerAccountOrDefault(financeMessage);
-      // Nueva funcion crear credi
       DistributorCreditResponse sellerCredit =
           simulateSellerCredit(financeMessage, buyer, programExtension, buyerAccountParser);
       saveGafOperationSellerInformation(sellerCredit, invoiceExtension);
@@ -177,7 +177,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       InvoiceMaster invoice = findInvoiceByMasterReference(invoiceReference);
       invoice.setProductMasterExtension(invoiceExtension);
 
-      handleFinanceFlowError(e, financeMessage, invoice);
+      handleFinancingError(e, financeMessage, invoice);
     }
   }
 
@@ -210,12 +210,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
 
       invoicePaymentCorrelationInfoRepository.delete(invoicePaymentCorrelationInfo);
 
-      String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
-      boolean invoiceCreatedBySftp = fileUuid.isBlank();
-      if (invoiceCreatedBySftp) {
-        notifyFinanceStatusViaSftp(
-            InvoiceRealOutputData.Status.FINANCED, financeMessage, invoice, fileUuid);
-        notifyFinanceStatusViaBusinessBanking(
+      if (isCreatedViaSftp(invoice)) {
+        notifyStatusViaSftp(InvoiceRealOutputData.Status.FINANCED, financeMessage, invoice);
+        notifyStatusViaBusinessBanking(
             PayloadStatus.SUCCEEDED,
             OperationalGatewayProcessCode.INVOICE_FINANCING_SFTP,
             financeMessage,
@@ -224,14 +221,14 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
         return;
       }
 
-      notifyFinanceStatusViaBusinessBanking(
+      notifyStatusViaBusinessBanking(
           PayloadStatus.SUCCEEDED,
           OperationalGatewayProcessCode.INVOICE_FINANCING,
           financeMessage,
           invoice,
           null);
     } catch (Exception e) {
-      handleFinanceFlowError(e, financeMessage, invoice);
+      handleFinancingError(e, financeMessage, invoice);
     }
   }
 
@@ -274,7 +271,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     return sellerCredit;
   }
 
-  private void handleFinanceFlowError(
+  private void handleFinancingError(
       Throwable e, FinanceAckMessage financeMessage, InvoiceMaster invoice) {
     log.error(e.getMessage());
 
@@ -285,12 +282,9 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
             || e instanceof EncodedAccountParser.AccountDecodingException;
     if (!isNotifiableError) return;
 
-    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
-    boolean createdBySftpChannel = fileUuid.isBlank();
-    if (createdBySftpChannel) {
-      notifyFinanceStatusViaSftp(
-          InvoiceRealOutputData.Status.FAILED, financeMessage, invoice, fileUuid);
-      notifyFinanceStatusViaBusinessBanking(
+    if (isCreatedViaSftp(invoice)) {
+      notifyStatusViaSftp(InvoiceRealOutputData.Status.FAILED, financeMessage, invoice);
+      notifyStatusViaBusinessBanking(
           PayloadStatus.FAILED,
           OperationalGatewayProcessCode.INVOICE_FINANCING_SFTP,
           financeMessage,
@@ -299,7 +293,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       return;
     }
 
-    notifyFinanceStatusViaBusinessBanking(
+    notifyStatusViaBusinessBanking(
         PayloadStatus.FAILED,
         OperationalGatewayProcessCode.INVOICE_FINANCING,
         financeMessage,
@@ -307,7 +301,12 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
         e.getMessage());
   }
 
-  public void sendEmailToCustomer(
+  private boolean isCreatedViaSftp(InvoiceMaster invoice) {
+    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
+    return fileUuid != null && !fileUuid.isBlank();
+  }
+
+  private void sendEmailToCustomer(
       InvoiceEmailEvent event, FinanceAckMessage financeMessage, Customer seller) {
     String invoiceNumber = financeMessage.getTheirRef().split("--")[0];
 
@@ -327,30 +326,31 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
     operationalGatewayService.sendNotificationRequest(financedInvoiceInfo);
   }
 
-  private void notifyFinanceStatusViaSftp(
+  private void notifyStatusViaSftp(
       InvoiceRealOutputData.Status status,
       FinanceAckMessage financeMessage,
-      InvoiceMaster invoice,
-      String fileUuid) {
+      InvoiceMaster invoice) {
+    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid().trim();
+
     BulkCreateInvoicesFileInfo fileInfo =
         createInvoicesFileInfoRepository
-            .findById(fileUuid.trim())
+            .findById(fileUuid)
             .orElseThrow(
                 () ->
                     new EntityNotFoundException("Could not find file info with uuid " + fileUuid));
 
-    realOutputFileUploader.appendInvoiceStatusRow(
-        fileInfo.getOriginalFilename(),
+    InvoiceRealOutputData realOutputRow =
         InvoiceRealOutputData.builder()
             .invoiceReference(invoice.getReference().trim())
             .processedAt(LocalDateTime.now(clock))
             .status(status)
             .amount(getFinanceDealAmountFromMessage(financeMessage))
             .counterPartyMnemonic(financeMessage.getSellerIdentifier())
-            .build());
+            .build();
+    realOutputFileUploader.appendInvoiceStatusRow(fileInfo.getOriginalFilename(), realOutputRow);
   }
 
-  private void notifyFinanceStatusViaBusinessBanking(
+  private void notifyStatusViaBusinessBanking(
       PayloadStatus status,
       OperationalGatewayProcessCode processCode,
       FinanceAckMessage financeResultMessage,
@@ -388,7 +388,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
         .orElseThrow(
             () ->
                 new InconsistentInvoiceInformationException(
-                    "Could not find account for the given invoice master."));
+                    "Could not find extension for master " + invoiceMasterReference));
   }
 
   private InvoiceMaster findInvoiceByMasterReference(String invoiceMasterReference) {
