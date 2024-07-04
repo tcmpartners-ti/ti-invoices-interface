@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusNotifier {
+  private static final String PATH_DELIMITER = "/";
+
   private final FcmAzureContainerConfiguration containerConfiguration;
   private final BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
   private final InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
@@ -120,10 +122,13 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
             fileInfo.getOriginalFilename(), invoiceProcessingResults);
 
     String filename = getFilenameFromPath(localPath);
-    String remotePath = containerConfiguration.remoteDirectories().fullOutput() + "/" + filename;
+    String remotePath =
+        containerConfiguration.remoteDirectories().fullOutput() + PATH_DELIMITER + filename;
 
     invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
     invoiceFileHandler.deleteFile(localPath);
+
+    log.info("Uploaded full output file to {}.", remotePath);
   }
 
   private void processAndUploadSummaryFile(BulkCreateInvoicesFileInfo fileInfo) {
@@ -135,10 +140,13 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
     String localPath =
         invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo, totalInvoicesSucceeded);
     String filename = getFilenameFromPath(localPath);
-    String remotePath = containerConfiguration.remoteDirectories().summary() + "/" + filename;
+    String remotePath =
+        containerConfiguration.remoteDirectories().summary() + PATH_DELIMITER + filename;
 
     invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
     invoiceFileHandler.deleteFile(localPath);
+
+    log.info("Uploaded summary file to {}.", remotePath);
   }
 
   private String getFilenameFromPath(String filePath) {
