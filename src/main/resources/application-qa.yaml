@@ -2,6 +2,18 @@
 # otherwise it will send the messages to the processing queue.
 config.schedule-messages: true
 
+sftp:
+  user: ""
+  private-key: ""
+  host: ""
+  port: ""
+  local-dir:
+    full-output: "/app/tmp/full-output"
+    summary: "/app/tmp/summary"
+  remote-dir:
+    full-output: "/ti/full-output"
+    summary: "/ti/summary"
+
 spring:
   datasource:
     host: ${DB_HOST}
@@ -74,6 +86,9 @@ fcm:
 
   route:
     payment-result.from: "activemqFcm:queue:${fcm.queue.notification.sub.name}"
+    sftp:
+      from-full-output: "direct:sendFullOutputToFcmViaSftp"
+      from-summary: "direct:sendSummaryToFcmViaSftp"
 
 ti.route:
   fti:
