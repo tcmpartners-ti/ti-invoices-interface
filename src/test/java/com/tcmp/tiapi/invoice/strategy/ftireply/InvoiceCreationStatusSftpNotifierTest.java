@@ -12,7 +12,9 @@ import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoReposit
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceProcessingRowBulkRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
 import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
+import com.tcmp.tiapi.invoice.service.files.InvoiceLocalFileUploader;
 import com.tcmp.tiapi.invoice.service.files.fulloutput.InvoiceFullOutputFileBuilder;
+import com.tcmp.tiapi.invoice.service.files.realoutput.InvoiceRealOutputFileUploader;
 import com.tcmp.tiapi.invoice.service.files.summary.InvoiceSummaryFileBuilder;
 import com.tcmp.tiapi.ti.dto.response.Details;
 import com.tcmp.tiapi.ti.dto.response.ResponseHeader;
@@ -38,6 +40,8 @@ class InvoiceCreationStatusSftpNotifierTest {
   @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
   @Mock private InvoiceFileHandler invoiceFileHandler;
   @Mock private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
+  @Mock private InvoiceLocalFileUploader invoiceLocalFileUploader;
+  @Mock private InvoiceRealOutputFileUploader invoiceRealOutputFileUploader;
   @Mock private InvoiceSummaryFileBuilder invoiceSummaryFileBuilder;
 
   @Captor private ArgumentCaptor<InvoiceRowProcessingResult> resultArgumentCaptor;
@@ -102,6 +106,8 @@ class InvoiceCreationStatusSftpNotifierTest {
     verify(invoiceFileHandler, times(2)).deleteFile(anyString());
     verify(bulkCreateInvoicesFileInfoRepository).findById(anyString());
     verify(invoiceRowProcessingResultRepository).deleteAllByFileUuid(anyString());
+    verify(invoiceLocalFileUploader, times(2)).uploadFromPath(anyString(), anyString());
+    verify(invoiceRealOutputFileUploader).createHeader(anyString());
 
     var expectedErrorCodes =
         List.of(
