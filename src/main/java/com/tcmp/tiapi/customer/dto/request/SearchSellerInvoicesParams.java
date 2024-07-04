@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.customer.dto.response;
+package com.tcmp.tiapi.customer.dto.request;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Pattern;

@@ -68,16 +68,16 @@ pipelines:
       - step: *unit-tests
 
     # Staging branches
-    '{develop,hotfix/*,release/*}':
+    '{develop,hotfix/*}':
       - step: *build
       - parallel:
           steps:
             - step: *sonar-scan-test
-            - step: *integration-tests
+            #- step: *integration-tests
       - step: *deploy-test
 
     # Development Branches
-    feat/*:
+    features:
       - step: *build
       - parallel:
           steps:

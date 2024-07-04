@@ -3,7 +3,7 @@ package com.tcmp.tiapi.customer.controller;
 import com.tcmp.tiapi.customer.dto.CustomerIdType;
 import com.tcmp.tiapi.customer.dto.request.SearchSellerProgramsParams;
 import com.tcmp.tiapi.customer.dto.response.OutstandingBalanceDTO;
-import com.tcmp.tiapi.customer.dto.response.SearchSellerInvoicesParams;
+import com.tcmp.tiapi.customer.dto.request.SearchSellerInvoicesParams;
 import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
