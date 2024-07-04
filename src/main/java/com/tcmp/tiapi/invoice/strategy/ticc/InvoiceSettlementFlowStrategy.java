@@ -6,12 +6,15 @@ import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
+import com.tcmp.tiapi.invoice.dto.InvoiceRealOutputData;
 import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
-import com.tcmp.tiapi.invoice.strategy.payment.SettlementPaymentResultStrategy;
+import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
+import com.tcmp.tiapi.invoice.service.files.realoutput.InvoiceRealOutputFileUploader;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
@@ -42,7 +45,9 @@ import com.tcmp.tiapi.titofcm.service.SingleElectronicPaymentService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +64,7 @@ import reactor.util.function.Tuple5;
 public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   private final UUIDGenerator uuidGenerator;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   private final CorporateLoanService corporateLoanService;
   private final OperationalGatewayService operationalGatewayService;
@@ -69,6 +75,8 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
   private final CustomerRepository customerRepository;
   private final InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   private final InvoiceRepository invoiceRepository;
+  private final BulkCreateInvoicesFileInfoRepository createInvoicesFileInfoRepository;
+  private final InvoiceRealOutputFileUploader realOutputFileUploader;
   private final ProductMasterExtensionRepository productMasterExtensionRepository;
   private final ProgramExtensionRepository programExtensionRepository;
   private final SinglePaymentMapper singlePaymentMapper;
@@ -93,12 +101,15 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         message.getMasterRef());
 
     InvoiceMaster invoice = findInvoiceByMasterReference(message.getMasterRef());
+    ProductMasterExtension invoiceExtension =
+        findMasterExtensionByReference(message.getMasterRef());
+    invoice.setProductMasterExtension(invoiceExtension);
 
     Mono.zip(
             Mono.fromCallable(() -> findCustomerByMnemonic(message.getBuyerIdentifier())),
             Mono.fromCallable(() -> findCustomerByMnemonic(message.getSellerIdentifier())),
             Mono.fromCallable(() -> findProgrammeExtensionByIdOrDefault(message.getProgramme())),
-            Mono.fromCallable(() -> findMasterExtensionByReference(message.getMasterRef())),
+            Mono.fromCallable(() -> invoiceExtension),
             Mono.fromCallable(() -> findAccountByCustomerMnemonic(message.getSellerIdentifier())))
         .flatMap(
             tuple -> {
@@ -149,19 +160,17 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         .then(
             transferPaymentAmountFromBuyerToSeller(
                     message, buyer, seller, buyerAccount, sellerAccount)
-                .map(this::handleBuyerToSellerTransaction));
+                .map(this::saveTransactionCorrelationInfo));
   }
 
   /**
    * This function stores required invoice info to be processed when the payment result is received
    * in the queue (TRADE_INNOVATION_NOT).
    *
-   * @see SettlementPaymentResultStrategy#handleResult(InvoicePaymentCorrelationInfo,
-   *     PaymentResultResponse)
    * @param tuple Correlation information.
    * @return Empty mono if data was saved successfully.
    */
-  private Mono<Object> handleBuyerToSellerTransaction(
+  private Mono<Object> saveTransactionCorrelationInfo(
       Tuple2<String, InvoiceSettlementEventMessage> tuple) {
     try {
       InvoiceSettlementEventMessage message = tuple.getT2();
@@ -184,7 +193,62 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     }
   }
 
-  public Mono<Object> sendEmailToCustomer(
+  /**
+   * This function handles the transaction payment result for the credit amount. The result is
+   * received from FCM.
+   *
+   * @see
+   *     com.tcmp.tiapi.invoice.strategy.payment.SettlementPaymentResultStrategy#handleResult(InvoicePaymentCorrelationInfo,
+   *     PaymentResultResponse) where the method is consumed from.
+   * @param message message content found in redis payload.
+   * @param paymentResultResponse the payment execution result.
+   * @return mono response with the result of the final step of settlement flow.
+   */
+  public Mono<Object> handleTransactionPaymentResult(
+      InvoiceSettlementEventMessage message, PaymentResultResponse paymentResultResponse) {
+
+    String masterReference = message.getMasterRef();
+    InvoiceMaster invoice = findInvoiceByMasterReference(masterReference);
+    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
+    invoice.setProductMasterExtension(invoiceExtension);
+
+    Customer seller = findCustomerByMnemonic(message.getSellerIdentifier());
+
+    String fileUuid = invoiceExtension.getFileCreationUuid();
+    boolean createdViaSftp = fileUuid != null && !fileUuid.isBlank();
+    boolean transactionFailed =
+        !PaymentResultResponse.Status.SUCCEEDED.equals(paymentResultResponse.status());
+    if (transactionFailed) {
+      SinglePaymentException error =
+          new SinglePaymentException("Could not perform bgl to seller transaction");
+      return handleError(error, message, invoice);
+    }
+
+    if (createdViaSftp) {
+      return notifyStatusViaSftp(InvoiceRealOutputData.Status.PAID, message, invoice)
+          .then(
+              notifyStatusViaBusinessBanking(
+                  PayloadStatus.SUCCEEDED,
+                  OperationalGatewayProcessCode.INVOICE_SETTLEMENT_SFTP,
+                  message,
+                  invoice,
+                  invoiceExtension.getGafOperationId(),
+                  null));
+    }
+
+    // Credit received, should be all good
+    return sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller)
+        .then(
+            notifyStatusViaBusinessBanking(
+                PayloadStatus.SUCCEEDED,
+                OperationalGatewayProcessCode.INVOICE_SETTLEMENT,
+                message,
+                invoice,
+                invoiceExtension.getGafOperationId(),
+                null));
+  }
+
+  private Mono<Object> sendEmailToCustomer(
       InvoiceEmailEvent event, InvoiceSettlementEventMessage message, Customer customer) {
 
     String invoiceNumber = message.getInvoiceNumber().split("--")[0];
@@ -212,7 +276,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             });
   }
 
-  public Mono<Object> handleError(
+  private Mono<Object> handleError(
       Throwable e, InvoiceSettlementEventMessage message, InvoiceMaster invoice) {
     log.error(e.getMessage());
 
@@ -220,12 +284,32 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         e instanceof CreditCreationException || e instanceof SinglePaymentException;
     if (!isNotifiableError) return Mono.empty();
 
-    return notifySettlementStatusExternally(
-        PayloadStatus.FAILED, message, invoice, null, e.getMessage());
+    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid();
+    boolean createdViaSftp = fileUuid != null && !fileUuid.isBlank();
+    if (createdViaSftp) {
+      return notifyStatusViaSftp(InvoiceRealOutputData.Status.FAILED, message, invoice)
+          .then(
+              notifyStatusViaBusinessBanking(
+                  PayloadStatus.FAILED,
+                  OperationalGatewayProcessCode.INVOICE_SETTLEMENT_SFTP,
+                  message,
+                  invoice,
+                  null,
+                  e.getMessage()));
+    }
+
+    return notifyStatusViaBusinessBanking(
+        PayloadStatus.FAILED,
+        OperationalGatewayProcessCode.INVOICE_SETTLEMENT,
+        message,
+        invoice,
+        null,
+        e.getMessage());
   }
 
-  public Mono<Object> notifySettlementStatusExternally(
+  private Mono<Object> notifyStatusViaBusinessBanking(
       PayloadStatus status,
+      OperationalGatewayProcessCode processCode,
       InvoiceSettlementEventMessage message,
       InvoiceMaster invoice,
       @Nullable String operationId,
@@ -245,10 +329,34 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
             .details(new PayloadDetails(errors, null, null))
             .build();
 
+    return Mono.fromRunnable(() -> businessBankingService.notifyEvent(processCode, payload));
+  }
+
+  private Mono<Object> notifyStatusViaSftp(
+      InvoiceRealOutputData.Status status,
+      InvoiceSettlementEventMessage message,
+      InvoiceMaster invoice) {
+    String fileUuid = invoice.getProductMasterExtension().getFileCreationUuid().trim();
+
+    BulkCreateInvoicesFileInfo fileInfo =
+        createInvoicesFileInfoRepository
+            .findById(fileUuid)
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException("Could not find file info with uuid " + fileUuid));
+
+    String filename = fileInfo.getOriginalFilename();
+    InvoiceRealOutputData realOutputRow =
+        InvoiceRealOutputData.builder()
+            .invoiceReference(invoice.getReference().trim())
+            .processedAt(LocalDateTime.now(clock))
+            .status(status)
+            .amount(getPaymentAmountFromMessage(message))
+            .counterPartyMnemonic(message.getSellerIdentifier())
+            .build();
+
     return Mono.fromRunnable(
-        () ->
-            businessBankingService.notifyEvent(
-                OperationalGatewayProcessCode.INVOICE_SETTLEMENT, payload));
+        () -> realOutputFileUploader.appendInvoiceStatusRow(filename, realOutputRow));
   }
 
   private InvoiceMaster findInvoiceByMasterReference(String masterReference) {
@@ -266,7 +374,7 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
                     "Could not find customer with mnemonic " + customerMnemonic));
   }
 
-  public ProductMasterExtension findMasterExtensionByReference(String masterReference) {
+  private ProductMasterExtension findMasterExtensionByReference(String masterReference) {
     return productMasterExtensionRepository
         .findByMasterReference(masterReference)
         .orElseThrow(

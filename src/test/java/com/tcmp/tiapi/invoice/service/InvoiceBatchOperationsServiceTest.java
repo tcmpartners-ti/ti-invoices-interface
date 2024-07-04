@@ -91,7 +91,7 @@ class InvoiceBatchOperationsServiceTest {
     verify(wrapper, times(totalInvoices))
         .wrapRequest(any(), any(), any(), invoiceMessageUuidArgumentCaptor.capture(), any());
     verify(invoiceMapper, times(totalInvoices))
-        .mapCSVRowToFTIMessage(any(InvoiceCreationRowCSV.class), anyString());
+        .mapCSVRowToFTIMessage(any(InvoiceCreationRowCSV.class), anyString(), any());
     verify(invoiceCacheRepository, times(expectedBatchCalls))
         .saveAll(invoiceInfosArgumentCaptor.capture());
     verify(producerTemplate, times(totalInvoices))

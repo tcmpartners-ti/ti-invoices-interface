@@ -16,6 +16,8 @@ import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
+import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
+import com.tcmp.tiapi.invoice.service.files.realoutput.InvoiceRealOutputFileUploader;
 import com.tcmp.tiapi.program.model.ProgramExtension;
 import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.UUIDGenerator;
@@ -74,6 +76,8 @@ class InvoiceSettlementFlowStrategyTest {
   @Mock private CustomerRepository customerRepository;
   @Mock private InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   @Mock private InvoiceRepository invoiceRepository;
+  @Mock private BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
+  @Mock private InvoiceRealOutputFileUploader realOutputFileUploader;
   @Mock private ProductMasterExtensionRepository productMasterExtensionRepository;
   @Mock private ProgramExtensionRepository programExtensionRepository;
 
@@ -103,6 +107,7 @@ class InvoiceSettlementFlowStrategyTest {
         new InvoiceSettlementFlowStrategy(
             uuidGenerator,
             objectMapper,
+            mockedClock,
             corporateLoanService,
             operationalGatewayService,
             businessBankingService,
@@ -111,6 +116,8 @@ class InvoiceSettlementFlowStrategyTest {
             customerRepository,
             invoicePaymentCorrelationInfoRepository,
             invoiceRepository,
+            bulkCreateInvoicesFileInfoRepository,
+            realOutputFileUploader,
             productMasterExtensionRepository,
             programExtensionRepository,
             singlePaymentMapper,
@@ -222,7 +229,11 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(notFinancedInvoice));
     when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
-            Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
+            Optional.of(
+                ProductMasterExtension.builder()
+                    .financeAccount("AH9278281280")
+                    .fileCreationUuid("      ")
+                    .build()));
     when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
         .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH9278281281").build()));
     when(corporateLoanService.createCredit(any()))
@@ -266,7 +277,11 @@ class InvoiceSettlementFlowStrategyTest {
         .thenReturn(Optional.of(notFinancedInvoice));
     when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(
-            Optional.of(ProductMasterExtension.builder().financeAccount("AH9278281280").build()));
+            Optional.of(
+                ProductMasterExtension.builder()
+                    .financeAccount("AH9278281280")
+                    .fileCreationUuid("     ")
+                    .build()));
     when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
         .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH9278281281").build()));
     when(corporateLoanService.createCredit(any()))

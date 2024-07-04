@@ -143,6 +143,7 @@ public abstract class InvoiceMapper {
   @Mapping(source = "invoiceRow.behalfOfBranch", target = "context.behalfOfBranch")
   @Mapping(source = "invoiceRow.anchorParty", target = "anchorParty")
   @Mapping(source = "invoiceRow.anchorAccount", target = "extraData.financeAccount")
+  @Mapping(source = "fileUUid", target = "extraData.fileUuid")
   @Mapping(source = "batchId", target = "batchId")
   @Mapping(source = "invoiceRow.programme", target = "programme")
   @Mapping(source = "invoiceRow.seller", target = "seller")
@@ -165,7 +166,7 @@ public abstract class InvoiceMapper {
       dateFormat = DTO_DATE_FORMAT)
   @Mapping(target = "invoiceApproved", constant = "Y")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(
-      InvoiceCreationRowCSV invoiceRow, String batchId);
+      InvoiceCreationRowCSV invoiceRow, String batchId, String fileUUid);
 
   @Mapping(source = "context.customer", target = "context.customer")
   @Mapping(source = "context.behalfOfBranch", target = "context.behalfOfBranch")

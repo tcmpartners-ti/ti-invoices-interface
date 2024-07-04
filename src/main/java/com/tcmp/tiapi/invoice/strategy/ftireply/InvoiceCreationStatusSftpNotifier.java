@@ -5,41 +5,37 @@ import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceProcessingRowBulkRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
-import com.tcmp.tiapi.invoice.service.InvoiceFileHandler;
-import com.tcmp.tiapi.invoice.service.InvoiceFullOutputFileService;
-import com.tcmp.tiapi.invoice.service.InvoiceSummaryFileService;
+import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
+import com.tcmp.tiapi.invoice.service.files.InvoiceLocalFileUploader;
+import com.tcmp.tiapi.invoice.service.files.fulloutput.InvoiceFullOutputFileBuilder;
+import com.tcmp.tiapi.invoice.service.files.realoutput.InvoiceRealOutputFileUploader;
+import com.tcmp.tiapi.invoice.service.files.summary.InvoiceSummaryFileBuilder;
 import com.tcmp.tiapi.ti.dto.response.Details;
 import com.tcmp.tiapi.ti.dto.response.ResponseStatus;
 import com.tcmp.tiapi.ti.dto.response.ServiceResponse;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.ProducerTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusNotifier {
-  private final ProducerTemplate producerTemplate;
+  private static final String PATH_DELIMITER = "/";
 
-  private final InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
-  private final InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  private final FcmAzureContainerConfiguration containerConfiguration;
   private final BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
-
-  private final InvoiceFullOutputFileService invoiceFullOutputFileService;
-  private final InvoiceSummaryFileService invoiceSummaryFileService;
+  private final InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  private final InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
 
   private final InvoiceFileHandler invoiceFileHandler;
-
-  @Value("${fcm.route.sftp.from-full-output}")
-  private String uriFromFullOutputFile;
-
-  @Value("${fcm.route.sftp.from-summary}")
-  private String uriFromSummaryFile;
+  private final InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
+  private final InvoiceLocalFileUploader invoiceLocalFileUploader;
+  private final InvoiceRealOutputFileUploader invoiceRealOutputFileUploader;
+  private final InvoiceSummaryFileBuilder invoiceSummaryFileBuilder;
 
   @Override
   public void notify(ServiceResponse serviceResponse) {
@@ -60,47 +56,13 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
         invoiceProcessingRowBulkRepository.totalRowsByIdPattern(keyPattern);
     boolean isLastInvoiceFromBatch = invoiceFileInfo.getTotalInvoices() == totalInvoicesProcessed;
     if (isLastInvoiceFromBatch) {
-      String[] paths = generateFullOutputAndSummaryFiles(invoiceFileInfo, fileUuid);
-      uploadFullOutputAndSummaryFiles(paths);
-      cleanUpFullOutputAndSummaryFilesInformation(invoiceFileInfo, fileUuid, paths);
+      processAndUploadFullOutputFile(invoiceFileInfo, fileUuid);
+      processAndUploadSummaryFile(invoiceFileInfo);
+
+      invoiceRowProcessingResultRepository.deleteAllByFileUuid(fileUuid);
+
+      invoiceRealOutputFileUploader.createHeader(invoiceFileInfo.getOriginalFilename());
     }
-  }
-
-  private String[] generateFullOutputAndSummaryFiles(
-      BulkCreateInvoicesFileInfo invoiceFileInfo, String fileUuid) {
-    String fullOutputFilePath =
-        invoiceFullOutputFileService.generateAndSaveFile(
-            invoiceFileInfo.getOriginalFilename(), fileUuid);
-    String summaryFilePath = invoiceSummaryFileService.generateAndSaveFile(invoiceFileInfo);
-
-    log.info("Created full output file in: {}", fullOutputFilePath);
-    log.info("Created summary file in: {}", summaryFilePath);
-
-    return new String[] {fullOutputFilePath, summaryFilePath};
-  }
-
-  private void uploadFullOutputAndSummaryFiles(String... paths) {
-    assert paths.length == 2;
-    String fullOutputFilePath = paths[0];
-    String summaryFilePath = paths[1];
-    String fullOutputFilename = getFilenameFromPath(fullOutputFilePath);
-    String summaryFilename = getFilenameFromPath(summaryFilePath);
-
-    log.info("Uploading files.");
-    producerTemplate.sendBodyAndHeaders(
-        uriFromFullOutputFile, fullOutputFilePath, Map.of("CamelFileName", fullOutputFilename));
-    producerTemplate.sendBodyAndHeaders(
-        uriFromSummaryFile, summaryFilePath, Map.of("CamelFileName", summaryFilename));
-  }
-
-  private void cleanUpFullOutputAndSummaryFilesInformation(
-      BulkCreateInvoicesFileInfo invoiceFileInfo, String fileUuid, String... paths) {
-    assert paths.length == 2;
-
-    invoiceFileHandler.deleteFile(paths[0]);
-    invoiceFileHandler.deleteFile(paths[1]);
-    bulkCreateInvoicesFileInfoRepository.deleteById(invoiceFileInfo.getId());
-    invoiceRowProcessingResultRepository.deleteAllByFileUuid(fileUuid);
   }
 
   private void saveProcessingResult(
@@ -149,6 +111,42 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
       case "Invoice amount exceeds buyer limit availability (BuyerExpos)" -> "017";
       default -> "000";
     };
+  }
+
+  private void processAndUploadFullOutputFile(
+      BulkCreateInvoicesFileInfo fileInfo, String fileUuid) {
+    List<InvoiceRowProcessingResult> invoiceProcessingResults =
+        invoiceRowProcessingResultRepository.findAllByFileUuidOrderByIndex(fileUuid);
+    String localPath =
+        invoiceFullOutputFileBuilder.generateAndSaveFile(
+            fileInfo.getOriginalFilename(), invoiceProcessingResults);
+
+    String filename = getFilenameFromPath(localPath);
+    String remotePath =
+        containerConfiguration.remoteDirectories().fullOutput() + PATH_DELIMITER + filename;
+
+    invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
+    invoiceFileHandler.deleteFile(localPath);
+
+    log.info("Uploaded full output file to {}.", remotePath);
+  }
+
+  private void processAndUploadSummaryFile(BulkCreateInvoicesFileInfo fileInfo) {
+    long totalInvoicesSucceeded =
+        invoiceRowProcessingResultRepository
+            .findAllByFileUuidAndStatus(fileInfo.getId(), InvoiceRowProcessingResult.Status.PENDING)
+            .size();
+
+    String localPath =
+        invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo, totalInvoicesSucceeded);
+    String filename = getFilenameFromPath(localPath);
+    String remotePath =
+        containerConfiguration.remoteDirectories().summary() + PATH_DELIMITER + filename;
+
+    invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
+    invoiceFileHandler.deleteFile(localPath);
+
+    log.info("Uploaded summary file to {}.", remotePath);
   }
 
   private String getFilenameFromPath(String filePath) {

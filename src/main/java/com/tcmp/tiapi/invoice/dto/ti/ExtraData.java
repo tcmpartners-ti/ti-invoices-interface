@@ -22,6 +22,9 @@ public class ExtraData implements Serializable {
   @XmlElement(name = "FinanceAccount", namespace = TINamespace.CUSTOM)
   private String financeAccount;
 
+  @XmlElement(name = "CreationFileUuid", namespace = TINamespace.CUSTOM)
+  private String fileUuid;
+
   @XmlElement(name = "GafOperationId", namespace = TINamespace.CUSTOM)
   private String gafOperationId;
 
