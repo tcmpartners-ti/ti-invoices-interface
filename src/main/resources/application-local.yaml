@@ -88,10 +88,6 @@ fcm:
 
   route:
     payment-result.from: "activemqFcm:queue:TRADE_INNOVATION_NOT"
-    sftp:
-      from-full-output: "direct:sendFullOutputToFcmViaSftp"
-      from-summary: "direct:sendSummaryToFcmViaSftp"
-      from-real-output: "direct:sendRealOutputToFcmViaSftp"
 
 ti.route:
   fti:
