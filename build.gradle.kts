@@ -25,7 +25,7 @@ sonar {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.3.0"
+val springbootVersion = "3.3.1"
 val camelVersion = "4.6.0"
 val lombokVersion = "1.18.32"
 val h2Version = "2.2.224"
@@ -35,7 +35,7 @@ val jdbcVersion = "12.7.0.jre8-preview"
 val openCsvVersion = "5.9"
 val commonsCodecVersion = "1.17.0"
 val openApiVersion = "2.3.0"
-val azureStorageBlobVersion = "12.26.1"
+val azureStorageBlobVersion = "12.27.0-beta.1"
 val woodStoxVersion = "4.4.1"
 val openFeignVersion = "4.1.2"
 val retryVersion = "2.0.6"
@@ -69,6 +69,7 @@ dependencies {
 
     // Other libraries
     implementation("com.opencsv:opencsv:$openCsvVersion")
+    implementation("com.azure:azure-storage-blob:$azureStorageBlobVersion")
     implementation("commons-codec:commons-codec:$commonsCodecVersion") // Cryptography
     implementation("org.codehaus.woodstox:woodstox-core-asl:$woodStoxVersion")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")

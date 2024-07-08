@@ -55,17 +55,17 @@ bp:
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
 
-sftp:
-  user: ${SFTP_USER}
-  private-key: ${SFTP_PRIVATE_KEY}
-  host: ${SFTP_HOST}
-  port: ${SFTP_PORT}
+azure:
+  storage-account:
+    connection-string: ${STORAGE_ACCOUNT_CONNECTION_STRING}
+    fcm-container: "sftp01"
   local-dir:
     full-output: "./tmp/full-output"
     summary: "./tmp/summary"
   remote-dir:
     full-output: "/ti/full-output"
     summary: "/ti/summary"
+    real-output: "/ti/real-output"
 
 fcm:
   activemq:
@@ -88,9 +88,6 @@ fcm:
 
   route:
     payment-result.from: "activemqFcm:queue:TRADE_INNOVATION_NOT"
-    sftp:
-      from-full-output: "direct:sendFullOutputToFcmViaSftp"
-      from-summary: "direct:sendSummaryToFcmViaSftp"
 
 ti.route:
   fti:

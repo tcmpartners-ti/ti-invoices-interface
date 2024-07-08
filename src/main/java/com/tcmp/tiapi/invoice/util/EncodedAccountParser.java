@@ -22,12 +22,17 @@ public class EncodedAccountParser {
     }
 
     String trimmedAccount = encodedAccount.trim();
+    if (trimmedAccount.isBlank()) {
+      throw new AccountDecodingException("Account is empty.");
+    }
+
     if (trimmedAccount.length() != EXPECTED_ACCOUNT_NUMBER_LENGTH) {
       throw new AccountDecodingException("Invalid account length. " + encodedAccount);
     }
 
     if (!hasCorrectFormat(trimmedAccount)) {
-      throw new AccountDecodingException("Account is not in format ^(AH|CC)\\d{10}$. " + encodedAccount);
+      throw new AccountDecodingException(
+          "Account is not in format ^(AH|CC)\\d{10}$. " + encodedAccount);
     }
 
     this.encodedAccount = trimmedAccount;

@@ -6,7 +6,9 @@ import static org.mockito.Mockito.*;
 
 import com.opencsv.CSVWriter;
 import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
+import com.tcmp.tiapi.invoice.service.files.InvoiceCsvFileWriter;
+import com.tcmp.tiapi.invoice.service.files.fulloutput.InvoiceFullOutputFileBuilder;
+import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,29 +17,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class InvoiceFullOutputFileServiceTest {
-  private static final String LOCAL_TEMP_PATH = "/tmp";
-
-  @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
-  @Mock private InvoiceFileWriter invoiceFileWriter;
+class InvoiceFullOutputFileBuilderTest {
+  @Mock private FcmAzureContainerConfiguration containerConfiguration;
+  @Mock private InvoiceCsvFileWriter invoiceCsvFileWriter;
 
   @Captor private ArgumentCaptor<String[]> fileRowArgumentCaptor;
 
-  @InjectMocks private InvoiceFullOutputFileService invoiceFullOutputFileService;
+  @InjectMocks private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
 
   @BeforeEach
-  void setup() {
-    ReflectionTestUtils.setField(invoiceFullOutputFileService, "localTempPath", LOCAL_TEMP_PATH);
+  void setUp() {
+    var localDirectories = mock(FcmAzureContainerConfiguration.LocalDir.class);
+
+    when(containerConfiguration.localDirectories()).thenReturn(localDirectories);
+    when(localDirectories.fullOutput()).thenReturn("/tmp/full-output");
   }
 
   @Test
   void generateAndSaveFile_itShouldGenerateFile() throws FileNotFoundException {
     var originalFilename = "CRD-ArchivoEmpresaACB01-20240610.csv";
     var fileUuid = "abc-123";
-    List<InvoiceRowProcessingResult> results =
+    var results =
         List.of(
             InvoiceRowProcessingResult.builder()
                 .index(1)
@@ -53,12 +55,10 @@ class InvoiceFullOutputFileServiceTest {
 
     var writerMock = Mockito.mock(CSVWriter.class);
 
-    when(invoiceFileWriter.createWriter(anyString(), anyChar())).thenReturn(writerMock);
-    when(invoiceRowProcessingResultRepository.findAllByFileUuidOrderByIndex(anyString()))
-        .thenReturn(results);
+    when(invoiceCsvFileWriter.createWriter(anyString(), anyChar())).thenReturn(writerMock);
     doNothing().when(writerMock).writeNext(fileRowArgumentCaptor.capture());
 
-    invoiceFullOutputFileService.generateAndSaveFile(originalFilename, fileUuid);
+    invoiceFullOutputFileBuilder.generateAndSaveFile(originalFilename, results);
 
     var expectedRows = new ArrayList<String[]>();
     expectedRows.add(new String[] {"Índice", "Estado", "Descripción Estado"});

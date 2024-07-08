@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.invoice.service;
+package com.tcmp.tiapi.invoice.service.files;
 
 import com.tcmp.tiapi.invoice.exception.InvoiceFileException;
 import java.io.IOException;
