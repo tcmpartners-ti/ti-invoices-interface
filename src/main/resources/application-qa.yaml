@@ -2,18 +2,6 @@
 # otherwise it will send the messages to the processing queue.
 config.schedule-messages: true
 
-sftp:
-  user: ""
-  private-key: ""
-  host: ""
-  port: ""
-  local-dir:
-    full-output: "/app/tmp/full-output"
-    summary: "/app/tmp/summary"
-  remote-dir:
-    full-output: "/ti/full-output"
-    summary: "/ti/summary"
-
 spring:
   datasource:
     host: ${DB_HOST}
@@ -65,6 +53,17 @@ bp:
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
 
+azure:
+  storage-account:
+    connection-string: ${STORAGE_ACCOUNT_CONNECTION_STRING}
+    fcm-container: "sftp01"
+  local-dir:
+    full-output: "/app/tmp/full-output"
+    summary: "/app/tmp/summary"
+  remote-dir:
+    full-output: "/ti/full-output"
+    summary: "/ti/summary"
+
 fcm:
   activemq:
     host: ${FCM_MQ_HOST}
@@ -86,9 +85,6 @@ fcm:
 
   route:
     payment-result.from: "activemqFcm:queue:${fcm.queue.notification.sub.name}"
-    sftp:
-      from-full-output: "direct:sendFullOutputToFcmViaSftp"
-      from-summary: "direct:sendSummaryToFcmViaSftp"
 
 ti.route:
   fti:
