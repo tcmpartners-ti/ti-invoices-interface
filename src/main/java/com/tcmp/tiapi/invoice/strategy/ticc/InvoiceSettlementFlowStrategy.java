@@ -128,6 +128,61 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
         .subscribe();
   }
 
+  /**
+   * This function handles the transaction payment result for the credit amount. The result is
+   * received from FCM.
+   *
+   * @see
+   *     com.tcmp.tiapi.invoice.strategy.payment.SettlementPaymentResultStrategy#handleResult(InvoicePaymentCorrelationInfo,
+   *     PaymentResultResponse) where the method is consumed from.
+   * @param message message content found in redis payload.
+   * @param paymentResultResponse the payment execution result.
+   * @return mono response with the result of the final step of settlement flow.
+   */
+  public Mono<Object> handleTransactionPaymentResult(
+      InvoiceSettlementEventMessage message, PaymentResultResponse paymentResultResponse) {
+
+    String masterReference = message.getMasterRef();
+    InvoiceMaster invoice = findInvoiceByMasterReference(masterReference);
+    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
+    invoice.setProductMasterExtension(invoiceExtension);
+
+    Customer seller = findCustomerByMnemonic(message.getSellerIdentifier());
+
+    String fileUuid = invoiceExtension.getFileCreationUuid();
+    boolean createdViaSftp = fileUuid != null && !fileUuid.isBlank();
+    boolean transactionFailed =
+        !PaymentResultResponse.Status.SUCCEEDED.equals(paymentResultResponse.status());
+    if (transactionFailed) {
+      SinglePaymentException error =
+          new SinglePaymentException("Could not perform bgl to seller transaction");
+      return handleError(error, message, invoice);
+    }
+
+    if (createdViaSftp) {
+      return notifyStatusViaSftp(InvoiceRealOutputData.Status.PAID, message, invoice)
+          .then(
+              notifyStatusViaBusinessBanking(
+                  PayloadStatus.SUCCEEDED,
+                  OperationalGatewayProcessCode.INVOICE_SETTLEMENT_SFTP,
+                  message,
+                  invoice,
+                  invoiceExtension.getGafOperationId(),
+                  null));
+    }
+
+    // Credit received, should be all good
+    return sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller)
+        .then(
+            notifyStatusViaBusinessBanking(
+                PayloadStatus.SUCCEEDED,
+                OperationalGatewayProcessCode.INVOICE_SETTLEMENT,
+                message,
+                invoice,
+                invoiceExtension.getGafOperationId(),
+                null));
+  }
+
   private Mono<Object> handleNoExtraDaysInvoice() {
     // For Mvp, we ignore invoices with no extra financing days.
     log.info("Programe has no extra financing days, flow ended.");
@@ -191,61 +246,6 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     } catch (JsonProcessingException e) {
       return Mono.error(e);
     }
-  }
-
-  /**
-   * This function handles the transaction payment result for the credit amount. The result is
-   * received from FCM.
-   *
-   * @see
-   *     com.tcmp.tiapi.invoice.strategy.payment.SettlementPaymentResultStrategy#handleResult(InvoicePaymentCorrelationInfo,
-   *     PaymentResultResponse) where the method is consumed from.
-   * @param message message content found in redis payload.
-   * @param paymentResultResponse the payment execution result.
-   * @return mono response with the result of the final step of settlement flow.
-   */
-  public Mono<Object> handleTransactionPaymentResult(
-      InvoiceSettlementEventMessage message, PaymentResultResponse paymentResultResponse) {
-
-    String masterReference = message.getMasterRef();
-    InvoiceMaster invoice = findInvoiceByMasterReference(masterReference);
-    ProductMasterExtension invoiceExtension = findMasterExtensionByReference(masterReference);
-    invoice.setProductMasterExtension(invoiceExtension);
-
-    Customer seller = findCustomerByMnemonic(message.getSellerIdentifier());
-
-    String fileUuid = invoiceExtension.getFileCreationUuid();
-    boolean createdViaSftp = fileUuid != null && !fileUuid.isBlank();
-    boolean transactionFailed =
-        !PaymentResultResponse.Status.SUCCEEDED.equals(paymentResultResponse.status());
-    if (transactionFailed) {
-      SinglePaymentException error =
-          new SinglePaymentException("Could not perform bgl to seller transaction");
-      return handleError(error, message, invoice);
-    }
-
-    if (createdViaSftp) {
-      return notifyStatusViaSftp(InvoiceRealOutputData.Status.PAID, message, invoice)
-          .then(
-              notifyStatusViaBusinessBanking(
-                  PayloadStatus.SUCCEEDED,
-                  OperationalGatewayProcessCode.INVOICE_SETTLEMENT_SFTP,
-                  message,
-                  invoice,
-                  invoiceExtension.getGafOperationId(),
-                  null));
-    }
-
-    // Credit received, should be all good
-    return sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller)
-        .then(
-            notifyStatusViaBusinessBanking(
-                PayloadStatus.SUCCEEDED,
-                OperationalGatewayProcessCode.INVOICE_SETTLEMENT,
-                message,
-                invoice,
-                invoiceExtension.getGafOperationId(),
-                null));
   }
 
   private Mono<Object> sendEmailToCustomer(

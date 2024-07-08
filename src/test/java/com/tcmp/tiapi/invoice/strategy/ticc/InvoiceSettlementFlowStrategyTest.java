@@ -11,9 +11,11 @@ import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.model.CustomerId;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
+import com.tcmp.tiapi.invoice.dto.InvoiceRealOutputData;
 import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
@@ -38,6 +40,7 @@ import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailEvent;
 import com.tcmp.tiapi.titoapigee.operationalgateway.model.InvoiceEmailInfo;
 import com.tcmp.tiapi.titofcm.dto.SinglePaymentMapper;
 import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
+import com.tcmp.tiapi.titofcm.dto.response.PaymentResultResponse;
 import com.tcmp.tiapi.titofcm.dto.response.SinglePaymentResponse;
 import com.tcmp.tiapi.titofcm.exception.SinglePaymentException;
 import com.tcmp.tiapi.titofcm.repository.InvoicePaymentCorrelationInfoRepository;
@@ -76,7 +79,7 @@ class InvoiceSettlementFlowStrategyTest {
   @Mock private CustomerRepository customerRepository;
   @Mock private InvoicePaymentCorrelationInfoRepository invoicePaymentCorrelationInfoRepository;
   @Mock private InvoiceRepository invoiceRepository;
-  @Mock private BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
+  @Mock private BulkCreateInvoicesFileInfoRepository createInvoicesFileInfoRepository;
   @Mock private InvoiceRealOutputFileUploader realOutputFileUploader;
   @Mock private ProductMasterExtensionRepository productMasterExtensionRepository;
   @Mock private ProgramExtensionRepository programExtensionRepository;
@@ -116,7 +119,7 @@ class InvoiceSettlementFlowStrategyTest {
             customerRepository,
             invoicePaymentCorrelationInfoRepository,
             invoiceRepository,
-            bulkCreateInvoicesFileInfoRepository,
+            createInvoicesFileInfoRepository,
             realOutputFileUploader,
             productMasterExtensionRepository,
             programExtensionRepository,
@@ -179,7 +182,7 @@ class InvoiceSettlementFlowStrategyTest {
   }
 
   @Test
-  void handleServiceRequest_itShouldNotifyIfCreditCreationFails() {
+  void handleServiceRequest_itShouldNotifyIfCreditCreationFailsViaBusinessBanking() {
     InvoiceMaster notFinancedInvoice =
         InvoiceMaster.builder()
             .id(1L)
@@ -210,6 +213,51 @@ class InvoiceSettlementFlowStrategyTest {
     verify(businessBankingService)
         .notifyEvent(
             eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT), payloadArgumentCaptor.capture());
+  }
+
+  @Test
+  void handleServiceRequest_itShouldNotifyIfCreditCreationFailsViaSftp() {
+    InvoiceMaster notFinancedInvoice =
+        InvoiceMaster.builder()
+            .id(1L)
+            .reference("Inv123")
+            .batchId("123")
+            .isDrawDownEligible(true)
+            .createFinanceEventId(1L)
+            .discountDealAmount(BigDecimal.TEN)
+            .build();
+
+    when(programExtensionRepository.findByProgrammeId(anyString()))
+        .thenReturn(Optional.of(ProgramExtension.builder().extraFinancingDays(30).build()));
+    when(invoiceRepository.findByProductMasterMasterReference(anyString()))
+        .thenReturn(Optional.of(notFinancedInvoice));
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
+        .thenReturn(
+            Optional.of(
+                ProductMasterExtension.builder()
+                    .financeAccount("AH9278281280")
+                    .fileCreationUuid("abc-123")
+                    .build()));
+    when(createInvoicesFileInfoRepository.findById(anyString()))
+        .thenReturn(
+            Optional.of(BulkCreateInvoicesFileInfo.builder().originalFilename("File.csv").build()));
+    when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
+        .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH7381827031").build()));
+    when(corporateLoanService.createCredit(any(DistributorCreditRequest.class)))
+        .thenReturn(
+            new DistributorCreditResponse(
+                Data.builder().error(new Error("123", "Invalid credit.", "ERROR")).build()));
+
+    invoiceSettlementFlowStrategy.handleServiceRequest(
+        new AckServiceRequest<>(null, buildMockSettlementMessage()));
+
+    verify(corporateLoanService).createCredit(any(DistributorCreditRequest.class));
+    verify(realOutputFileUploader)
+        .appendInvoiceStatusRow(anyString(), any(InvoiceRealOutputData.class));
+    verify(businessBankingService)
+        .notifyEvent(
+            eq(OperationalGatewayProcessCode.INVOICE_SETTLEMENT_SFTP),
+            payloadArgumentCaptor.capture());
   }
 
   @Test
@@ -308,6 +356,40 @@ class InvoiceSettlementFlowStrategyTest {
     assertCreditValues();
     assertTransactionsValues();
     assertEmailsValues();
+  }
+
+  @Test
+  void handleTransactionPaymentResult_itShouldHandleHappyPath() {
+    var settlementMessage = buildMockSettlementMessage();
+    var paymentResultResponse =
+        PaymentResultResponse.builder()
+            .status(PaymentResultResponse.Status.SUCCEEDED)
+            .paymentReference("Payment123")
+            .type(PaymentResultResponse.Type.BGL_CLIENT)
+            .build();
+
+    when(invoiceRepository.findByProductMasterMasterReference(anyString()))
+        .thenReturn(
+            Optional.of(
+                InvoiceMaster.builder().batchId("Batch123").reference("Invoice123").build()));
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
+        .thenReturn(
+            Optional.of(
+                ProductMasterExtension.builder()
+                    .gafOperationId("12790310")
+                    .fileCreationUuid("abc-123")
+                    .build()));
+    when(createInvoicesFileInfoRepository.findById(anyString()))
+        .thenReturn(
+            Optional.of(BulkCreateInvoicesFileInfo.builder().originalFilename("File.csv").build()));
+
+    invoiceSettlementFlowStrategy
+        .handleTransactionPaymentResult(settlementMessage, paymentResultResponse)
+        .subscribe();
+
+    verify(createInvoicesFileInfoRepository).findById(anyString());
+    verify(realOutputFileUploader)
+        .appendInvoiceStatusRow(anyString(), any(InvoiceRealOutputData.class));
   }
 
   private void assertCreditValues() {

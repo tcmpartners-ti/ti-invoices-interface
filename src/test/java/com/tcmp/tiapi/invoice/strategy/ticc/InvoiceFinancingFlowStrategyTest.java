@@ -12,11 +12,13 @@ import com.tcmp.tiapi.customer.model.Customer;
 import com.tcmp.tiapi.customer.model.CustomerId;
 import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
+import com.tcmp.tiapi.invoice.dto.InvoiceRealOutputData;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinanceAckMessage;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.FinancePaymentDetails;
 import com.tcmp.tiapi.invoice.dto.ti.financeack.Invoice;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.model.ProductMasterExtension;
+import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.repository.EventExtensionRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.ProductMasterExtensionRepository;
@@ -90,12 +92,12 @@ class InvoiceFinancingFlowStrategyTest {
   @Captor private ArgumentCaptor<SinglePaymentRequest> singlePaymentRequestArgumentCaptor;
   @Captor private ArgumentCaptor<OperationalGatewayRequestPayload> payloadArgumentCaptor;
   @Captor private ArgumentCaptor<InvoicePaymentCorrelationInfo> invoicePaymentInfoArgumentCaptor;
+  @Captor private ArgumentCaptor<InvoiceRealOutputData> realOutputRowArgumentCaptor;
 
   private InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
 
   private Customer buyer;
   private Customer seller;
-  private ProductMasterExtension invoiceExtension;
   private DistributorCreditResponse buyerCredit;
   private DistributorCreditResponse sellerCredit;
 
@@ -148,11 +150,6 @@ class InvoiceFinancingFlowStrategyTest {
             .fullName("Seller")
             .address(Address.builder().customerEmail("seller@mail.com").build())
             .build();
-    invoiceExtension =
-        ProductMasterExtension.builder()
-            .financeAccount("CC0974631820")
-            .fileCreationUuid("       ")
-            .build();
     buyerCredit =
         new DistributorCreditResponse(
             Data.builder()
@@ -170,6 +167,23 @@ class InvoiceFinancingFlowStrategyTest {
                         new Amortization("", "IV", "12.04"), new Amortization("", "AS", "1.04")))
                 .error(Error.empty())
                 .build());
+    sellerCredit =
+        new DistributorCreditResponse(
+            Data.builder()
+                .operationId("Credit123")
+                .interestRate(1)
+                .disbursementAmount(2.30)
+                .tax(
+                    com.tcmp.tiapi.titoapigee.corporateloan.dto.response.Tax.builder()
+                        .factor(1.1)
+                        .amount(12)
+                        .build())
+                .disbursementAmount(100)
+                .amortizations(
+                    List.of(
+                        new Amortization("", "IV", "12.04"), new Amortization("", "AS", "1.04")))
+                .error(Error.empty())
+                .build());
   }
 
   @Test
@@ -178,6 +192,11 @@ class InvoiceFinancingFlowStrategyTest {
     var failedBuyerCredit =
         new DistributorCreditResponse(
             Data.builder().error(new Error("ERR001", "Error", "ERROR")).build());
+    var invoiceExtension =
+        ProductMasterExtension.builder()
+            .financeAccount("CC0974631820")
+            .fileCreationUuid("       ")
+            .build();
 
     when(productMasterExtensionRepository.findByMasterReference(anyString()))
         .thenReturn(Optional.of(invoiceExtension));
@@ -204,8 +223,13 @@ class InvoiceFinancingFlowStrategyTest {
   }
 
   @Test
-  void handleServiceRequest_itShouldNotifyIfPaymentRequestFails() {
+  void handleServiceRequest_itShouldNotifyIfPaymentRequestFailsViaBusinessBanking() {
     var invoiceFinanceMessage = buildMockMessage();
+    var invoiceExtension =
+        ProductMasterExtension.builder()
+            .financeAccount("CC0974631820")
+            .fileCreationUuid("       ")
+            .build();
 
     when(customerRepository.findFirstByIdMnemonic(anyString()))
         .thenReturn(Optional.of(buyer))
@@ -230,15 +254,60 @@ class InvoiceFinancingFlowStrategyTest {
     assertEquals(PayloadStatus.FAILED.getValue(), payloadArgumentCaptor.getValue().status());
   }
 
+  @Test
+  void handleServiceRequest_itShouldNotifyIfPaymentRequestFailsViaSftp() {
+    var invoiceFinanceMessage = buildMockMessage();
+    var invoiceExtension =
+        ProductMasterExtension.builder()
+            .financeAccount("CC0974631820")
+            .fileCreationUuid("abc-123   ")
+            .build();
+
+    when(customerRepository.findFirstByIdMnemonic(anyString()))
+        .thenReturn(Optional.of(buyer))
+        .thenReturn(Optional.of(seller));
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
+        .thenReturn(Optional.of(invoiceExtension));
+    when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
+        .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH0974631821").build()));
+    when(invoiceRepository.findByProductMasterMasterReference(any()))
+        .thenReturn(
+            Optional.of(InvoiceMaster.builder().reference("INV123").batchId("b123").build()));
+    when(corporateLoanService.createCredit(any()))
+        .thenThrow(new CreditCreationException("Credit creation failed."));
+    when(createInvoicesFileInfoRepository.findById(anyString()))
+        .thenReturn(
+            Optional.of(BulkCreateInvoicesFileInfo.builder().originalFilename("File.csv").build()));
+
+    invoiceFinancingFlowStrategy.handleServiceRequest(
+        new AckServiceRequest<>(null, invoiceFinanceMessage));
+
+    verify(operationalGatewayService).sendNotificationRequest(emailInfoArgumentCaptor.capture());
+    verify(corporateLoanService).createCredit(any(DistributorCreditRequest.class));
+    verify(realOutputFileUploader)
+        .appendInvoiceStatusRow(anyString(), realOutputRowArgumentCaptor.capture());
+    verify(businessBankingService)
+        .notifyEvent(any(OperationalGatewayProcessCode.class), payloadArgumentCaptor.capture());
+
+    var actualRow = realOutputRowArgumentCaptor.getValue();
+    assertEquals(PayloadStatus.FAILED.getValue(), payloadArgumentCaptor.getValue().status());
+    assertEquals(InvoiceRealOutputData.Status.FAILED, actualRow.status());
+  }
+
   /** This test executes all the flow (as it should work in runtime) */
   @Test
-  void itShouldHandleHappyPath() {
-    String correlationInfoUuid = "001-001-001";
-    String paymentReference = "ref123";
+  void itShouldHandleHappyPathForBusinessBankingChannel() {
+    var correlationInfoUuid = "001-001-001";
+    var paymentReference = "ref123";
 
-    FinanceAckMessage invoiceFinanceMessage = buildMockMessage();
-    ProgramExtension programExtension =
+    var invoiceFinanceMessage = buildMockMessage();
+    var programExtension =
         ProgramExtension.builder().requiresExtraFinancing(true).extraFinancingDays(6).build();
+    var invoiceExtension =
+        ProductMasterExtension.builder()
+            .financeAccount("CC0974631820")
+            .fileCreationUuid("       ")
+            .build();
 
     when(customerRepository.findFirstByIdMnemonic(anyString()))
         .thenReturn(Optional.of(buyer))
@@ -293,11 +362,11 @@ class InvoiceFinancingFlowStrategyTest {
         .sendNotificationRequest(emailInfoArgumentCaptor.capture());
     verify(corporateLoanService).createCredit(creditRequestArgumentCaptor.capture());
     verify(corporateLoanService).simulateCredit(any(DistributorCreditRequest.class));
-    verify(singleElectronicPaymentService)
+    verify(singleElectronicPaymentService, times(2))
         .createSinglePayment(singlePaymentRequestArgumentCaptor.capture());
-    verify(invoicePaymentCorrelationInfoRepository)
+    verify(invoicePaymentCorrelationInfoRepository, times(2))
         .save(invoicePaymentInfoArgumentCaptor.capture());
-
+    verify(productMasterExtensionRepository, times(2)).save(any(ProductMasterExtension.class));
     verify(businessBankingService)
         .notifyEvent(any(OperationalGatewayProcessCode.class), payloadArgumentCaptor.capture());
     verify(invoicePaymentCorrelationInfoRepository)
@@ -305,17 +374,113 @@ class InvoiceFinancingFlowStrategyTest {
 
     var expectedInitialEvent = InvoicePaymentCorrelationInfo.InitialEvent.BUYER_CENTRIC_FINANCE_1;
     var actualInitialEvent = invoicePaymentInfoArgumentCaptor.getValue().getInitialEvent();
-    assertEquals(expectedInitialEvent, actualInitialEvent);
-
     var actualPaymentReference = invoicePaymentInfoArgumentCaptor.getValue().getPaymentReference();
-    assertEquals("REF", actualPaymentReference);
 
+    assertEquals(expectedInitialEvent, actualInitialEvent);
+    assertEquals("REF", actualPaymentReference);
     assertFinancedEmailIsMappedCorrectly();
     assertCreditsAreMappedCorrectly();
     assertPaymentIsMappedCorrectly();
-
     assertEquals("abc-123", invoicePaymentInfoArgumentCaptor.getValue().getId());
     assertEquals("REF", invoicePaymentInfoArgumentCaptor.getValue().getPaymentReference());
+  }
+
+  /** The channel is determined by the file uuid in the invoice extension. */
+  @Test
+  void itShouldHandleHappyPathForSftpChannel() {
+    var correlationInfoUuid = "001-001-001";
+    var paymentReference = "ref123";
+
+    var invoiceFinanceMessage = buildMockMessage();
+    var programExtension =
+        ProgramExtension.builder().requiresExtraFinancing(true).extraFinancingDays(6).build();
+    var invoiceExtension =
+        ProductMasterExtension.builder()
+            .financeAccount("CC0974631820")
+            .fileCreationUuid("file-123     ")
+            .build();
+
+    when(customerRepository.findFirstByIdMnemonic(anyString()))
+        .thenReturn(Optional.of(buyer))
+        .thenReturn(Optional.of(seller));
+    when(productMasterExtensionRepository.findByMasterReference(anyString()))
+        .thenReturn(Optional.of(invoiceExtension));
+    when(accountRepository.findByTypeAndCustomerMnemonic(anyString(), anyString()))
+        .thenReturn(Optional.of(Account.builder().externalAccountNumber("AH0974631821").build()));
+    when(invoiceRepository.findByProductMasterMasterReference(any()))
+        .thenReturn(
+            Optional.of(InvoiceMaster.builder().reference("INV123").batchId("b123").build()));
+    when(programExtensionRepository.findByProgrammeId(anyString()))
+        .thenReturn(Optional.of(programExtension));
+    when(corporateLoanService.createCredit(any())).thenReturn(buyerCredit);
+    when(corporateLoanService.simulateCredit(any())).thenReturn(sellerCredit);
+    when(uuidGenerator.getNewId()).thenReturn(correlationInfoUuid);
+    when(createInvoicesFileInfoRepository.findById(anyString()))
+        .thenReturn(
+            Optional.of(BulkCreateInvoicesFileInfo.builder().originalFilename("FILE.csv").build()));
+    when(singleElectronicPaymentService.createSinglePayment(any()))
+        .thenReturn(new SinglePaymentResponse(new SinglePaymentResponse.Data(paymentReference)));
+
+    var serviceRequest = new AckServiceRequest<>(null, invoiceFinanceMessage);
+    var creditPaymentInfo =
+        InvoicePaymentCorrelationInfo.builder()
+            .id("abc-123")
+            .paymentReference("REF")
+            .initialEvent(InvoicePaymentCorrelationInfo.InitialEvent.BUYER_CENTRIC_FINANCE_0)
+            .build();
+    var creditPaymentResult =
+        new PaymentResultResponse(
+            PaymentResultResponse.Status.SUCCEEDED,
+            "REF123",
+            PaymentResultResponse.Type.BGL_CLIENT);
+    var taxesPaymentInfo =
+        InvoicePaymentCorrelationInfo.builder()
+            .id("abc-123")
+            .paymentReference("REF")
+            .initialEvent(InvoicePaymentCorrelationInfo.InitialEvent.BUYER_CENTRIC_FINANCE_1)
+            .build();
+    var taxesPaymentResult =
+        new PaymentResultResponse(
+            PaymentResultResponse.Status.SUCCEEDED,
+            "REF456",
+            PaymentResultResponse.Type.BGL_CLIENT);
+
+    // Call every method of the flow
+    invoiceFinancingFlowStrategy.handleServiceRequest(serviceRequest);
+    invoiceFinancingFlowStrategy.handleCreditPaymentResult(
+        invoiceFinanceMessage, creditPaymentResult, creditPaymentInfo);
+    invoiceFinancingFlowStrategy.handleTaxesPaymentResult(
+        invoiceFinanceMessage, taxesPaymentResult, taxesPaymentInfo);
+
+    verify(operationalGatewayService, times(2))
+        .sendNotificationRequest(emailInfoArgumentCaptor.capture());
+    verify(corporateLoanService).createCredit(creditRequestArgumentCaptor.capture());
+    verify(corporateLoanService).simulateCredit(any(DistributorCreditRequest.class));
+    verify(singleElectronicPaymentService, times(2))
+        .createSinglePayment(singlePaymentRequestArgumentCaptor.capture());
+    verify(invoicePaymentCorrelationInfoRepository, times(2))
+        .save(invoicePaymentInfoArgumentCaptor.capture());
+    verify(invoicePaymentCorrelationInfoRepository)
+        .delete(invoicePaymentInfoArgumentCaptor.capture());
+    verify(realOutputFileUploader)
+        .appendInvoiceStatusRow(anyString(), realOutputRowArgumentCaptor.capture());
+    verify(businessBankingService)
+        .notifyEvent(any(OperationalGatewayProcessCode.class), payloadArgumentCaptor.capture());
+
+    var expectedInitialEvent = InvoicePaymentCorrelationInfo.InitialEvent.BUYER_CENTRIC_FINANCE_1;
+    var actualInitialEvent = invoicePaymentInfoArgumentCaptor.getValue().getInitialEvent();
+    var actualPaymentReference = invoicePaymentInfoArgumentCaptor.getValue().getPaymentReference();
+    var actualRealOutputRow = realOutputRowArgumentCaptor.getValue();
+
+    assertEquals(expectedInitialEvent, actualInitialEvent);
+    assertEquals("REF", actualPaymentReference);
+    assertEquals("abc-123", invoicePaymentInfoArgumentCaptor.getValue().getId());
+    assertEquals("REF", invoicePaymentInfoArgumentCaptor.getValue().getPaymentReference());
+    assertEquals(InvoiceRealOutputData.Status.FINANCED, actualRealOutputRow.status());
+    assertEquals(new BigDecimal("100.00"), actualRealOutputRow.amount());
+    assertFinancedEmailIsMappedCorrectly();
+    assertCreditsAreMappedCorrectly();
+    assertPaymentIsMappedCorrectly();
   }
 
   private void assertFinancedEmailIsMappedCorrectly() {
@@ -411,7 +576,7 @@ class InvoiceFinancingFlowStrategyTest {
                     "0974631820"))
             .build();
 
-    assertEquals(expectedPaymentRequest, singlePaymentRequestArgumentCaptor.getValue());
+    assertEquals(expectedPaymentRequest, singlePaymentRequestArgumentCaptor.getAllValues().get(0));
   }
 
   @Test

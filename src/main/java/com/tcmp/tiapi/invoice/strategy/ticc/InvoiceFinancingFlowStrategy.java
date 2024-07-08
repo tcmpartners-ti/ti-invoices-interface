@@ -267,7 +267,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
           creditError != null ? creditError.message() : "Credit simulation failed.";
       throw new CreditCreationException(creditErrorMessage);
     }
-    log.info("Starting seller to buyer taxes and solca transaction.");
+
     return sellerCredit;
   }
 
