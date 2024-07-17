@@ -8,7 +8,7 @@ import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceSpecifications;
-import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.InterestTier;
 import com.tcmp.tiapi.program.model.Program;

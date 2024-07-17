@@ -3,7 +3,10 @@ package com.tcmp.tiapi.ti.dto.request;
 import com.tcmp.tiapi.customer.dto.ti.*;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.program.dto.ti.BaseRateProgramme;
+import com.tcmp.tiapi.program.dto.ti.InterestSchedule;
 import com.tcmp.tiapi.program.dto.ti.ScfProgramme;
+import com.tcmp.tiapi.program.dto.ti.Tier1;
 import com.tcmp.tiapi.ti.dto.NestedCustomer;
 import com.tcmp.tiapi.ti.dto.TINamespace;
 import com.tcmp.tiapi.ti.dto.TIOperation;
@@ -27,7 +30,9 @@ import lombok.NoArgsConstructor;
   Account.class,
   ScfProgramme.class,
   ScfBuyerOrSeller.class,
-  ScfRelationship.class
+  ScfRelationship.class,
+  Tier1.class,
+  BaseRateProgramme.class
 })
 public class ServiceRequest<T> {
   // Missing namespaces
@@ -76,6 +81,10 @@ public class ServiceRequest<T> {
     @XmlElement(
         name = TIOperation.CREATE_BUYER_SELLER_RELATIONSHIP_VALUE,
         type = ScfRelationship.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.UPDATE_BASE_RATE_VALUE,
+        type = InterestSchedule.class,
         namespace = TINamespace.MESSAGES)
   })
   private T body;

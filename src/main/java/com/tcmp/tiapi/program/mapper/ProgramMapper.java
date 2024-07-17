@@ -1,4 +1,4 @@
-package com.tcmp.tiapi.program;
+package com.tcmp.tiapi.program.mapper;
 
 import com.tcmp.tiapi.customer.dto.ti.ScfBuyerOrSeller;
 import com.tcmp.tiapi.customer.dto.ti.ScfRelationship;

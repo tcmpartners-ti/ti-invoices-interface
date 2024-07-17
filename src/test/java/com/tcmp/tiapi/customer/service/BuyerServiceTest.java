@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.tcmp.tiapi.customer.repository.CustomerRepository;
-import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.program.repository.InterestTierRepository;
 import com.tcmp.tiapi.program.repository.ProgramRepository;

@@ -12,7 +12,7 @@ import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
-import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.program.model.Interest;
 import com.tcmp.tiapi.program.model.InterestTier;
 import com.tcmp.tiapi.program.model.Program;
