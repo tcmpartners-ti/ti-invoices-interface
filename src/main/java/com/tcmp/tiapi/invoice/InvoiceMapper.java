@@ -10,7 +10,7 @@ import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
-import com.tcmp.tiapi.program.ProgramMapper;
+import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
 import com.tcmp.tiapi.shared.utils.StringMappingUtils;

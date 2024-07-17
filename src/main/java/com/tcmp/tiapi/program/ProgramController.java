@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.program;
 
 import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
+import com.tcmp.tiapi.program.dto.response.BaseRateOperationResponse;
 import com.tcmp.tiapi.program.dto.response.ProgramBulkOperationResponse;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.service.ProgramBatchOperationsService;
@@ -8,6 +9,7 @@ import com.tcmp.tiapi.program.service.ProgramService;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
 import com.tcmp.tiapi.shared.dto.request.PageParams;
 import com.tcmp.tiapi.shared.dto.response.paginated.PaginatedResult;
+import com.tcmp.tiapi.ti.dto.MaintenanceType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -90,5 +92,17 @@ public class ProgramController {
   public ProgramBulkOperationResponse createMultiplePrograms(MultipartFile programsFile) {
     programBatchOperationsService.createMultipleProgramsInTi(programsFile);
     return new ProgramBulkOperationResponse(HttpStatus.OK.value(), "Programs sent to be created");
+  }
+
+  @PostMapping("base-rate/load")
+  public BaseRateOperationResponse loadBaseRate(MultipartFile baseRateFile) {
+    programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.INSERT);
+    return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive load sent");
+  }
+
+  @PutMapping("base-rate/load")
+  public BaseRateOperationResponse updateBaseRate(MultipartFile baseRateFile) {
+    programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.UPDATE);
+    return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive update sent");
   }
 }
