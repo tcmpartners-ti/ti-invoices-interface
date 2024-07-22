@@ -2,6 +2,7 @@ package com.tcmp.tiapi.customer.controller;
 
 import com.tcmp.tiapi.customer.dto.response.CustomerBulkOperationResponse;
 import com.tcmp.tiapi.customer.service.CustomerBatchOperationsService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CustomerController {
   private final CustomerBatchOperationsService customerBatchOperationsService;
 
   @PostMapping("bulk")
+  @Hidden
   @Operation(description = "Create multiple customers in TI.")
   public CustomerBulkOperationResponse createMultipleCustomers(MultipartFile customersFile) {
     customerBatchOperationsService.createMultipleCustomersInTi(customersFile);
@@ -28,6 +30,7 @@ public class CustomerController {
   }
 
   @DeleteMapping("bulk")
+  @Hidden
   public CustomerBulkOperationResponse deleteMultipleCustomers(MultipartFile customersFile) {
     customerBatchOperationsService.deleteMultipleCustomersInTi(customersFile);
 
