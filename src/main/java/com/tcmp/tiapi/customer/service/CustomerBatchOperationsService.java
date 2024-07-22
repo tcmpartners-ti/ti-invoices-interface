@@ -36,7 +36,9 @@ public class CustomerBatchOperationsService {
   private String uriFtiOutgoingFrom;
 
   public void createMultipleCustomersInTi(MultipartFile customersFile) {
-    if (customersFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
+    if (customersFile == null || customersFile.isEmpty()) {
+      throw new InvalidFileHttpException("File is empty.");
+    }
 
     List<CustomerCreationCSVRow> customers = getCustomerCreationCSVRows(customersFile);
     validateCustomerBeans(customers);
@@ -61,6 +63,7 @@ public class CustomerBatchOperationsService {
         new BufferedReader(new InputStreamReader(customersFile.getInputStream()))) {
       CsvToBean<CustomerCreationCSVRow> customerRows =
           new CsvToBeanBuilder<CustomerCreationCSVRow>(bufferedReader)
+              .withSeparator(';')
               .withType(CustomerCreationCSVRow.class)
               .withIgnoreEmptyLine(true)
               .build();

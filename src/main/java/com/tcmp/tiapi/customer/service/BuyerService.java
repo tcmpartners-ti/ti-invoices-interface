@@ -63,7 +63,7 @@ public class BuyerService {
                 Collectors.toMap(
                     this::buildProgramBuyerKeys,
                     t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO),
-                        (old, actual) -> actual));
+                    (old, actual) -> actual));
 
     return PaginatedResult.<InvoiceDTO>builder()
         .data(invoiceMapper.mapEntitiesToDTOs(buyerInvoicesPage.getContent(), buyerProgramRates))
