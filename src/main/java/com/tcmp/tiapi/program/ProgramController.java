@@ -94,13 +94,13 @@ public class ProgramController {
     return new ProgramBulkOperationResponse(HttpStatus.OK.value(), "Programs sent to be created");
   }
 
-  @PostMapping("base-rate/load")
+  @PostMapping("base-rate/bulk")
   public BaseRateOperationResponse loadBaseRate(MultipartFile baseRateFile) {
     programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.INSERT);
     return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive load sent");
   }
 
-  @PutMapping("base-rate/load")
+  @PutMapping("base-rate/bulk")
   public BaseRateOperationResponse updateBaseRate(MultipartFile baseRateFile) {
     programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.UPDATE);
     return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive update sent");
