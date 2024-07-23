@@ -160,7 +160,8 @@ public class InvoiceSettlementFlowStrategy implements TICCIncomingStrategy {
     }
 
     if (createdViaSftp) {
-      return notifyStatusViaSftp(InvoiceRealOutputData.Status.PAID, message, invoice)
+      return sendEmailToCustomer(InvoiceEmailEvent.PROCESSED, message, seller)
+          .then(notifyStatusViaSftp(InvoiceRealOutputData.Status.PAID, message, invoice))
           .then(
               notifyStatusViaBusinessBanking(
                   PayloadStatus.SUCCEEDED,
