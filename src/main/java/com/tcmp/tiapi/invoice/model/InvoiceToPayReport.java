@@ -22,7 +22,13 @@ public interface InvoiceToPayReport {
 
   String getProgrammeId();
 
+  String getProgrammeType();
+
+  String getProgrammeSubtype();
+
   BigDecimal getFinanceAmount();
+
+  LocalDate getFinanceEffectiveDate();
 
   BigDecimal getBuyerInterests();
 

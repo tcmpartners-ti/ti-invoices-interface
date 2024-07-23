@@ -22,6 +22,12 @@ public interface InvoiceToCollectReport {
 
   String getProgrammeId();
 
+  String getProgrammeType();
+
+  String getProgrammeSubtype();
+
+  Integer getProgrammeExtraFinancingDays();
+
   BigDecimal getFinanceAmount();
 
   BigDecimal getSellerInterests();
@@ -29,6 +35,8 @@ public interface InvoiceToCollectReport {
   BigDecimal getBuyerInterestsRate();
 
   BigDecimal getSellerSolcaAmount();
+
+  String getGafOperationId();
 
   LocalDate getInvoiceDateReceived();
 
