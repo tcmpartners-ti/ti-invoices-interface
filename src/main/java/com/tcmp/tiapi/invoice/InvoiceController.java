@@ -119,9 +119,20 @@ public class InvoiceController {
   }
 
   @PostMapping(path = "report", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-  @Operation(description = "Get a ")
-  public ResponseEntity<Resource> generateInvoicesReport(@Valid GenerateInvoiceReportParams params)
-      throws IOException {
+  @Operation(description = "Generate report for payment and collecting pending invoices.")
+  @Parameter(
+      name = "customerMnemonic",
+      example = "1722466420001",
+      schema = @Schema(type = "string", minLength = 10, maxLength = 13),
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "customerRole",
+      description = "Possible values: BUYER or SELLER",
+      example = "BUYER",
+      schema = @Schema(type = "enum"),
+      in = ParameterIn.QUERY)
+  public ResponseEntity<Resource> generateInvoicesReport(
+      @Valid @Parameter(hidden = true) GenerateInvoiceReportParams params) throws IOException {
 
     Resource resource = null;
     String customerMnemonic = params.customerMnemonic();
