@@ -82,12 +82,7 @@ public class InvoiceService {
         interestTierRepository
             .findByProgrammeIdAndSellerId(invoice.getProgrammeId(), invoice.getSellerId())
             .map(InterestTier::getRate)
-            .orElseGet(
-                () ->
-                    interestTierRepository
-                        .findByProgrammeId(invoice.getProgrammeId())
-                        .map(InterestTier::getRate)
-                        .orElse(BigDecimal.ZERO));
+            .orElse(BigDecimal.ZERO);
 
     return invoiceMapper.mapEntityToDTO(invoice, programInterestRate);
   }

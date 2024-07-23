@@ -48,6 +48,7 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
             InterestTier tier
           WHERE
             interest.map IS NOT NULL
+              AND tier.rate IS NOT NULL
               AND tier.number = 1
               AND interest.map.programType = 'B'
               AND interest.map.programId = :programmeId
