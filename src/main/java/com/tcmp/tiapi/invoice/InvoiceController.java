@@ -129,7 +129,7 @@ public class InvoiceController {
       name = "customerRole",
       description = "Possible values: BUYER or SELLER",
       example = "BUYER",
-      schema = @Schema(type = "enum"),
+      schema = @Schema(type = "string"),
       in = ParameterIn.QUERY)
   public ResponseEntity<Resource> generateInvoicesReport(
       @Valid @Parameter(hidden = true) GenerateInvoiceReportParams params) throws IOException {
