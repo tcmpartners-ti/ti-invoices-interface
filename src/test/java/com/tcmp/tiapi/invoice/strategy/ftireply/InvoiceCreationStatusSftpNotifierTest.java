@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceProcessingRowBulkRepository;
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultBatchRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
 import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
 import com.tcmp.tiapi.invoice.service.files.InvoiceLocalFileUploader;
@@ -36,7 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class InvoiceCreationStatusSftpNotifierTest {
   @Mock private FcmAzureContainerConfiguration containerConfiguration;
   @Mock private BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
-  @Mock private InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  @Mock private InvoiceRowProcessingResultBatchRepository invoiceRowProcessingResultBatchRepository;
   @Mock private InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
   @Mock private InvoiceFileHandler invoiceFileHandler;
   @Mock private InvoiceFullOutputFileBuilder invoiceFullOutputFileBuilder;
@@ -94,7 +94,7 @@ class InvoiceCreationStatusSftpNotifierTest {
             .build();
     when(bulkCreateInvoicesFileInfoRepository.findById(anyString()))
         .thenReturn(Optional.of(fileInfo));
-    when(invoiceProcessingRowBulkRepository.totalRowsByIdPattern(anyString())).thenReturn(1L);
+    when(invoiceRowProcessingResultBatchRepository.totalRowsByIdPattern(anyString())).thenReturn(1L);
     when(invoiceFullOutputFileBuilder.generateAndSaveFile(anyString(), anyList()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-FULLOUTPUT.tsv");
     when(invoiceSummaryFileBuilder.generateAndSaveFile(any(), anyLong()))
