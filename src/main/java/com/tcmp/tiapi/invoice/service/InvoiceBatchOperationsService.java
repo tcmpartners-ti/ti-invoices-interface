@@ -32,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -86,11 +86,11 @@ public class InvoiceBatchOperationsService {
       }
 
       log.info("Payment pending report generated in {}.", filename);
-
-      return new ByteArrayResource(new FileInputStream(path).readAllBytes());
     } catch (IOException e) {
       throw new InvoiceFileException(e.getMessage());
     }
+
+    return new FileSystemResource(path);
   }
 
   private void processBatchForToPayReport(CSVWriter writer, List<InvoiceToPayReport> invoices) {
@@ -119,11 +119,11 @@ public class InvoiceBatchOperationsService {
       }
 
       log.info("Collect pending report generated in {}.", filename);
-
-      return new ByteArrayResource(new FileInputStream(path).readAllBytes());
     } catch (IOException e) {
       throw new InvoiceFileException(e.getMessage());
     }
+
+    return new FileSystemResource(path);
   }
 
   private void processBatchForToCollectReport(
