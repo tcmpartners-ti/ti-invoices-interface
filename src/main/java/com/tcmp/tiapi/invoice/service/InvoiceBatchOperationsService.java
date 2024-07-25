@@ -14,6 +14,7 @@ import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.repository.InvoiceCacheRepository;
 import com.tcmp.tiapi.invoice.repository.InvoiceRepository;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
+import com.tcmp.tiapi.invoice.service.files.DeletableFileSystemResource;
 import com.tcmp.tiapi.invoice.service.files.InvoiceCsvFileWriter;
 import com.tcmp.tiapi.invoice.service.files.reports.InvoiceToCollectFileBuilder;
 import com.tcmp.tiapi.invoice.service.files.reports.InvoiceToPayFileBuilder;
@@ -32,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -90,7 +90,7 @@ public class InvoiceBatchOperationsService {
       throw new InvoiceFileException(e.getMessage());
     }
 
-    return new FileSystemResource(path);
+    return new DeletableFileSystemResource(path);
   }
 
   private void processBatchForToPayReport(CSVWriter writer, List<InvoiceToPayReport> invoices) {
@@ -123,7 +123,7 @@ public class InvoiceBatchOperationsService {
       throw new InvoiceFileException(e.getMessage());
     }
 
-    return new FileSystemResource(path);
+    return new DeletableFileSystemResource(path);
   }
 
   private void processBatchForToCollectReport(
