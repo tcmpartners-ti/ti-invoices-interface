@@ -81,6 +81,6 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *sonar-scan-test
-            # - step: *integration-tests
+            - step: *unit-tests
+              # - step: *integration-testsS
       - step: *deploy-dev
