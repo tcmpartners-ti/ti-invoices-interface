@@ -19,6 +19,8 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
             InterestTier tier
           WHERE
             interest.map IS NOT NULL
+              AND tier.rate IS NOT NULL
+              AND interest.isObsolete = false
               AND tier.number = 1
               AND interest.map.programType = 'B'
               AND interest.map.programId IN :programmeIds
@@ -35,6 +37,8 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
             InterestTier tier
           WHERE
             interest.map IS NULL
+              AND tier.rate IS NOT NULL
+              AND interest.isObsolete = false
               AND tier.number = 1
               AND interest.map.programId IN :programmeIds""")
   List<InterestTier> findByProgrammeIdIn(Set<Long> programmeIds);
@@ -49,6 +53,7 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
           WHERE
             interest.map IS NOT NULL
               AND tier.rate IS NOT NULL
+              AND interest.isObsolete = false
               AND tier.number = 1
               AND interest.map.programType = 'B'
               AND interest.map.programId = :programmeId
@@ -64,6 +69,8 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
             InterestTier tier
           WHERE
             interest.map IS NULL
+              AND tier.rate IS NOT NULL
+              AND interest.isObsolete = false
               AND tier.number = 1
               AND interest.map.programId = :programmeId""")
   Optional<InterestTier> findByProgrammeId(Long programmeId);
@@ -76,7 +83,10 @@ public interface InterestTierRepository extends JpaRepository<InterestTier, Long
           FROM
             InterestTier tier
           WHERE interest.map IS NOT NULL
-            AND tier.number=1 AND interest.map.programType = 'B'
+            AND tier.rate IS NOT NULL
+            AND interest.isObsolete = false
+            AND tier.number = 1
+            AND interest.map.programType = 'B'
             AND interest.map.programId IN :programmeIds
             AND interest.map.counterPartyId IN :buyerIds""")
   List<InterestTier> findAllByProgrammeIdInAndBuyerIdIn(Set<Long> programmeIds, Set<Long> buyerIds);

@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.program.model;
 
+import com.tcmp.tiapi.shared.converter.DatabaseBooleanConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,10 @@ public class Interest {
 
   @Column(name = "SCFMAP", nullable = false)
   private Long scfMap;
+
+  @Column(name = "OBSOLETE", nullable = false)
+  @Convert(converter = DatabaseBooleanConverter.class)
+  private Boolean isObsolete;
 
   @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinColumn(
