@@ -3,7 +3,7 @@ package com.tcmp.tiapi.invoice.strategy.ftireply;
 import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.model.bulkcreate.InvoiceRowProcessingResult;
 import com.tcmp.tiapi.invoice.repository.redis.BulkCreateInvoicesFileInfoRepository;
-import com.tcmp.tiapi.invoice.repository.redis.InvoiceProcessingRowBulkRepository;
+import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultBatchRepository;
 import com.tcmp.tiapi.invoice.repository.redis.InvoiceRowProcessingResultRepository;
 import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
 import com.tcmp.tiapi.invoice.service.files.InvoiceLocalFileUploader;
@@ -28,7 +28,7 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
 
   private final FcmAzureContainerConfiguration containerConfiguration;
   private final BulkCreateInvoicesFileInfoRepository bulkCreateInvoicesFileInfoRepository;
-  private final InvoiceProcessingRowBulkRepository invoiceProcessingRowBulkRepository;
+  private final InvoiceRowProcessingResultBatchRepository invoiceRowProcessingResultBatchRepository;
   private final InvoiceRowProcessingResultRepository invoiceRowProcessingResultRepository;
 
   private final InvoiceFileHandler invoiceFileHandler;
@@ -53,7 +53,7 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
 
     String keyPattern = String.format("InvoiceRowProcessingResult:%s:*", fileUuid);
     long totalInvoicesProcessed =
-        invoiceProcessingRowBulkRepository.totalRowsByIdPattern(keyPattern);
+        invoiceRowProcessingResultBatchRepository.totalRowsByIdPattern(keyPattern);
     boolean isLastInvoiceFromBatch = invoiceFileInfo.getTotalInvoices() == totalInvoicesProcessed;
     if (isLastInvoiceFromBatch) {
       processAndUploadFullOutputFile(invoiceFileInfo, fileUuid);

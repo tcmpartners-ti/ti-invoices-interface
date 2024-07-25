@@ -3,7 +3,7 @@
 config.schedule-messages: false
 
 spring:
-  jpa.show-sql: true
+#  jpa.show-sql: true
   output.ansi.enabled: ALWAYS
 
   datasource:
@@ -62,6 +62,7 @@ azure:
   local-dir:
     full-output: "./tmp/full-output"
     summary: "./tmp/summary"
+    reports: "./tmp/reports"
   remote-dir:
     full-output: "/ti/full-output"
     summary: "/ti/summary"

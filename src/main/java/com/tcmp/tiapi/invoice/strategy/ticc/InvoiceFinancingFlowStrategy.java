@@ -161,6 +161,7 @@ public class InvoiceFinancingFlowStrategy implements TICCIncomingStrategy {
       EncodedAccountParser buyerAccountParser =
           new EncodedAccountParser(invoiceExtension.getFinanceAccount());
       EncodedAccountParser sellerAccountParser = findSelectedSellerAccountOrDefault(financeMessage);
+
       DistributorCreditResponse sellerCredit =
           simulateSellerCredit(financeMessage, buyer, programExtension, buyerAccountParser);
       saveGafOperationSellerInformation(sellerCredit, invoiceExtension);

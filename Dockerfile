@@ -24,7 +24,8 @@ EXPOSE 80
 
 RUN mkdir -p \
     /app/tmp/full-output \
-    /app/tmp/summary
+    /app/tmp/summary \
+    /app/tmp/reports
 RUN chown -R invoices:invoices-group /app/tmp
 
 USER invoices

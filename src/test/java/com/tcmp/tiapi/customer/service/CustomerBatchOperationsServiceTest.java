@@ -71,8 +71,8 @@ class CustomerBatchOperationsServiceTest {
   @Test
   void createMultipleCustomersInTi_itShouldHandleCustomersFiles() {
     var rawContent =
-        "SourceBankingBusiness,Branch,Mnemonic,BankCode,Number,Type,FullName,ShortName,Address,Phone,Email,AccountType,AccountNumber,AccountCurrency,AccountDateOpened\n"
-            + "BPCH,BPEC,1722466530001,0003,845139,SDC,Agatha Chirstie,A. Christie,UK,593987079645,achristie@mail.com,CA,CC2100307805,USD,01-04-2024";
+        "SourceBankingBusiness;Branch;Mnemonic;BankCode;Number;Type;FullName;ShortName;Address;Phone;Email;AccountType;AccountNumber;AccountCurrency;AccountDateOpened\n"
+            + "BPCH;BPEC;1722466530001;0003;845139;SDC;Agatha Chirstie;A. Christie;UK;593987079645;achristie@mail.com;CA;CC2100307805;USD;01-04-2024";
     var customersFile =
         new MockMultipartFile("customersFile", "customers.csv", "text/csv", rawContent.getBytes());
 
@@ -100,8 +100,8 @@ class CustomerBatchOperationsServiceTest {
   @Disabled("Fixed in dev")
   void deleteMultipleCustomersInTi_itShouldHandleInvalidCustomersFiles() {
     var rawContent =
-        "SourceBankingBusiness,Branch,Mnemonic,BankCode,Number,Type,FullName,ShortName,Address,Phone,Email,AccountType,AccountNumber,AccountCurrency,AccountDateOpened\n"
-            + "BPCH,BPEC,FAIL1722466530001,0003,845139,SDC,Agatha Chirstie,A. Christie,UK,593987079645,achristie@mail.com,CA,CC2100307805,USD,01-04-2024";
+        "SourceBankingBusiness;Branch;Mnemonic;BankCode;Number;Type;FullName;ShortName;Address;Phone;Email;AccountType;AccountNumber;AccountCurrency;AccountDateOpened\n"
+            + "BPCH;BPEC;FAIL1722466530001;0003;845139;SDC;Agatha Chirstie;A. Christie;UK;593987079645;achristie@mail.com;CA;CC2100307805;USD;01-04-2024";
     var customersFile =
         new MockMultipartFile("customersFile", "customers.csv", "text/csv", rawContent.getBytes());
 
@@ -122,8 +122,8 @@ class CustomerBatchOperationsServiceTest {
   @Test
   void deleteMultipleCustomersInTi_itShouldHandleCustomersFiles() {
     var rawContent =
-        "SourceBankingBusiness,Branch,Mnemonic,BankCode,Number,Type,FullName,ShortName,Address,Phone,Email,AccountType,AccountNumber,AccountCurrency,AccountDateOpened\n"
-            + "BPCH,BPEC,1722466530001,0003,845139,SDC,Agatha Chirstie,A. Christie,UK,593987079645,achristie@mail.com,CA,CC2100307805,USD,01-04-2024";
+        "SourceBankingBusiness;Branch;Mnemonic;BankCode;Number;Type;FullName;ShortName;Address;Phone;Email;AccountType;AccountNumber;AccountCurrency;AccountDateOpened\n"
+            + "BPCH;BPEC;1722466530001;0003;845139;SDC;Agatha Chirstie;A. Christie;UK;593987079645;achristie@mail.com;CA;CC2100307805;USD;01-04-2024";
     var customersFile =
         new MockMultipartFile("customersFile", "customers.csv", "text/csv", rawContent.getBytes());
 
