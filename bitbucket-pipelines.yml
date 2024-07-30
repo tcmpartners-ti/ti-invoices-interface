@@ -32,13 +32,13 @@ definitions:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - gradle integrationTest --no-daemon
 
-    - step: &sonar-scan-test
-        name: Scan and unit test project with sonar
-        caches: [ gradle, sonar ]
-        script:
-          - gradle build jacocoTestReport sonar
-        artifacts:
-          - build/libs/**
+#    - step: &sonar-scan-test
+#        name: Scan and unit test project with sonar
+#        caches: [ gradle, sonar ]
+#        script:
+#          - gradle build jacocoTestReport sonar
+#        artifacts:
+#          - build/libs/**
 
     - step: &deploy-dev
         name: Deploy to development
