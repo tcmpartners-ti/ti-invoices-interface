@@ -25,21 +25,21 @@ sonar {
 }
 
 //<editor-fold desc="Dependencies Versions">
-val springbootVersion = "3.3.1"
-val camelVersion = "4.6.0"
+val springbootVersion = "3.3.2"
+val camelVersion = "4.7.0"
 val lombokVersion = "1.18.32"
 val h2Version = "2.2.224"
 val postgresVersion = "42.7.1"
-val mapstructVersion = "1.6.0.Beta1"
+val mapstructVersion = "1.6.0.RC1"
 val jdbcVersion = "12.7.0.jre8-preview"
 val openCsvVersion = "5.9"
 val commonsCodecVersion = "1.17.0"
 val openApiVersion = "2.3.0"
-val azureStorageBlobVersion = "12.27.0-beta.1"
+val azureStorageBlobVersion = "12.27.0"
 val woodStoxVersion = "4.4.1"
-val openFeignVersion = "4.1.2"
-val retryVersion = "2.0.6"
-val aspectsVersion = "6.1.8"
+val openFeignVersion = "4.1.3"
+val retryVersion = "2.0.7"
+val aspectsVersion = "6.1.10"
 val lombokMapstructBindingVersion = "0.2.0"
 
 val junitVersion = "5.11.0-M2"
