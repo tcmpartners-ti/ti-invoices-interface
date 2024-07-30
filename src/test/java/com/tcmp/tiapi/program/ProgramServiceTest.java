@@ -8,6 +8,7 @@ import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.model.CounterPartyRole;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
+import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.program.model.InterestTier;
 import com.tcmp.tiapi.program.model.Program;
 import com.tcmp.tiapi.program.repository.InterestTierRepository;

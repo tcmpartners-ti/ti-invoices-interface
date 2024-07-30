@@ -22,6 +22,7 @@ public enum TIOperation {
   CREATE_BUYER_OR_SELLER(TIOperation.CREATE_BUYER_OR_SELLER_VALUE),
   CREATE_BUYER_SELLER_RELATIONSHIP(TIOperation.CREATE_BUYER_SELLER_RELATIONSHIP_VALUE),
   CREATE_CUSTOMER_TYPE(TIOperation.CREATE_CUSTOMER_TYPE_VALUE),
+  UPDATE_BASE_RATE(TIOperation.UPDATE_BASE_RATE_VALUE),
   ITEM("Item");
 
   public static final String CREATE_INVOICE_VALUE = "TFINVNEW";
@@ -36,6 +37,7 @@ public enum TIOperation {
   public static final String CREATE_PROGRAMME_VALUE = "SCFProgramme";
   public static final String CREATE_BUYER_OR_SELLER_VALUE = "SCFBuyerOrSeller";
   public static final String CREATE_BUYER_SELLER_RELATIONSHIP_VALUE = "SCFRelationship";
+  public static final String UPDATE_BASE_RATE_VALUE = "InterestSchedule";
 
   private final String value;
 }
