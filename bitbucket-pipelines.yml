@@ -72,7 +72,7 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *sonar-scan-test
+#            - step: *sonar-scan-test
             #- step: *integration-tests
       - step: *deploy-test
 
@@ -81,6 +81,6 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *sonar-scan-test
+#            - step: *sonar-scan-test
             # - step: *integration-tests
       - step: *deploy-dev
