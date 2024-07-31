@@ -70,17 +70,19 @@ pipelines:
     # Staging branches
     '{develop,hotfix/*}':
       - step: *build
-#      - parallel:
-#          steps:
+      - parallel:
+          steps:
+            - step: *unit-tests
 #            - step: *sonar-scan-test
-            #- step: *integration-tests
+#            - step: *integration-tests
       - step: *deploy-test
 
     # Development Branches
     features:
       - step: *build
-#      - parallel:
-#          steps:
+      - parallel:
+          steps:
+            - step: *unit-tests
 #            - step: *sonar-scan-test
             # - step: *integration-tests
       - step: *deploy-dev
