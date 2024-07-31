@@ -97,7 +97,7 @@ public class ProgramController {
   @PostMapping("base-rate/bulk")
   public BaseRateOperationResponse loadBaseRate(MultipartFile baseRateFile) {
     programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.INSERT);
-    return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive load sent");
+    return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive load sent ");
   }
 
   @PutMapping("base-rate/bulk")
