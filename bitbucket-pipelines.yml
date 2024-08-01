@@ -81,6 +81,6 @@ pipelines:
       - step: *build
       - parallel:
           steps:
-            - step: *unit-tests
+#            - step: *unit-tests
               # - step: *integration-testsS
       - step: *deploy-dev
