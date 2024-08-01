@@ -79,8 +79,8 @@ pipelines:
     # Development Branches
     features:
       - step: *build
-      - parallel:
-          steps:
+#      - parallel:
+#          steps:
 #            - step: *unit-tests
               # - step: *integration-testsS
       - step: *deploy-dev
