@@ -178,7 +178,7 @@ public class SellerService {
     return new OutstandingBalanceDTO(totalOutstandingBalance);
   }
 
-  private void checkIfSellerExistsOrThrowNotFound(String sellerMnemonic) {
+  public void checkIfSellerExistsOrThrowNotFound(String sellerMnemonic) {
     if (!counterPartyRepository.counterPartyIsSeller(sellerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a seller with mnemonic %s.", sellerMnemonic));

@@ -1,5 +1,7 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.customer.service.BuyerService;
+import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.request.*;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
@@ -37,6 +39,8 @@ import org.springframework.web.bind.annotation.*;
 public class InvoiceController {
   private final InvoiceService invoiceService;
   private final InvoiceBatchOperationsService invoiceBatchOperationsService;
+  private final BuyerService buyerService;
+  private final SellerService sellerService;
 
   @GetMapping(path = "{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its internal id.")
@@ -138,8 +142,10 @@ public class InvoiceController {
     String customerMnemonic = params.customerMnemonic();
 
     if ("BUYER".equals(params.customerRole())) {
+      buyerService.checkIfBuyerExistsOrThrowNotFound(customerMnemonic);
       resource = invoiceBatchOperationsService.generateToPayInvoicesReport(customerMnemonic);
     } else if ("SELLER".equals(params.customerRole())) {
+      sellerService.checkIfSellerExistsOrThrowNotFound(customerMnemonic);
       resource = invoiceBatchOperationsService.generateToCollectInvoicesReport(customerMnemonic);
     }
 

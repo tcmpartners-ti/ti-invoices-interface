@@ -101,7 +101,7 @@ public class BuyerService {
         .build();
   }
 
-  private void checkIfBuyerExistsOrThrowNotFound(String buyerMnemonic) {
+  public void checkIfBuyerExistsOrThrowNotFound(String buyerMnemonic) {
     if (!counterPartyRepository.counterPartyIsBuyer(buyerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a buyer with mnemonic %s.", buyerMnemonic));
