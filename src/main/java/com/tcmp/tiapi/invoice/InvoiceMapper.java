@@ -8,6 +8,8 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceNumberDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceSellerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.mapper.ProgramMapper;
@@ -186,14 +188,29 @@ public abstract class InvoiceMapper {
   @Mapping(
       target = "invoiceNumbersContainer.invoiceNumbers",
       expression = "java(List.of(mapDTOToInvoiceNumbers(invoiceFinancingDTO.getInvoice())))")
-  public abstract FinanceBuyerCentricInvoiceEventMessage mapFinancingDTOToFTIMessage(
-      InvoiceFinancingDTO invoiceFinancingDTO);
+  public abstract void mapFinancingDTOToFTIMessage(
+      InvoiceFinancingDTO invoiceFinancingDTO, @MappingTarget FinanceInvoiceEventMessage financeInvoiceEventMessage);
+
+  public FinanceBuyerCentricInvoiceEventMessage mapFinancingBuyerCentricDTOToFTIMessage(
+          InvoiceFinancingDTO invoiceFinancingDTO){
+    FinanceBuyerCentricInvoiceEventMessage buyerCentricFinance = new FinanceBuyerCentricInvoiceEventMessage();
+    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, buyerCentricFinance);
+    return buyerCentricFinance;
+  }
+
+  public FinanceSellerCentricInvoiceEventMessage mapFinancingSellerCentricDTOToFTIMessage(
+          InvoiceFinancingDTO invoiceFinancingDTO){
+    FinanceSellerCentricInvoiceEventMessage sellerCentricFinance = new FinanceSellerCentricInvoiceEventMessage();
+    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, sellerCentricFinance);
+    return sellerCentricFinance;
+  }
 
   @Mapping(source = "number", target = "invoiceNumber")
   @Mapping(source = "issueDate", target = "issueDate", dateFormat = DTO_DATE_FORMAT)
   @Mapping(source = "outstanding.amount", target = "outstandingAmount")
   @Mapping(source = "outstanding.currency", target = "outstandingAmountCurrency")
   protected abstract InvoiceNumbers mapDTOToInvoiceNumbers(InvoiceNumberDTO invoiceNumberDTO);
+
 
   public List<InvoiceDTO> mapEntitiesToDTOs(
       List<InvoiceMaster> invoices, Map<String, BigDecimal> sellerProgramRates) {
