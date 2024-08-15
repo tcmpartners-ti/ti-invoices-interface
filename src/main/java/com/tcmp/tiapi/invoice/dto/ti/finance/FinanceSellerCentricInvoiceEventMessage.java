@@ -6,7 +6,5 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 @XmlRootElement(name = "TFSELFIN", namespace = TINamespace.MESSAGES)
-public class FinanceSellerCentricInvoiceEventMessage extends FinanceInvoiceEventMessage {
-
-}
+public class FinanceSellerCentricInvoiceEventMessage extends FinanceInvoiceEventMessage {}
 

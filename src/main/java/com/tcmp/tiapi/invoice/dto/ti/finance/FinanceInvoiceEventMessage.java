@@ -14,10 +14,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -57,6 +58,4 @@ public class FinanceInvoiceEventMessage {
   @XmlElement(name = "InvoiceNumberss", namespace = TINamespace.MESSAGES)
   private InvoiceNumbersContainer invoiceNumbersContainer;
 
-  @XmlElement(name = "ExtraData", namespace = TINamespace.MESSAGES)
-  private ExtraFinancingData extraFinancingData;
 }
