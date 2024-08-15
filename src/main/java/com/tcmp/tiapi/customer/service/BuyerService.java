@@ -63,7 +63,7 @@ public class BuyerService {
                 Collectors.toMap(
                     this::buildProgramBuyerKeys,
                     t -> Optional.ofNullable(t.getRate()).orElse(BigDecimal.ZERO),
-                        (old, actual) -> actual));
+                    (old, actual) -> actual));
 
     return PaginatedResult.<InvoiceDTO>builder()
         .data(invoiceMapper.mapEntitiesToDTOs(buyerInvoicesPage.getContent(), buyerProgramRates))
@@ -101,7 +101,7 @@ public class BuyerService {
         .build();
   }
 
-  private void checkIfBuyerExistsOrThrowNotFound(String buyerMnemonic) {
+  public void checkIfBuyerExistsOrThrowNotFound(String buyerMnemonic) {
     if (!counterPartyRepository.counterPartyIsBuyer(buyerMnemonic)) {
       throw new NotFoundHttpException(
           String.format("Could not find a buyer with mnemonic %s.", buyerMnemonic));

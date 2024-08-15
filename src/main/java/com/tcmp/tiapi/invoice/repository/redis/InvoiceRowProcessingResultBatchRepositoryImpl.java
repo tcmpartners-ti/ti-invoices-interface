@@ -1,6 +1,5 @@
 package com.tcmp.tiapi.invoice.repository.redis;
 
-import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceProcessingRowBulkRepositoryImpl implements InvoiceProcessingRowBulkRepository {
+public class InvoiceRowProcessingResultBatchRepositoryImpl implements InvoiceRowProcessingResultBatchRepository {
   private final RedisTemplate<String, Object> redisTemplate;
 
   public long totalRowsByIdPattern(String idPattern) {

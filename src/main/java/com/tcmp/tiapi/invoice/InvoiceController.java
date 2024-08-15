@@ -1,10 +1,13 @@
 package com.tcmp.tiapi.invoice;
 
+import com.tcmp.tiapi.customer.service.BuyerService;
+import com.tcmp.tiapi.customer.service.SellerService;
 import com.tcmp.tiapi.invoice.dto.request.*;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceCreatedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceFinancedDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoicesCreatedDTO;
+import com.tcmp.tiapi.invoice.exception.InvoiceReportException;
 import com.tcmp.tiapi.invoice.service.InvoiceBatchOperationsService;
 import com.tcmp.tiapi.invoice.service.InvoiceService;
 import com.tcmp.tiapi.shared.FieldValidationRegex;
@@ -16,10 +19,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.io.IOException;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +39,8 @@ import org.springframework.web.bind.annotation.*;
 public class InvoiceController {
   private final InvoiceService invoiceService;
   private final InvoiceBatchOperationsService invoiceBatchOperationsService;
+  private final BuyerService buyerService;
+  private final SellerService sellerService;
 
   @GetMapping(path = "{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(description = "Get an invoice by its internal id.")
@@ -110,6 +119,47 @@ public class InvoiceController {
       @Valid @RequestBody InvoiceFinancingDTO invoiceFinancingDTO) {
     invoiceService.financeInvoice(invoiceFinancingDTO);
 
-    return InvoiceFinancedDTO.builder().message("Invoice financing request sent.").build();
+    return new InvoiceFinancedDTO("Invoice financing request sent.");
+  }
+
+  @PostMapping(path = "report", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  @Operation(description = "Generate report for payment and collecting pending invoices.")
+  @Parameter(
+      name = "customerMnemonic",
+      example = "1722466420001",
+      schema = @Schema(type = "string", minLength = 10, maxLength = 13),
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "customerRole",
+      description = "Possible values: BUYER or SELLER",
+      example = "BUYER",
+      schema = @Schema(type = "string"),
+      in = ParameterIn.QUERY)
+  public ResponseEntity<Resource> generateInvoicesReport(
+      @Valid @Parameter(hidden = true) GenerateInvoiceReportParams params) throws IOException {
+
+    Resource resource = null;
+    String customerMnemonic = params.customerMnemonic();
+
+    if ("BUYER".equals(params.customerRole())) {
+      buyerService.checkIfBuyerExistsOrThrowNotFound(customerMnemonic);
+      resource = invoiceBatchOperationsService.generateToPayInvoicesReport(customerMnemonic);
+    } else if ("SELLER".equals(params.customerRole())) {
+      sellerService.checkIfSellerExistsOrThrowNotFound(customerMnemonic);
+      resource = invoiceBatchOperationsService.generateToCollectInvoicesReport(customerMnemonic);
+    }
+
+    // Impossible edge case
+    if (resource == null) {
+      throw new InvoiceReportException("Could not generate invoices report file.");
+    }
+
+    return ResponseEntity.ok()
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            String.format("attachment; filename=\"%s\"", resource.getFilename()))
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .contentLength(resource.contentLength())
+        .body(resource);
   }
 }

@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
 
-@CsvRecord(separator = ",", quoting = true)
+@CsvRecord(separator = ";")
 @Data
 @Builder
 @AllArgsConstructor

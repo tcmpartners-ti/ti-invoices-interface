@@ -11,4 +11,9 @@ public class StringMappingUtils {
     if (nullableString == null) return null;
     return nullableString.trim();
   }
+
+  public static String toStringNullable(Object value) {
+    if (value == null) return "";
+    return value.toString();
+  }
 }
