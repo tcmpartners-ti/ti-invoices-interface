@@ -194,11 +194,11 @@ public abstract class InvoiceMapper {
 
     FinanceBuyerCentricInvoiceEventMessage buyerCentricFinance =
         new FinanceBuyerCentricInvoiceEventMessage();
-    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, buyerCentricFinance);
     buyerCentricFinance.setExtraFinancingData(
-        ExtraFinancingData.builder()
-            .financeSellerAccount(invoiceFinancingDTO.getSellerAccount())
-            .build());
+            ExtraFinancingData.builder()
+                    .financeSellerAccount(invoiceFinancingDTO.getSellerAccount())
+                    .build());
+    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, buyerCentricFinance);
     return buyerCentricFinance;
   }
 
