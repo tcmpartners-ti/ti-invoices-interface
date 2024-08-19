@@ -162,4 +162,16 @@ public class InvoiceController {
         .contentLength(resource.contentLength())
         .body(resource);
   }
+
+  @PostMapping(
+          path = "finance/seller-centric",
+          consumes = MediaType.APPLICATION_JSON_VALUE,
+          produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Finance Seller centric program invoice in Trade Innovation.")
+  public InvoiceFinancedDTO financeSellerInvoice(
+          @Valid @RequestBody InvoiceFinancingDTO invoiceFinancingDTO
+  ){
+    invoiceService.financeSellerInvoice(invoiceFinancingDTO);
+    return new InvoiceFinancedDTO("Seller centric invoice financing request sent");
+  }
 }

@@ -24,6 +24,7 @@ public class FTIOutgoingRouteBuilder extends RouteBuilder {
         .marshal(jaxbDataFormatServiceRequest)
         .transform()
         .body(String.class, xmlNamespaceFixer::fixNamespaces)
+        .log("${body}")
         .to(toFtiOutgoingQueue);
   }
 }

@@ -128,7 +128,7 @@ public class InvoiceService {
             TIOperation.FINANCE_INVOICE,
             ReplyFormat.STATUS,
             invoiceUuid,
-            invoiceMapper.mapFinancingDTOToFTIMessage(financingDTO)));
+            invoiceMapper.mapFinancingBuyerCentricDTOToFTIMessage(financingDTO)));
   }
 
   /**
@@ -147,5 +147,27 @@ public class InvoiceService {
             () ->
                 new NotFoundHttpException(
                     "Could not find invoice for given programme / buyer / seller relationship."));
+  }
+
+  public void financeSellerInvoice(InvoiceFinancingDTO financingDTO) {
+    String invoiceUuid = uuidGenerator.getNewId();
+
+    InvoiceMaster invoice = findInvoiceFromFinancingInfo(financingDTO);
+    invoiceEventRepository.save(
+        InvoiceEventInfo.builder()
+            .id(invoiceUuid)
+            .batchId(invoice.getBatchId().trim())
+            .reference(financingDTO.getInvoice().getNumber())
+            .sellerMnemonic(financingDTO.getSeller())
+            .build());
+
+    producerTemplate.sendBody(
+        uriFromFtiOutgoing,
+        serviceRequestWrapper.wrapRequest(
+            TIService.TRADE_INNOVATION,
+            TIOperation.FINANCE_SELLER_INVOICE,
+            ReplyFormat.STATUS,
+            invoiceUuid,
+            invoiceMapper.mapFinancingSellerCentricDTOToFTIMessage(financingDTO)));
   }
 }
