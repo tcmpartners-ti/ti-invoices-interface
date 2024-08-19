@@ -60,9 +60,11 @@ azure:
   local-dir:
     full-output: "/app/tmp/full-output"
     summary: "/app/tmp/summary"
+    reports: "./tmp/reports"
   remote-dir:
     full-output: "/ti/full-output"
     summary: "/ti/summary"
+    real-output: "/ti/real-output"
 
 fcm:
   activemq:
