@@ -52,6 +52,18 @@ bp:
         user: ${CL_USER}
         operation-token: ${CL_OP_TOKEN}
         url: "${bp.api-gee.url.test}/domain/corporate-loan/v1"
+azure:
+  storage-account:
+    connection-string: ${STORAGE_ACCOUNT_CONNECTION_STRING}
+    fcm-container: "sftp01"
+  local-dir:
+    full-output: "./tmp/full-output"
+    summary: "./tmp/summary"
+    reports: "./tmp/reports"
+  remote-dir:
+    full-output: "/ti/full-output"
+    summary: "/ti/summary"
+    real-output: "/ti/real-output"
 
 fcm:
   activemq:
