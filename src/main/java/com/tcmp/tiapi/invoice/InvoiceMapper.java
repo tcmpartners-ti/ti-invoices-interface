@@ -7,8 +7,7 @@ import com.tcmp.tiapi.invoice.dto.request.InvoiceFinancingDTO;
 import com.tcmp.tiapi.invoice.dto.request.InvoiceNumberDTO;
 import com.tcmp.tiapi.invoice.dto.response.InvoiceDTO;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
-import com.tcmp.tiapi.invoice.dto.ti.finance.InvoiceNumbers;
+import com.tcmp.tiapi.invoice.dto.ti.finance.*;
 import com.tcmp.tiapi.invoice.model.InvoiceMaster;
 import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.shared.mapper.CurrencyAmountMapper;
@@ -176,7 +175,7 @@ public abstract class InvoiceMapper {
   @Mapping(target = "context.ourReference", ignore = true)
   @Mapping(source = "programme", target = "programme")
   @Mapping(source = "seller", target = "seller")
-  @Mapping(source = "sellerAccount", target = "extraFinancingData.financeSellerAccount")
+  // Mapping(source = "sellerAccount", target = "extraFinancingData.financeSellerAccount")
   @Mapping(source = "buyer", target = "buyer")
   @Mapping(source = "anchorParty", target = "anchorParty")
   @Mapping(source = "financeCurrency", target = "financeCurrency")
@@ -186,8 +185,30 @@ public abstract class InvoiceMapper {
   @Mapping(
       target = "invoiceNumbersContainer.invoiceNumbers",
       expression = "java(List.of(mapDTOToInvoiceNumbers(invoiceFinancingDTO.getInvoice())))")
-  public abstract FinanceBuyerCentricInvoiceEventMessage mapFinancingDTOToFTIMessage(
-      InvoiceFinancingDTO invoiceFinancingDTO);
+  public abstract void mapFinancingDTOToFTIMessage(
+      InvoiceFinancingDTO invoiceFinancingDTO,
+      @MappingTarget FinanceInvoiceEventMessage financeInvoiceEventMessage);
+
+  public FinanceBuyerCentricInvoiceEventMessage mapFinancingBuyerCentricDTOToFTIMessage(
+      InvoiceFinancingDTO invoiceFinancingDTO) {
+
+    FinanceBuyerCentricInvoiceEventMessage buyerCentricFinance =
+        new FinanceBuyerCentricInvoiceEventMessage();
+    buyerCentricFinance.setExtraFinancingData(
+            ExtraFinancingData.builder()
+                    .financeSellerAccount(invoiceFinancingDTO.getSellerAccount())
+                    .build());
+    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, buyerCentricFinance);
+    return buyerCentricFinance;
+  }
+
+  public FinanceSellerCentricInvoiceEventMessage mapFinancingSellerCentricDTOToFTIMessage(
+      InvoiceFinancingDTO invoiceFinancingDTO) {
+    FinanceSellerCentricInvoiceEventMessage sellerCentricFinance =
+        new FinanceSellerCentricInvoiceEventMessage();
+    mapFinancingDTOToFTIMessage(invoiceFinancingDTO, sellerCentricFinance);
+    return sellerCentricFinance;
+  }
 
   @Mapping(source = "number", target = "invoiceNumber")
   @Mapping(source = "issueDate", target = "issueDate", dateFormat = DTO_DATE_FORMAT)

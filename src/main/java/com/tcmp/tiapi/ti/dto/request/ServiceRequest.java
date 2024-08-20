@@ -3,6 +3,7 @@ package com.tcmp.tiapi.ti.dto.request;
 import com.tcmp.tiapi.customer.dto.ti.*;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
 import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceBuyerCentricInvoiceEventMessage;
+import com.tcmp.tiapi.invoice.dto.ti.finance.FinanceSellerCentricInvoiceEventMessage;
 import com.tcmp.tiapi.program.dto.ti.BaseRateProgramme;
 import com.tcmp.tiapi.program.dto.ti.InterestSchedule;
 import com.tcmp.tiapi.program.dto.ti.ScfProgramme;
@@ -85,6 +86,10 @@ public class ServiceRequest<T> {
     @XmlElement(
         name = TIOperation.UPDATE_BASE_RATE_VALUE,
         type = InterestSchedule.class,
+        namespace = TINamespace.MESSAGES),
+    @XmlElement(
+        name = TIOperation.FINANCE_SELLER_INVOICE_VALUE,
+        type = FinanceSellerCentricInvoiceEventMessage.class,
         namespace = TINamespace.MESSAGES)
   })
   private T body;
