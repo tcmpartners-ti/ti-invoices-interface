@@ -68,8 +68,8 @@ definitions:
         script:
           - echo $CR_PASS | docker login $CR_NAME -u $CR_USER --password-stdin
           - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME/$IMAGE:$SHORT_COMMIT -t $CR_NAME/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
-          - docker push $CR_NAME/$IMAGE --all-tags
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME/$IMAGE_PRO:$SHORT_COMMIT -t $CR_NAME/$IMAGE_PRO:latest . --build-arg="COMMIT=$SHORT_COMMIT"
+          - docker push $CR_NAME/$IMAGE_PRO --all-tags
 
 pipelines:
   branches:
