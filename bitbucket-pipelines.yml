@@ -57,8 +57,8 @@ definitions:
         script:
           - echo $CR_PASS_TEST | docker login $CR_NAME_TEST -u $CR_USER_TEST --password-stdin
           - SHORT_COMMIT=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE:$SHORT_COMMIT -t $CR_NAME_TEST/$IMAGE:latest . --build-arg="COMMIT=$SHORT_COMMIT"
-          - docker push $CR_NAME_TEST/$IMAGE --all-tags
+          - DOCKER_BUILDKIT=1 docker build -t $CR_NAME_TEST/$IMAGE_QA:$SHORT_COMMIT -t $CR_NAME_TEST/$IMAGE_QA:latest . --build-arg="COMMIT=$SHORT_COMMIT"
+          - docker push $CR_NAME_TEST/$IMAGE_QA --all-tags
 
 pipelines:
   branches:
