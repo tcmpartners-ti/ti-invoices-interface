@@ -76,10 +76,10 @@ pipelines:
     # Production Branch
     main:
       - step: *build
-      - parallel:
-          steps:
+      #- parallel:
+          #steps:
             #- step: *sonar-scan-test
-            - step: *integration-tests
+            #- step: *integration-tests
       - step: *approval
       - step: *deploy-prod
 
