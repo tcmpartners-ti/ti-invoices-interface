@@ -9,8 +9,7 @@ definitions:
       memory: 2048
 
   caches:
-    sonar:
-      path: ~/.sonar/cache
+    sonar: ~/.sonar/cache
 
   steps:
     - step: &build
@@ -18,6 +17,12 @@ definitions:
         caches: [ gradle ]
         script:
           - gradle build --no-daemon -x test
+
+    - step: &unit-tests
+        name: Unit tests
+        caches: [ gradle ]
+        script:
+          - gradle test --no-daemon
 
     - step: &integration-tests
         name: Integration tests
