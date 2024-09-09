@@ -93,6 +93,7 @@ fcm:
       from-full-output: "direct:sendFullOutputToFcmViaSftp"
       from-summary: "direct:sendSummaryToFcmViaSftp"
 
+
 ti.route:
   fti:
     out:
