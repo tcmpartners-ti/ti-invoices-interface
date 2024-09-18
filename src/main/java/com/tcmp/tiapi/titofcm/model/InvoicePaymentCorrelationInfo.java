@@ -24,5 +24,7 @@ public class InvoicePaymentCorrelationInfo {
     SETTLEMENT,
     BUYER_CENTRIC_FINANCE_0,
     BUYER_CENTRIC_FINANCE_1,
+    SELLER_CENTRIC_FINANCE_0,
+    SELLER_CENTRIC_FINANCE_1,
   }
 }

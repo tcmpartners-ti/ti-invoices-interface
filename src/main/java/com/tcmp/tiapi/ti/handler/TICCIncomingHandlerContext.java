@@ -1,9 +1,6 @@
 package com.tcmp.tiapi.ti.handler;
 
-import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCancellationFlowStrategy;
-import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceCreationResultFlowStrategy;
-import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceFinancingFlowStrategy;
-import com.tcmp.tiapi.invoice.strategy.ticc.InvoiceSettlementFlowStrategy;
+import com.tcmp.tiapi.invoice.strategy.ticc.*;
 import com.tcmp.tiapi.ti.dto.TIOperation;
 import com.tcmp.tiapi.ti.route.ticc.TICCIncomingStrategy;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +13,7 @@ public class TICCIncomingHandlerContext {
   private final InvoiceSettlementFlowStrategy invoiceSettlementFlowStrategy;
   private final InvoiceFinancingFlowStrategy invoiceFinancingFlowStrategy;
   private final InvoiceCancellationFlowStrategy invoiceCancellationFlowStrategy;
+  private final SellerInvoiceFinancingFlowStrategy sellerInvoiceFinancingFlowStrategy;
 
   public TICCIncomingStrategy strategy(String operation) throws IllegalArgumentException {
     return switch (operation) {
@@ -24,6 +22,7 @@ public class TICCIncomingHandlerContext {
       case "TFINVSET", TIOperation.SETTLE_INVOICE_RESULT_VALUE -> invoiceSettlementFlowStrategy;
       case TIOperation.FINANCE_INVOICE_RESULT_VALUE -> invoiceFinancingFlowStrategy;
       case TIOperation.CANCEL_INVOICE_RESULT_VALUE -> invoiceCancellationFlowStrategy;
+      case TIOperation.FINANCE_SELLER_INVOICE_RESULT_VALUE -> sellerInvoiceFinancingFlowStrategy;
       default -> throw new IllegalArgumentException("Unhandled operation: " + operation);
     };
   }
