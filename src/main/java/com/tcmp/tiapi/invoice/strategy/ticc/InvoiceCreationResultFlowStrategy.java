@@ -37,6 +37,8 @@ public class InvoiceCreationResultFlowStrategy implements TICCIncomingStrategy {
     } catch (EntityNotFoundException | OperationalGatewayException e) {
       log.error(e.getMessage());
     }
+
+    // validacion ruc de Avon junto con el flujo de strategy financiacion
   }
 
   private Customer findCustomerByMnemonic(String customerMnemonic) {

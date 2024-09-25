@@ -6,13 +6,13 @@ import com.tcmp.tiapi.shared.annotation.ValidDateFormat;
 import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -114,4 +114,40 @@ public class InvoiceCreationDTO {
   @ValidDateFormat(message = "Invalid date", pattern = DATE_FORMAT)
   @Schema(description = "Invoice payment due date.", format = DATE_FORMAT, type = "string")
   private String settlementDate;
+
+  @DecimalMin(value = "0", message = "The amount must be positive")
+  @DecimalMax(
+          value = "99999999999999999999",
+          message = "The amount must not exceed 9999999999999999999999.")
+  @Schema(description = "Withholding base amount.")
+  private BigDecimal witholdingBase;
+
+  @Size(min = 4, max = 4, message = "The witholding code must be 4 characters long")
+  @Schema(description = "Withholding code.")
+  private String witholdingCode;
+
+  @DecimalMin(value = "0", message = "The amount must be positive")
+  @DecimalMax(
+          value = "99999999999999999999",
+          message = "The amount must not exceed 9999999999999999999999.")
+  @Schema(description = "Withholding amount.")
+  private BigDecimal witholdingAmount;
+
+  @DecimalMin(value = "0", message = "The amount must be positive")
+  @DecimalMax(
+          value = "99999999999999999999",
+          message = "The amount must not exceed 9999999999999999999999.")
+  @Schema(description = "IVA base amount.")
+  private BigDecimal ivaBase;
+
+  @Size(min = 4, max = 4, message = "The IVA code must be 4 characters long")
+  @Schema(description = "IVA code.")
+  private String ivaCode;
+
+  @DecimalMin(value = "0", message = "The amount must be positive")
+  @DecimalMax(
+          value = "99999999999999999999",
+          message = "The amount must not exceed 9999999999999999999999.")
+  @Schema(description = "Withholding IVA amount.")
+  private BigDecimal witholdingIVAAmount;
 }
