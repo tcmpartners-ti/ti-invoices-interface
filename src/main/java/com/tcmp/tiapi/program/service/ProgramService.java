@@ -1,10 +1,15 @@
 package com.tcmp.tiapi.program.service;
 
 import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
+import com.tcmp.tiapi.customer.dto.response.SellerInfoDTO;
+import com.tcmp.tiapi.customer.dto.response.SellerToProgramRelationDTO;
 import com.tcmp.tiapi.customer.mapper.CounterPartyMapper;
+import com.tcmp.tiapi.customer.model.Account;
 import com.tcmp.tiapi.customer.model.CounterParty;
 import com.tcmp.tiapi.customer.model.CounterPartyRole;
+import com.tcmp.tiapi.customer.repository.AccountRepository;
 import com.tcmp.tiapi.customer.repository.CounterPartyRepository;
+import com.tcmp.tiapi.program.dto.request.ProgramSellersDTO;
 import com.tcmp.tiapi.program.mapper.ProgramMapper;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
 import com.tcmp.tiapi.program.model.InterestTier;
@@ -29,6 +34,7 @@ public class ProgramService {
   private final CounterPartyRepository counterPartyRepository;
   private final ProgramMapper programMapper;
   private final CounterPartyMapper counterPartyMapper;
+  private final AccountRepository accountRepository;
 
   public ProgramDTO getProgramById(String programId) {
     Program program = findProgramByIdOrThrowNotFoundException(programId);
@@ -64,5 +70,33 @@ public class ProgramService {
             () ->
                 new NotFoundHttpException(
                     String.format("Could not find a program with id %s.", programId)));
+  }
+
+  public ProgramSellersDTO getFullProgramInformationById(String programId, PageParams pageParams) {
+    Program program = findProgramByIdOrThrowNotFoundException(programId);
+    BigDecimal rate =
+        interestTierRepository
+            .findByProgrammeId(program.getPk())
+            .map(InterestTier::getRate)
+            .orElse(BigDecimal.ZERO);
+    ProgramDTO programInfo = programMapper.mapEntityToDTO(program, rate);
+
+    Page<CounterParty> sellerCounterPartiesPage =
+        counterPartyRepository.findByProgrammePkAndRole(
+            program.getPk(),
+            CounterPartyRole.SELLER.getValue(),
+            PageRequest.of(pageParams.getPage(), pageParams.getSize()));
+
+
+    PaginatedResult<SellerInfoDTO> paginatedResult =
+        PaginatedResult.<SellerInfoDTO>builder()
+            .data(counterPartyMapper.mapEntitiesToSellerInfoDTOs(sellerCounterPartiesPage.getContent()))
+            .meta(PaginatedResultMeta.from(sellerCounterPartiesPage))
+            .build();
+
+    return ProgramSellersDTO.builder()
+        .programInfo(programInfo)
+        .sellersInfo(paginatedResult)
+        .build();
   }
 }
