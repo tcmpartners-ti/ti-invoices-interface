@@ -1,17 +1,15 @@
-package com.tcmp.tiapi.customer.dto.request;
+package com.tcmp.tiapi.customer.dto.response;
 
-import com.tcmp.tiapi.shared.dto.response.CurrencyAmountDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CounterPartyDTO {
+public class SellerInfoDTO {
   @Schema(description = "Counter party mnemonic (RUC).", maxLength = 20)
   private String mnemonic;
 
@@ -21,14 +19,17 @@ public class CounterPartyDTO {
   @Schema(description = "Address line 1.", maxLength = 25)
   private String address;
 
-  @Schema(description = "Counter party branch code.", maxLength = 8)
-  private String branch;
+  @Schema(description = "Counter party email address.", maxLength = 8)
+  private String email;
+
+  @Schema private String phone;
+
+  @Schema private AccountDTO account;
+
+  @Schema private SellerToProgramRelationDTO relation;
 
   @Schema(
       description = "Counter party status. B = Blocked; R = Referred; A = Active",
       maxLength = 1)
   private String status;
-
-  @Schema(description = "Invoice limit amount and currency code.")
-  private CurrencyAmountDTO invoiceLimit;
 }
