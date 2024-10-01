@@ -52,9 +52,9 @@ public abstract class SinglePaymentMapper {
   @Mapping(target = "confidentialPayment", constant = "false")
   // Debtor is always BGL
   @Mapping(target = "debtorAccount.id.other.id", expression = "java(this.bglAccount)")
-  @Mapping(target = "debtorAccount.type", constant = AccountType.SAVINGS)
+  @Mapping(target = "debtorAccount.type", constant = AccountType.GENERALLEDGER)
   @Mapping(target = "debtorAccount.currency", source = "message.paymentCurrency")
-  @Mapping(target = "debtorAccount.name", constant = "BGL")
+  @Mapping(target = "debtorAccount.name", expression = "java(this.bglAccount)")
   @Mapping(target = "instructedAmount.amount", expression = "java(getPaymentAmount(invoiceSettlementEventMessage))")
   @Mapping(target = "instructedAmount.currencyOfTransfer", source = "message.paymentCurrency")
   @Mapping(target = "chargeBearer", constant = "OUR")
@@ -102,9 +102,9 @@ public abstract class SinglePaymentMapper {
   @Mapping(target = "confidentialPayment", constant = "false")
   // Debtor is always BGL
   @Mapping(target = "debtorAccount.id.other.id", expression = "java(this.bglAccount)")
-  @Mapping(target = "debtorAccount.type", constant = AccountType.SAVINGS)
+  @Mapping(target = "debtorAccount.type", constant = AccountType.GENERALLEDGER)
   @Mapping(target = "debtorAccount.currency", source = "message.outstandingCurrency")
-  @Mapping(target = "debtorAccount.name", constant = "BGL")
+  @Mapping(target = "debtorAccount.name", expression = "java(this.bglAccount)")
   @Mapping(target = "instructedAmount.amount", source = "amount")
   @Mapping(target = "instructedAmount.currencyOfTransfer", source = "message.outstandingCurrency")
   @Mapping(target = "chargeBearer", constant = "OUR")
