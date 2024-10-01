@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 public interface CounterPartyRepository extends JpaRepository<CounterParty, Long> {
   Page<CounterParty> findByProgrammePkAndRole(Long programmePk, Character role, Pageable page);
 
+  @Query("SELECT c FROM CounterParty c WHERE c.programmePk = ?1 AND c.role = ?2 AND c.scfMap IS NOT NULL")
+  Page<CounterParty> findByProgrammePkAndRoleAndScfMapIsNotNull(Long programmePk, Character role, Pageable page);
+
   @Query(
       "SELECT COUNT(cp) > 0 FROM CounterParty cp WHERE cp.role = 'S' AND cp.mnemonic = :mnemonic")
   boolean counterPartyIsSeller(String mnemonic);

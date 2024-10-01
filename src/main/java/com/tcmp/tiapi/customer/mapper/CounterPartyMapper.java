@@ -95,10 +95,12 @@ public abstract class CounterPartyMapper {
   public List<SellerInfoDTO> mapEntitiesToSellerInfoDTOs(List<CounterParty> counterParties) {
     List<SellerInfoDTO> sellerInfoDTOs = new ArrayList<>(counterParties.size());
     for (CounterParty counterParty : counterParties) {
-      Account account =
-          accountRepository.findAccountWithMaxSequenceNumberByCustomerMnemonic(
-              counterParty.getCustomerMnemonic());
-      sellerInfoDTOs.add(mapEntityToSellerInfoDTO(counterParty, account));
+      if(counterParty.getScfMap() != null){
+        Account account =
+                accountRepository.findAccountWithMaxSequenceNumberByCustomerMnemonic(
+                        counterParty.getCustomerMnemonic());
+        sellerInfoDTOs.add(mapEntityToSellerInfoDTO(counterParty, account));
+      }
     }
 
     return sellerInfoDTOs;

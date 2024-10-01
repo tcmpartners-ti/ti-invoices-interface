@@ -82,17 +82,25 @@ public class ProgramService {
     ProgramDTO programInfo = programMapper.mapEntityToDTO(program, rate);
 
     Page<CounterParty> sellerCounterPartiesPage =
-        counterPartyRepository.findByProgrammePkAndRole(
+        counterPartyRepository.findByProgrammePkAndRoleAndScfMapIsNotNull(
             program.getPk(),
             CounterPartyRole.SELLER.getValue(),
             PageRequest.of(pageParams.getPage(), pageParams.getSize()));
 
-
     PaginatedResult<SellerInfoDTO> paginatedResult =
         PaginatedResult.<SellerInfoDTO>builder()
             .data(counterPartyMapper.mapEntitiesToSellerInfoDTOs(sellerCounterPartiesPage.getContent()))
-            .meta(PaginatedResultMeta.from(sellerCounterPartiesPage))
             .build();
+
+    Integer count = paginatedResult.getData().size();
+    PaginatedResultMeta meta =
+        PaginatedResultMeta.builder()
+            .totalItems(count) // Número de elementos válidos
+            .totalPages(sellerCounterPartiesPage.getTotalPages())
+            .isLastPage(sellerCounterPartiesPage.isLast())
+            .build();
+
+    paginatedResult.setMeta(meta);
 
     return ProgramSellersDTO.builder()
         .programInfo(programInfo)
