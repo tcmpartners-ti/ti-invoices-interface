@@ -1,6 +1,7 @@
 package com.tcmp.tiapi.program;
 
 import com.tcmp.tiapi.customer.dto.request.CounterPartyDTO;
+import com.tcmp.tiapi.program.dto.request.ProgramSellersDTO;
 import com.tcmp.tiapi.program.dto.response.BaseRateOperationResponse;
 import com.tcmp.tiapi.program.dto.response.ProgramBulkOperationResponse;
 import com.tcmp.tiapi.program.dto.response.ProgramDTO;
@@ -104,5 +105,38 @@ public class ProgramController {
   public BaseRateOperationResponse updateBaseRate(MultipartFile baseRateFile) {
     programBatchOperationsService.baseRateBulkCreation(baseRateFile, MaintenanceType.UPDATE);
     return new BaseRateOperationResponse(HttpStatus.OK.value(), "Base Rate massive update sent");
+  }
+
+  @GetMapping(path = "{programId}/full-info", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(description = "Get a program's complete information with sellers by it's identifier")
+  @Parameter(
+      name = "programId",
+      description = "Program identifier.",
+      schema = @Schema(type = "string"),
+      in = ParameterIn.PATH,
+      example = "IDEAL01")
+  @Parameter(
+      name = "page",
+      description = "Page (0 based).",
+      schema = @Schema(type = "number"),
+      in = ParameterIn.QUERY,
+      example = "0")
+  @Parameter(
+      name = "size",
+      description = "Page size (items per page).",
+      schema = @Schema(type = "number"),
+      in = ParameterIn.QUERY,
+      example = "10")
+  public ProgramSellersDTO getProgramFullInfo(
+      @PathVariable
+          @Valid
+          @NotNull(message = "This filed is required.")
+          @Size(max = 35, message = "This field must have up to 35 characters")
+          @Pattern(
+              regexp = FieldValidationRegex.AVOID_SPECIAL_CHARACTERS,
+              message = "Special characters are not allowed")
+          String programId,
+      @Parameter(hidden = true) @Valid PageParams pageParams) {
+    return programService.getFullProgramInformationById(programId, pageParams);
   }
 }

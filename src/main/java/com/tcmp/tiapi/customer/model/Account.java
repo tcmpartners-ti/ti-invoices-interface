@@ -24,6 +24,10 @@ public class Account {
   @Column(name = "ACC_TYPE", length = 10)
   private String type;
 
+  @Column(name = "ACC_SEQNO")
+  private Integer sequenceNumber;
+
   @Column(name = "EXT_ACCTNO", length = 34)
   private String externalAccountNumber;
+
 }

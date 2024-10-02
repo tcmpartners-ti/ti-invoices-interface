@@ -1,5 +1,6 @@
 package com.tcmp.tiapi.customer.model;
 
+import com.tcmp.tiapi.program.model.ScfMap;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -179,4 +180,20 @@ public class CounterParty {
 
   @Column(name = "TSTAMP")
   private Integer tstamp;
+
+  @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(
+          name = "PROGRAMME",
+          referencedColumnName = "PROGRAMME",
+          insertable = false,
+          updatable = false
+  )
+  @JoinColumn(
+          name = "AUTOKEY",
+          referencedColumnName = "CPARTY",
+          insertable = false,
+          updatable = false
+  )
+  private ScfMap scfMap;
+
 }
