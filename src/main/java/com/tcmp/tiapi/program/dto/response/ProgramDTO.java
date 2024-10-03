@@ -41,6 +41,14 @@ public class ProgramDTO {
       example = "B")
   private Character type;
 
+  @Schema(
+      description =
+          "Program Sub-type. R=Crédito Proveedor, D=Crédito Distribuidor, FC=Facturación de Combustibles.",
+      minLength = 1,
+      maxLength = 2,
+      example = "FC")
+  private String subType;
+
   private CurrencyAmountDTO creditLimit;
 
   @Schema(
