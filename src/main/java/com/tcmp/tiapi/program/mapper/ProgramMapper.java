@@ -42,6 +42,7 @@ public abstract class ProgramMapper {
   @Mapping(source = "program.startDate", target = "startDate")
   @Mapping(source = "program.expiryDate", target = "expiryDate")
   @Mapping(source = "program.type", target = "type")
+  @Mapping(source = "program.subTypeCategory", target = "subType")
   @Mapping(source = "program.status", target = "status")
   @Mapping(
       target = "creditLimit",
