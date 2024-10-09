@@ -51,4 +51,23 @@ public class ExtraData implements Serializable {
 
   @XmlElement(name = "GafAmortizations", namespace = TINamespace.CUSTOM)
   private String gafAmortizations;
+
+  @XmlElement(name = "WitholdingBase", namespace = TINamespace.CUSTOM)
+  private BigDecimal witholdingBase;
+
+  @XmlElement(name = "WitholdingCode", namespace = TINamespace.CUSTOM)
+  private String witholdingCode;
+
+  @XmlElement(name = "WitholdingAmount", namespace = TINamespace.CUSTOM)
+  private BigDecimal witholdingAmount;
+
+  @XmlElement(name = "IVABase", namespace = TINamespace.CUSTOM)
+  private BigDecimal ivaBase;
+
+  @XmlElement(name = "IVACode", namespace = TINamespace.CUSTOM)
+  private String ivaCode;
+
+  @XmlElement(name = "WiltholdingIVAAmount", namespace = TINamespace.CUSTOM)
+  private BigDecimal witholdingIVAAmount;
+
 }

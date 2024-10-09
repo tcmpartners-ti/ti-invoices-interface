@@ -133,6 +133,13 @@ public abstract class InvoiceMapper {
   @Mapping(source = "issueDate", target = "issueDate", dateFormat = DTO_DATE_FORMAT)
   @Mapping(source = "settlementDate", target = "settlementDate", dateFormat = DTO_DATE_FORMAT)
   @Mapping(target = "invoiceApproved", constant = "Y")
+  // Campos retenciones
+  @Mapping(source = "witholdingBase", target = "extraData.witholdingBase")
+  @Mapping(source = "witholdingCode", target = "extraData.witholdingCode")
+  @Mapping(source = "witholdingAmount", target = "extraData.witholdingAmount")
+  @Mapping(source = "ivaBase", target = "extraData.ivaBase")
+  @Mapping(source = "ivaCode", target = "extraData.ivaCode")
+  @Mapping(source = "witholdingIVAAmount", target = "extraData.witholdingIVAAmount")
   public abstract CreateInvoiceEventMessage mapDTOToFTIMessage(
       InvoiceCreationDTO invoiceCreationDTO);
 
@@ -164,6 +171,13 @@ public abstract class InvoiceMapper {
       target = "settlementDate",
       dateFormat = DTO_DATE_FORMAT)
   @Mapping(target = "invoiceApproved", constant = "Y")
+  // Campos retenciones
+  @Mapping(source = "invoiceRow.witholdingBase", target = "extraData.witholdingBase")
+  @Mapping(source = "invoiceRow.witholdingCode", target = "extraData.witholdingCode")
+  @Mapping(source = "invoiceRow.witholdingAmount", target = "extraData.witholdingAmount")
+  @Mapping(source = "invoiceRow.ivaBase", target = "extraData.ivaBase")
+  @Mapping(source = "invoiceRow.ivaCode", target = "extraData.ivaCode")
+  @Mapping(source = "invoiceRow.witholdingIVAAmount", target = "extraData.witholdingIVAAmount")
   public abstract CreateInvoiceEventMessage mapCSVRowToFTIMessage(
       InvoiceCreationRowCSV invoiceRow, String batchId, String fileUUid);
 
