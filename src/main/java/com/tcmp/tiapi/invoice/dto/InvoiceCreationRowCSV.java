@@ -63,4 +63,23 @@ public class InvoiceCreationRowCSV implements Serializable {
 
   @CsvBindByName(column = "CurrentAccountAnchor", required = true)
   private String anchorAccount;
+
+  @CsvBindByName(column = "WitholdingBase")
+  private String witholdingBase;
+
+  @CsvBindByName(column = "WitholdingCode")
+  private String witholdingCode;
+
+  @CsvBindByName(column = "WitholdingAmount")
+  private String witholdingAmount;
+
+  @CsvBindByName(column = "IVABase")
+  private String ivaBase;
+
+  @CsvBindByName(column = "IVACode")
+  private String ivaCode;
+
+  @CsvBindByName(column = "WitholdingIVAAmount")
+  private String witholdingIVAAmount;
+
 }
