@@ -5,6 +5,8 @@ import com.tcmp.tiapi.program.dto.csv.BaseRateCsvRow;
 import com.tcmp.tiapi.program.dto.csv.ProgramCreationCsvRow;
 import com.tcmp.tiapi.program.mapper.BaseRateMapper;
 import com.tcmp.tiapi.program.mapper.ProgramMapper;
+import com.tcmp.tiapi.program.model.ProgramExtension;
+import com.tcmp.tiapi.program.repository.ProgramExtensionRepository;
 import com.tcmp.tiapi.shared.exception.CsvValidationException;
 import com.tcmp.tiapi.shared.exception.InvalidFileHttpException;
 import com.tcmp.tiapi.ti.dto.MaintenanceType;
@@ -32,6 +34,7 @@ public class ProgramBatchOperationsService {
   private final ProducerTemplate producerTemplate;
   private final ProgramMapper programMapper;
   private final BaseRateMapper baseRateMapper;
+  private final ProgramExtensionRepository programExtensionRepository;
 
   @Value("${ti.route.fti.out.from}")
   private String uriFtiOutgoingFrom;
@@ -93,6 +96,17 @@ public class ProgramBatchOperationsService {
   private void sendProgramsToTi(List<ProgramCreationCsvRow> programBeans) {
     for (ProgramCreationCsvRow program : programBeans) {
       var programRequest = programMapper.mapRowToItemRequest(program);
+      try {
+        ProgramExtension programExtension =
+            ProgramExtension.builder()
+                .programmeId(program.getProgrammeId())
+                .extraFinancingDays(program.getExtraFinanceDays())
+                    .requiresExtraFinancing(program.getExtraFinanceDays() >= 0)
+                .build();
+        programExtensionRepository.save(programExtension);
+      } catch (Exception e) {
+        throw new RuntimeException("No se pudo guardar el ProgramExtension", e);
+      }
       producerTemplate.sendBody(uriFtiOutgoingFrom, programRequest);
     }
   }
@@ -111,8 +125,8 @@ public class ProgramBatchOperationsService {
   }
 
   private List<BaseRateCsvRow> getCsvBaseRateBeansFromFile(MultipartFile baseRateFile) {
-    try(BufferedReader bufferedReader =
-                new BufferedReader(new InputStreamReader(baseRateFile.getInputStream()))) {
+    try (BufferedReader bufferedReader =
+        new BufferedReader(new InputStreamReader(baseRateFile.getInputStream()))) {
 
       return new CsvToBeanBuilder<BaseRateCsvRow>(bufferedReader)
           .withType(BaseRateCsvRow.class)
@@ -153,10 +167,11 @@ public class ProgramBatchOperationsService {
     }
   }
 
-  private void sendBaseRateToTi(List<BaseRateCsvRow> baseRateBeans, MaintenanceType maintenanceType) {
+  private void sendBaseRateToTi(
+      List<BaseRateCsvRow> baseRateBeans, MaintenanceType maintenanceType) {
     for (BaseRateCsvRow baseRate : baseRateBeans) {
       var baseRateRequest = baseRateMapper.mapRowToItemRequest(baseRate, maintenanceType);
-      producerTemplate.sendBody( uriFtiOutgoingFrom, baseRateRequest);
+      producerTemplate.sendBody(uriFtiOutgoingFrom, baseRateRequest);
     }
   }
 }

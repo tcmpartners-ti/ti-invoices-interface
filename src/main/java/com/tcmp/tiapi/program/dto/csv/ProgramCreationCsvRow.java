@@ -68,14 +68,14 @@ public class ProgramCreationCsvRow {
       message = "Programme expiry date must be in the format " + DATE_FORMAT)
   private String programmeExpiryDate;
 
-  @CsvBindByName(column = "FinanceProduct")
-  private String financeProduct;
-
-  @CsvBindByName(column = "FinanceProductType")
-  private String financeProductType;
-
-  @CsvBindByName(column = "FinanceParameterSet")
-  private String financeParameterSet;
+//  @CsvBindByName(column = "FinanceProduct")
+//  private String financeProduct;
+//
+//  @CsvBindByName(column = "FinanceProductType")
+//  private String financeProductType;
+//
+//  @CsvBindByName(column = "FinanceParameterSet")
+//  private String financeParameterSet;
 
   @CsvBindByName(column = "BuyerMnemonic")
   @Size(min = 1, max = 20, message = "Buyer mnemonic must be between 1 and 20 characters")
@@ -141,4 +141,8 @@ public class ProgramCreationCsvRow {
   @CsvBindByName(column = "MaximumPeriod")
   @Pattern(regexp = "[DMQWY]", message = "Maximum period must be D, M, Q, W, or Y")
   private String maximumPeriod;
+
+  @CsvBindByName(column = "ExtraFinanceDays", format = "#")
+  @Min(value = 0, message = "Maximum period days must be greater than or equal to 0")
+  private Integer extraFinanceDays;
 }

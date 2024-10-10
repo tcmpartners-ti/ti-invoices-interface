@@ -85,7 +85,6 @@ public abstract class ProgramMapper {
   @Mapping(target = "startDate", source = "programmeStartDate", dateFormat = DATE_FORMAT)
   @Mapping(target = "expiryDate", source = "programmeExpiryDate", dateFormat = DATE_FORMAT)
   @Mapping(target = "narrative", constant = "Narrative")
-  @Mapping(target = "financeProductType", ignore = true)
   @Mapping(target = "invoiceUploadedBy", expression = "java(CustomerRole.BUYER)")
   @Mapping(target = "financeRequestedBy", expression = "java(CustomerRole.SELLER)")
   @Mapping(target = "financeDebitParty", expression = "java(CustomerRole.BUYER)")
