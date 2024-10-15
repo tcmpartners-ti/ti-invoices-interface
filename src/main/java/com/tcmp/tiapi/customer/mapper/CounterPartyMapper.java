@@ -81,7 +81,7 @@ public abstract class CounterPartyMapper {
       expression = "java(StringMappingUtils.trimNullable(account.getExternalAccountNumber()))")
   @Mapping(
       target = "relation.limitAmount",
-      expression = "java(MonetaryAmountUtils.convertCentsToDollars(counterParty.getLimitAmt()))")
+      expression = "java(MonetaryAmountUtils.convertCentsToDollars(counterParty.getScfMap().getLimitAmt()))")
   @Mapping(
       target = "relation.maxNumAdvance",
       expression = "java(counterParty.getScfMap().getMaxPerNum())")
