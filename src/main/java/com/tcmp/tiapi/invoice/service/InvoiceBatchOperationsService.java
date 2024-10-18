@@ -3,6 +3,8 @@ package com.tcmp.tiapi.invoice.service;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.tcmp.tiapi.customer.model.Customer;
+import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
@@ -38,6 +40,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +62,7 @@ public class InvoiceBatchOperationsService {
   private final InvoiceMapper invoiceMapper;
   private final TIServiceRequestWrapper wrapper;
   private final UUIDGenerator uuidGenerator;
+  private final CustomerRepository customerRepository;
 
   @Value("${ti.route.fti.out.from}")
   private String uriFtiOutgoingFrom;
@@ -220,14 +225,22 @@ public class InvoiceBatchOperationsService {
               .withIgnoreEmptyLine(true)
               .build();
 
-      int totalProcessedInvoices = processSftpChannelBatch(fileUuid, batchId, invoiceCsvToBean);
+      Tuple2<Integer, String> totalProcessedInvoices = processSftpChannelBatch(fileUuid, batchId, invoiceCsvToBean);
+
+
+      String customerCIF =
+          customerRepository
+              .findFirstByIdMnemonic(totalProcessedInvoices.getT2())
+              .map(Customer::getNumber)
+              .orElse("000000");
 
       BulkCreateInvoicesFileInfo fileInfo =
           BulkCreateInvoicesFileInfo.builder()
               .id(fileUuid)
-              .totalInvoices(totalProcessedInvoices)
+              .totalInvoices(totalProcessedInvoices.getT1())
               .originalFilename(invoicesFile.getOriginalFilename())
               .receivedAt(LocalDateTime.now(clock))
+              .customerCif(customerCIF.trim())
               .build();
       bulkCreateInvoicesFileInfoRepository.save(fileInfo);
     } catch (IOException e) {
@@ -242,12 +255,18 @@ public class InvoiceBatchOperationsService {
    * @param invoices List of invoices to process
    * @return Total invoices processed
    */
-  private int processSftpChannelBatch(
+  private Tuple2<Integer,String> processSftpChannelBatch(
       String fileUuid, String batchId, CsvToBean<InvoiceCreationRowCSV> invoices) {
     int totalInvoices = 0;
 
+    String customerCif = "";
+
     for (InvoiceCreationRowCSV invoiceRow : invoices) {
       String correlationId = fileUuid + ":" + invoiceRow.getIndex();
+
+      if (invoiceRow.getIndex().equals("1")){
+        customerCif = invoiceRow.getBuyer().trim();
+      }
 
       ServiceRequest<CreateInvoiceEventMessage> message =
           wrapper.wrapRequest(
@@ -263,7 +282,7 @@ public class InvoiceBatchOperationsService {
 
     log.info("Sent {} invoice(s). Channel: SFTP.", totalInvoices);
 
-    return totalInvoices;
+    return Tuples.of(totalInvoices,customerCif);
   }
 
   private void sendMessagesToQueue(

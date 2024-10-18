@@ -32,12 +32,13 @@ class InvoiceFullOutputFileBuilderTest {
     var localDirectories = mock(FcmAzureContainerConfiguration.LocalDir.class);
 
     when(containerConfiguration.localDirectories()).thenReturn(localDirectories);
-    when(localDirectories.fullOutput()).thenReturn("/tmp/full-output");
+    when(localDirectories.OutputDir()).thenReturn("/fti/out");
   }
 
   @Test
   void generateAndSaveFile_itShouldGenerateFile() throws FileNotFoundException {
     var originalFilename = "CRD-ArchivoEmpresaACB01-20240610.csv";
+    var customerCif = "000000";
     var fileUuid = "abc-123";
     var results =
         List.of(
@@ -58,7 +59,7 @@ class InvoiceFullOutputFileBuilderTest {
     when(invoiceCsvFileWriter.createWriter(anyString(), anyChar())).thenReturn(writerMock);
     doNothing().when(writerMock).writeNext(fileRowArgumentCaptor.capture());
 
-    invoiceFullOutputFileBuilder.generateAndSaveFile(originalFilename, results);
+    invoiceFullOutputFileBuilder.generateAndSaveFile(originalFilename, customerCif, results);
 
     var expectedRows = new ArrayList<String[]>();
     expectedRows.add(new String[] {"Índice", "Estado", "Descripción Estado"});

@@ -29,7 +29,7 @@ class InvoiceSummaryFileBuilderTest {
     var localDirectories = mock(FcmAzureContainerConfiguration.LocalDir.class);
 
     when(containerConfiguration.localDirectories()).thenReturn(localDirectories);
-    when(localDirectories.summary()).thenReturn("/tmp/summary");
+    when(localDirectories.OutputDir()).thenReturn("/fti/out");
   }
 
   @Test

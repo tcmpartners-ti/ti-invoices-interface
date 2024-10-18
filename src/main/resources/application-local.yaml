@@ -60,13 +60,10 @@ azure:
     connection-string: ${STORAGE_ACCOUNT_CONNECTION_STRING}
     fcm-container: "sftp01"
   local-dir:
-    full-output: "./tmp/full-output"
-    summary: "./tmp/summary"
+    output-dir: "/fti/out"
     reports: "./tmp/reports"
   remote-dir:
-    full-output: "/ti/full-output"
-    summary: "/ti/summary"
-    real-output: "/ti/real-output"
+    output-dir: "/fti/out"
 
 fcm:
   activemq:

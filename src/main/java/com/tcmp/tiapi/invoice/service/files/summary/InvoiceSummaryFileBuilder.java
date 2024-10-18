@@ -1,12 +1,18 @@
 package com.tcmp.tiapi.invoice.service.files.summary;
 
+import com.tcmp.tiapi.invoice.exception.InvoiceFileException;
 import com.tcmp.tiapi.invoice.model.bulkcreate.BulkCreateInvoicesFileInfo;
 import com.tcmp.tiapi.invoice.service.files.InvoiceFileHandler;
 import com.tcmp.tiapi.titofcm.config.FcmAzureContainerConfiguration;
+
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Component
 @RequiredArgsConstructor
@@ -26,11 +32,23 @@ public class InvoiceSummaryFileBuilder {
     String fileContent =
         generateHeader(fileInfo) + generateFileBody(fileInfo, totalInvoicesSucceeded);
     String fileName = generateFilename(fileInfo.getOriginalFilename());
-    String tempFilePath = containerConfiguration.localDirectories().summary() + fileName;
+    String customerCif = fileInfo.getCustomerCif();
+    String tempFilePath =
+        containerConfiguration.localDirectories().OutputDir() + "/" + customerCif + fileName;
+    try {
+      // Crear el directorio si no existe
+      Path directory = Paths.get(containerConfiguration.localDirectories().OutputDir(), customerCif);
+      if (!Files.exists(directory)) {
+        Files.createDirectories(directory);
+      }
 
-    invoiceFileHandler.saveFile(tempFilePath, fileContent);
+      // Guardar el archivo
+      invoiceFileHandler.saveFile(tempFilePath, fileContent);
 
-    return tempFilePath;
+      return tempFilePath;
+    } catch (IOException e) {
+      throw new InvoiceFileException(e.getMessage());
+    }
   }
 
   private String generateHeader(BulkCreateInvoicesFileInfo fileInfo) {
