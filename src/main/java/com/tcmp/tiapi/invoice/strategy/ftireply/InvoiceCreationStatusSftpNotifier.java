@@ -59,9 +59,11 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
       processAndUploadFullOutputFile(invoiceFileInfo, fileUuid);
       processAndUploadSummaryFile(invoiceFileInfo);
 
+      String fileName = PATH_DELIMITER + invoiceFileInfo.getCustomerCif() + PATH_DELIMITER + invoiceFileInfo.getOriginalFilename();
+
       invoiceRowProcessingResultRepository.deleteAllByFileUuid(fileUuid);
 
-      invoiceRealOutputFileUploader.createHeader(invoiceFileInfo.getOriginalFilename());
+      invoiceRealOutputFileUploader.createHeader(fileName);
     }
   }
 
@@ -119,11 +121,15 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
         invoiceRowProcessingResultRepository.findAllByFileUuidOrderByIndex(fileUuid);
     String localPath =
         invoiceFullOutputFileBuilder.generateAndSaveFile(
-            fileInfo.getOriginalFilename(), invoiceProcessingResults);
+            fileInfo.getOriginalFilename(), fileInfo.getCustomerCif(), invoiceProcessingResults);
 
     String filename = getFilenameFromPath(localPath);
     String remotePath =
-        containerConfiguration.remoteDirectories().fullOutput() + PATH_DELIMITER + filename;
+        containerConfiguration.remoteDirectories().getOutputDir()
+            + PATH_DELIMITER
+            + fileInfo.getCustomerCif()
+            + PATH_DELIMITER
+            + filename;
 
     invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
     invoiceFileHandler.deleteFile(localPath);
@@ -141,7 +147,11 @@ public class InvoiceCreationStatusSftpNotifier implements InvoiceCreationStatusN
         invoiceSummaryFileBuilder.generateAndSaveFile(fileInfo, totalInvoicesSucceeded);
     String filename = getFilenameFromPath(localPath);
     String remotePath =
-        containerConfiguration.remoteDirectories().summary() + PATH_DELIMITER + filename;
+        containerConfiguration.remoteDirectories().getOutputDir()
+            + PATH_DELIMITER
+            + fileInfo.getCustomerCif()
+            + PATH_DELIMITER
+            + filename;
 
     invoiceLocalFileUploader.uploadFromPath(localPath, remotePath);
     invoiceFileHandler.deleteFile(localPath);

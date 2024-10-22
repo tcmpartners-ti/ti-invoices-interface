@@ -10,6 +10,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
@@ -29,19 +32,28 @@ public class InvoiceFullOutputFileBuilder {
    * @return The absolute path of the created file.
    */
   public String generateAndSaveFile(
-      String originalFilename, List<InvoiceRowProcessingResult> results) {
+      String originalFilename, String customerCif, List<InvoiceRowProcessingResult> results) {
     String filename = generateFilename(originalFilename);
-    String localTempPath = containerConfiguration.localDirectories().fullOutput();
+    String localTempPath = containerConfiguration.localDirectories().OutputDir()+ "/" + customerCif;
     String tempFilePath = localTempPath + filename;
 
-    try (CSVWriter writer = invoiceCsvFileWriter.createWriter(tempFilePath, SEPARATOR)) {
-      writer.writeNext(header());
-
-      for (InvoiceRowProcessingResult result : results) {
-        writer.writeNext(mapResultToRow(result));
+    try {
+      // Crea el directorio si no existe
+      Path directory = Paths.get(localTempPath);
+      if (!Files.exists(directory)) {
+        Files.createDirectories(directory);
       }
 
-      return tempFilePath;
+      // Crear y escribir en el archivo TSV
+      try (CSVWriter writer = invoiceCsvFileWriter.createWriter(tempFilePath, SEPARATOR)) {
+        writer.writeNext(header());
+
+        for (InvoiceRowProcessingResult result : results) {
+          writer.writeNext(mapResultToRow(result));
+        }
+
+        return tempFilePath;
+      }
     } catch (IOException e) {
       throw new InvoiceFileException(e.getMessage());
     }

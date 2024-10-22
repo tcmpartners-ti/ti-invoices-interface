@@ -95,7 +95,7 @@ class InvoiceCreationStatusSftpNotifierTest {
     when(bulkCreateInvoicesFileInfoRepository.findById(anyString()))
         .thenReturn(Optional.of(fileInfo));
     when(invoiceRowProcessingResultBatchRepository.totalRowsByIdPattern(anyString())).thenReturn(1L);
-    when(invoiceFullOutputFileBuilder.generateAndSaveFile(anyString(), anyList()))
+    when(invoiceFullOutputFileBuilder.generateAndSaveFile(anyString(), anyString(), anyList()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-FULLOUTPUT.tsv");
     when(invoiceSummaryFileBuilder.generateAndSaveFile(any(), anyLong()))
         .thenReturn("/tmp/CRD-ArchivoEmpresaACB01-20240610-SUMMARY.tsv");

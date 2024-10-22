@@ -55,7 +55,7 @@ public class InvoiceRealOutputFileUploader {
   }
 
   private AppendBlobClient buildAppendBlobClient(String originalFilename) {
-    String remoteDir = azureContainerConfiguration.getRemoteDir().realOutput();
+    String remoteDir = azureContainerConfiguration.getRemoteDir().OutputDir();
     String remoteFilePath = remoteDir + buildRemoteFilename(originalFilename);
     BlobClient blobClient = fcmContainerClient.getBlobClient(remoteFilePath);
 

@@ -61,9 +61,6 @@ public class ScfProgramme {
   @XmlElement(name = "Narrative", namespace = TINamespace.MESSAGES)
   private String narrative;
 
-  @XmlElement(name = "FinanceProductType ", namespace = TINamespace.MESSAGES)
-  private FinanceProductType financeProductType;
-
   @XmlElement(name = "InvoiceUploadedBy", namespace = TINamespace.MESSAGES)
   private CustomerRole invoiceUploadedBy;
 

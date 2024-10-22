@@ -63,35 +63,18 @@ public class FcmAzureContainerConfiguration {
   @Data
   @AllArgsConstructor
   public static class LocalDir {
-    private String fullOutput;
-    private String summary;
+    private String OutputDir;
 
-    public String fullOutput() {
-      return fullOutput;
-    }
-
-    public String summary() {
-      return summary;
+    public String OutputDir() {
+      return OutputDir;
     }
   }
 
   @Data
   @AllArgsConstructor
   public static class RemoteDir {
-    private String fullOutput;
-    private String summary;
-    private String realOutput;
+    private String OutputDir;
 
-    public String fullOutput() {
-      return fullOutput;
-    }
-
-    public String summary() {
-      return summary;
-    }
-
-    public String realOutput() {
-      return realOutput;
-    }
+    public String OutputDir() { return OutputDir; }
   }
 }

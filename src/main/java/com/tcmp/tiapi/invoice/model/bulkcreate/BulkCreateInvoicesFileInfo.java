@@ -26,4 +26,6 @@ public class BulkCreateInvoicesFileInfo {
   private String originalFilename;
 
   private LocalDateTime receivedAt;
+
+  private String customerCif;
 }
