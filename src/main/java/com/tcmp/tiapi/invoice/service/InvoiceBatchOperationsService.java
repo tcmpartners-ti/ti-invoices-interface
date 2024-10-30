@@ -3,8 +3,6 @@ package com.tcmp.tiapi.invoice.service;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.tcmp.tiapi.customer.model.Customer;
-import com.tcmp.tiapi.customer.repository.CustomerRepository;
 import com.tcmp.tiapi.invoice.InvoiceMapper;
 import com.tcmp.tiapi.invoice.dto.InvoiceCreationRowCSV;
 import com.tcmp.tiapi.invoice.dto.ti.creation.CreateInvoiceEventMessage;
@@ -30,6 +28,7 @@ import com.tcmp.tiapi.ti.dto.request.ServiceRequest;
 import java.io.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +39,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +59,6 @@ public class InvoiceBatchOperationsService {
   private final InvoiceMapper invoiceMapper;
   private final TIServiceRequestWrapper wrapper;
   private final UUIDGenerator uuidGenerator;
-  private final CustomerRepository customerRepository;
 
   @Value("${ti.route.fti.out.from}")
   private String uriFtiOutgoingFrom;
@@ -74,8 +70,8 @@ public class InvoiceBatchOperationsService {
     String filename = uuidGenerator.getNewId() + ".csv";
 
     Slice<InvoiceToPayReport> invoicesSlice =
-        invoiceRepository.findInvoiceToPayByBuyerMnemonic(
-            buyerMnemonic, PageRequest.of(0, REPORT_BATCH_SIZE));
+            invoiceRepository.findInvoiceToPayByBuyerMnemonic(
+                    buyerMnemonic, PageRequest.of(0, REPORT_BATCH_SIZE));
 
     String path = tempReportPath + "/" + filename;
 
@@ -85,8 +81,8 @@ public class InvoiceBatchOperationsService {
 
       while (invoicesSlice.hasNext()) {
         invoicesSlice =
-            invoiceRepository.findInvoiceToPayByBuyerMnemonic(
-                buyerMnemonic, invoicesSlice.nextPageable());
+                invoiceRepository.findInvoiceToPayByBuyerMnemonic(
+                        buyerMnemonic, invoicesSlice.nextPageable());
         processBatchForToPayReport(writer, invoicesSlice.getContent());
       }
 
@@ -107,8 +103,8 @@ public class InvoiceBatchOperationsService {
     String filename = uuidGenerator.getNewId() + ".csv";
 
     Slice<InvoiceToCollectReport> invoicesSlice =
-        invoiceRepository.findInvoiceToCollectBySellerMnemonic(
-            sellerMnemonic, PageRequest.of(0, REPORT_BATCH_SIZE));
+            invoiceRepository.findInvoiceToCollectBySellerMnemonic(
+                    sellerMnemonic, PageRequest.of(0, REPORT_BATCH_SIZE));
 
     String path = tempReportPath + "/" + filename;
 
@@ -118,8 +114,8 @@ public class InvoiceBatchOperationsService {
 
       while (invoicesSlice.hasNext()) {
         invoicesSlice =
-            invoiceRepository.findInvoiceToCollectBySellerMnemonic(
-                sellerMnemonic, invoicesSlice.nextPageable());
+                invoiceRepository.findInvoiceToCollectBySellerMnemonic(
+                        sellerMnemonic, invoicesSlice.nextPageable());
         processBatchForToCollectReport(writer, invoicesSlice.getContent());
       }
 
@@ -132,22 +128,22 @@ public class InvoiceBatchOperationsService {
   }
 
   private void processBatchForToCollectReport(
-      CSVWriter writer, List<InvoiceToCollectReport> invoices) {
+          CSVWriter writer, List<InvoiceToCollectReport> invoices) {
     List<String[]> rows = invoices.stream().map(invoiceToCollectFileBuilder::buildRow).toList();
     writer.writeAll(rows);
   }
 
   public void createInvoicesInTiWithBusinessBankingChannel(
-      MultipartFile invoicesFile, String batchId) {
+          MultipartFile invoicesFile, String batchId) {
     if (invoicesFile.isEmpty()) throw new InvalidFileHttpException("File is empty.");
 
     try (BufferedReader bufferedReader =
-        new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
+                 new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
       CsvToBean<InvoiceCreationRowCSV> invoiceCsvToBean =
-          new CsvToBeanBuilder<InvoiceCreationRowCSV>(bufferedReader)
-              .withType(InvoiceCreationRowCSV.class)
-              .withIgnoreEmptyLine(true)
-              .build();
+              new CsvToBeanBuilder<InvoiceCreationRowCSV>(bufferedReader)
+                      .withType(InvoiceCreationRowCSV.class)
+                      .withIgnoreEmptyLine(true)
+                      .build();
 
       processFileAsBatches(batchId, invoiceCsvToBean);
     } catch (IOException e) {
@@ -156,7 +152,7 @@ public class InvoiceBatchOperationsService {
   }
 
   private void processFileAsBatches(
-      String batchId, CsvToBean<InvoiceCreationRowCSV> invoiceCsvToBean) {
+          String batchId, CsvToBean<InvoiceCreationRowCSV> invoiceCsvToBean) {
     List<InvoiceCreationRowCSV> invoicesBatch = new ArrayList<>();
     // Skip header
     int currentLine = 1;
@@ -188,21 +184,21 @@ public class InvoiceBatchOperationsService {
       String uuid = uuidGenerator.getNewId();
 
       InvoiceEventInfo invoiceInfo =
-          InvoiceEventInfo.builder()
-              .id(uuid)
-              .batchId(batchId)
-              .reference(invoiceRow.getInvoiceNumber())
-              .sellerMnemonic(invoiceRow.getSeller())
-              .build();
+              InvoiceEventInfo.builder()
+                      .id(uuid)
+                      .batchId(batchId)
+                      .reference(invoiceRow.getInvoiceNumber())
+                      .sellerMnemonic(invoiceRow.getSeller())
+                      .build();
       invoiceEvents.add(invoiceInfo);
 
       ServiceRequest<CreateInvoiceEventMessage> tiMessage =
-          wrapper.wrapRequest(
-              TIService.TRADE_INNOVATION,
-              TIOperation.CREATE_INVOICE,
-              ReplyFormat.STATUS,
-              uuid,
-              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, null));
+              wrapper.wrapRequest(
+                      TIService.TRADE_INNOVATION,
+                      TIOperation.CREATE_INVOICE,
+                      ReplyFormat.STATUS,
+                      uuid,
+                      invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, null));
       invoiceMessages.add(tiMessage);
     }
 
@@ -218,30 +214,22 @@ public class InvoiceBatchOperationsService {
     String fileUuid = uuidGenerator.getNewId();
 
     try (BufferedReader bufferedReader =
-        new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
+                 new BufferedReader(new InputStreamReader(invoicesFile.getInputStream()))) {
       CsvToBean<InvoiceCreationRowCSV> invoiceCsvToBean =
-          new CsvToBeanBuilder<InvoiceCreationRowCSV>(bufferedReader)
-              .withType(InvoiceCreationRowCSV.class)
-              .withIgnoreEmptyLine(true)
-              .build();
+              new CsvToBeanBuilder<InvoiceCreationRowCSV>(bufferedReader)
+                      .withType(InvoiceCreationRowCSV.class)
+                      .withIgnoreEmptyLine(true)
+                      .build();
 
-      Tuple2<Integer, String> totalProcessedInvoices = processSftpChannelBatch(fileUuid, batchId, invoiceCsvToBean);
-
-
-      String customerCIF =
-          customerRepository
-              .findFirstByIdMnemonic(totalProcessedInvoices.getT2())
-              .map(Customer::getNumber)
-              .orElse("000000");
+      int totalProcessedInvoices = processSftpChannelBatch(fileUuid, batchId, invoiceCsvToBean);
 
       BulkCreateInvoicesFileInfo fileInfo =
-          BulkCreateInvoicesFileInfo.builder()
-              .id(fileUuid)
-              .totalInvoices(totalProcessedInvoices.getT1())
-              .originalFilename(invoicesFile.getOriginalFilename())
-              .receivedAt(LocalDateTime.now(clock))
-              .customerCif(customerCIF.trim())
-              .build();
+              BulkCreateInvoicesFileInfo.builder()
+                      .id(fileUuid)
+                      .totalInvoices(totalProcessedInvoices)
+                      .originalFilename(invoicesFile.getOriginalFilename())
+                      .receivedAt(LocalDateTime.now(clock))
+                      .build();
       bulkCreateInvoicesFileInfoRepository.save(fileInfo);
     } catch (IOException e) {
       throw new InvalidFileHttpException("Could not process file");
@@ -255,38 +243,57 @@ public class InvoiceBatchOperationsService {
    * @param invoices List of invoices to process
    * @return Total invoices processed
    */
-  private Tuple2<Integer,String> processSftpChannelBatch(
-      String fileUuid, String batchId, CsvToBean<InvoiceCreationRowCSV> invoices) {
+  private int processSftpChannelBatch(
+          String fileUuid, String batchId, CsvToBean<InvoiceCreationRowCSV> invoices) {
     int totalInvoices = 0;
-
-    String customerCif = "";
+    List<String> errorMessages = new ArrayList<>(); // Lista para registrar los errores
 
     for (InvoiceCreationRowCSV invoiceRow : invoices) {
-      String correlationId = fileUuid + ":" + invoiceRow.getIndex();
+      try {
+        String correlationId = fileUuid + ":" + invoiceRow.getIndex();
 
-      if (invoiceRow.getIndex().equals("1")){
-        customerCif = invoiceRow.getBuyer().trim();
+        ServiceRequest<CreateInvoiceEventMessage> message =
+                wrapper.wrapRequest(
+                        TIService.TRADE_INNOVATION,
+                        TIOperation.CREATE_INVOICE,
+                        ReplyFormat.STATUS,
+                        correlationId,
+                        invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, fileUuid));
+
+        producerTemplate.asyncSendBody(uriFtiOutgoingFrom, message);
+        totalInvoices++;
+
+      } catch (NumberFormatException e) {
+        String errorMsg = String.format("Error de formato numérico en la factura con índice %s: %s",
+                invoiceRow.getIndex(), e.getMessage());
+        log.error(errorMsg);
+        errorMessages.add(errorMsg);
+
+      } catch (DateTimeParseException e) {
+        String errorMsg = String.format("Error de formato de fecha en la factura con índice %s: %s",
+                invoiceRow.getIndex(), e.getMessage());
+        log.error(errorMsg);
+        errorMessages.add(errorMsg);
+
+      } catch (Exception e) {
+        String errorMsg = String.format("Error procesando la factura con índice %s: %s",
+                invoiceRow.getIndex(), e.getMessage());
+        log.error(errorMsg);
+        errorMessages.add(errorMsg);
       }
-
-      ServiceRequest<CreateInvoiceEventMessage> message =
-          wrapper.wrapRequest(
-              TIService.TRADE_INNOVATION,
-              TIOperation.CREATE_INVOICE,
-              ReplyFormat.STATUS,
-              correlationId,
-              invoiceMapper.mapCSVRowToFTIMessage(invoiceRow, batchId, fileUuid));
-
-      producerTemplate.asyncSendBody(uriFtiOutgoingFrom, message);
-      totalInvoices++;
     }
 
-    log.info("Sent {} invoice(s). Channel: SFTP.", totalInvoices);
+    if (!errorMessages.isEmpty()) {
+      log.warn("Errores encontrados en el procesamiento del batch: {}", errorMessages);
+      // Aquí podrías enviar la lista de errores a algún sistema de reporte o alerta, si es necesario.
+    }
 
-    return Tuples.of(totalInvoices,customerCif);
+    return totalInvoices;
   }
 
+
   private void sendMessagesToQueue(
-      List<ServiceRequest<CreateInvoiceEventMessage>> invoiceMessages) {
+          List<ServiceRequest<CreateInvoiceEventMessage>> invoiceMessages) {
     invoiceMessages.forEach(message -> producerTemplate.asyncSendBody(uriFtiOutgoingFrom, message));
   }
 }
