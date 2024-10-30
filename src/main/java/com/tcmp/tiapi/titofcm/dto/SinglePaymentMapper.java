@@ -207,7 +207,7 @@ public abstract class SinglePaymentMapper {
   public RemittanceInformation mapToRemittanceInformation(
       Customer creditor, EncodedAccountParser creditorAccount) {
     String information2 = mapInformation2(creditor);
-    String information3 = creditor.getOldMnemonic();
+    String information3 = creditor.getMnemonic();
     String information4 = creditorAccount.getType().equals("AH") ? "AHO" : "CTE";
 
     return RemittanceInformation.builder()

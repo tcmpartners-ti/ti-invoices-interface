@@ -16,6 +16,9 @@ import lombok.*;
 public class Customer {
   @EmbeddedId private CustomerId id;
 
+  @Column(name = "GFCUS1", length = 20)
+  private String mnemonic;
+
   @Column(name = "GFCUN", length = 35)
   private String fullName;
 
