@@ -32,4 +32,6 @@ public class SinglePaymentRequest {
   private CreditorDetails creditorDetails;
   private CreditorAgent creditorAgent;
   private RemittanceInformation remittanceInformation;
+  private EnrichmentDetailsTransaction enrichmentDetailsTransaction;
+
 }

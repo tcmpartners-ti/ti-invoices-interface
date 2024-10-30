@@ -6,12 +6,12 @@ import com.tcmp.tiapi.invoice.dto.ti.settle.InvoiceSettlementEventMessage;
 import com.tcmp.tiapi.invoice.util.EncodedAccountParser;
 import com.tcmp.tiapi.shared.utils.MapperUtils;
 import com.tcmp.tiapi.shared.utils.MonetaryAmountUtils;
-import com.tcmp.tiapi.titofcm.dto.request.AccountType;
-import com.tcmp.tiapi.titofcm.dto.request.SinglePaymentRequest;
-import com.tcmp.tiapi.titofcm.dto.request.TransactionType;
+import com.tcmp.tiapi.titofcm.dto.request.*;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +55,9 @@ public abstract class SinglePaymentMapper {
   @Mapping(target = "debtorAccount.type", constant = AccountType.GENERALLEDGER)
   @Mapping(target = "debtorAccount.currency", source = "message.paymentCurrency")
   @Mapping(target = "debtorAccount.name", expression = "java(this.bglAccount)")
-  @Mapping(target = "instructedAmount.amount", expression = "java(getPaymentAmount(invoiceSettlementEventMessage))")
+  @Mapping(
+      target = "instructedAmount.amount",
+      expression = "java(getPaymentAmount(invoiceSettlementEventMessage))")
   @Mapping(target = "instructedAmount.currencyOfTransfer", source = "message.paymentCurrency")
   @Mapping(target = "chargeBearer", constant = "OUR")
   // Creditor
@@ -71,9 +73,14 @@ public abstract class SinglePaymentMapper {
   @Mapping(target = "creditorAgent.postalAddress.addressType", constant = "ADDR")
   @Mapping(target = "creditorAgent.postalAddress.country", constant = "EC")
   // Remittance Information
-  @Mapping(target = "remittanceInformation.information2", source = "debitDescription")
-  @Mapping(target = "remittanceInformation.information3", source = "creditDescription")
-  @Mapping(target = "remittanceInformation.information4", source = "debtorAccount.account")
+  @Mapping(
+      target = "remittanceInformation",
+      expression = "java(mapToRemittanceInformation(creditor, creditorAccount))")
+  // Enrichment Details
+  @Mapping(
+      target = "enrichmentDetailsTransaction",
+      expression =
+          "java(mapToMultiSet(debitDescription, creditDescription, debtorAccount.getAccount()))")
   public abstract SinglePaymentRequest mapSettlementCustomerToCustomerTransaction(
       InvoiceSettlementEventMessage message,
       Customer debtor,
@@ -121,9 +128,14 @@ public abstract class SinglePaymentMapper {
   @Mapping(target = "creditorAgent.postalAddress.addressType", constant = "ADDR")
   @Mapping(target = "creditorAgent.postalAddress.country", constant = "EC")
   // Remittance Information
-  @Mapping(target = "remittanceInformation.information2", source = "debitDescription")
-  @Mapping(target = "remittanceInformation.information3", source = "creditDescription")
-  @Mapping(target = "remittanceInformation.information4", source = "debtorAccount.account")
+  @Mapping(
+      target = "remittanceInformation",
+      expression = "java(mapToRemittanceInformation(creditor, creditorAccount))")
+  // Enrichment Details
+  @Mapping(
+      target = "enrichmentDetailsTransaction",
+      expression =
+          "java(mapToMultiSet(debitDescription, creditDescription, debtorAccount.getAccount()))")
   public abstract SinglePaymentRequest mapFinanceCustomerToCustomerTransaction(
       FinanceAckMessage message,
       Customer debtor,
@@ -162,5 +174,46 @@ public abstract class SinglePaymentMapper {
     }
 
     return sanitizedDescription;
+  }
+
+  public EnrichmentDetailsTransaction mapToMultiSet(
+      String debitDescription, String creditDescription, String debtorAccount) {
+    EnrichmentDetailsTransaction.MultiSet multiSetItem =
+        EnrichmentDetailsTransaction.MultiSet.builder()
+            .debitDescription(debitDescription)
+            .creditDescription(creditDescription)
+            .debtorAccount(debtorAccount)
+            .build();
+
+    // Crear el objeto EnrichmentDetailsTransaction y establecer la lista multiSet
+    EnrichmentDetailsTransaction transaction =
+        EnrichmentDetailsTransaction.builder()
+            .multiSet(
+                Collections.singletonList(
+                    multiSetItem)) // Devolvemos una lista con un solo elemento
+            .build();
+
+    return transaction;
+  }
+
+  public String mapInformation2(Customer creditor) {
+    if (creditor.getBankCode1().equals("0001")) {
+      return "C";
+    } else {
+      return "R";
+    }
+  }
+
+  public RemittanceInformation mapToRemittanceInformation(
+      Customer creditor, EncodedAccountParser creditorAccount) {
+    String information2 = mapInformation2(creditor);
+    String information3 = creditor.getOldMnemonic();
+    String information4 = creditorAccount.getType().equals("AH") ? "AHO" : "CTE";
+
+    return RemittanceInformation.builder()
+        .information2(information2)
+        .information3(information3)
+        .information4(information4)
+        .build();
   }
 }

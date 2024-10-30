@@ -7,4 +7,6 @@ import lombok.NoArgsConstructor;
 public class AccountType {
   public static final String SAVINGS = "Savings Account";
   public static final String GENERALLEDGER = "GL Account";
+  public static final String SAVINGS_VALUE = "AHO";
+  public static final String CURRENT = "CTE";
 }
