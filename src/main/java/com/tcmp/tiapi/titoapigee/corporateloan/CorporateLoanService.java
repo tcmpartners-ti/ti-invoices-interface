@@ -10,8 +10,10 @@ import com.tcmp.tiapi.titoapigee.security.HeaderSigner;
 import feign.FeignException;
 import jakarta.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,7 +87,7 @@ public class CorporateLoanService {
   }
 
   private String buildOperationId() {
-    return UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+    return new SecureRandom().ints(20, 0, 10).mapToObj(String::valueOf).collect(Collectors.joining());
   }
 
   private void tryRequestAndResponseLogging(

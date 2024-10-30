@@ -156,6 +156,17 @@ configurations {
         resolutionStrategy {
             force("com.google.guava:guava:32.0.0-jre")
             force("org.mozilla:rhino:1.7.12")
+            force("io.netty:netty-common:4.1.110.Final")
+            force("io.netty:netty-handler:4.1.110.Final")
+            force("io.netty:netty-handler-proxy:4.1.110.Final")
+            force("io.netty:netty-buffer:4.1.110.Final")
+            force("io.netty:netty-codec:4.1.110.Final")
+            force("io.netty:netty-codec-http:4.1.110.Final")
+            force("io.netty:netty-codec-http2:4.1.110.Final")
+            force("io.netty:netty-transport-native-unix-common:4.1.110.Final")
+            force("io.netty:netty-transport-native-epoll:4.1.110.Final")
+            force("io.netty:netty-transport-native-kqueue:4.1.110.Final")
+            force("io.netty:netty-tcnative-boringssl-static:2.0.65.Final")
         }
     }
 
